@@ -1,0 +1,20 @@
+CREATE TABLE candidates (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  gender TEXT,
+  birth_date DATE,
+  age INTEGER,
+  residence TEXT,
+  marital_status TEXT,
+  children_count INTEGER DEFAULT 0,
+  religious_level TEXT,
+  height NUMERIC,
+  education TEXT,
+  occupation TEXT,
+  about_me TEXT,
+  looking_for TEXT,
+  phone_number TEXT UNIQUE NOT NULL,
+  image_urls TEXT[],
+  system_notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);

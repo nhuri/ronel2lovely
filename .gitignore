@@ -1,0 +1,52 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# testing
+coverage/
+
+# next.js
+.next/
+out/
+
+# production
+build/
+
+# misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files - NEVER commit secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# sensitive data files - contain personal info or credentials
+candidates.csv
+migrate_images.py
+upload_images.py
+import_candidates.py
+import_candidates.sql
+
+# duplicate image in root (original is in public/)
+/ronel-web.jpg
+
+# vercel
+.vercel
+
+# claude
+.claude/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
