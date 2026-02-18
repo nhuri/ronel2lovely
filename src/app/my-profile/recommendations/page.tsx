@@ -48,7 +48,7 @@ export default async function RecommendationsPage({
   const { data: allPotentialMatches } = await supabase
     .from("candidates")
     .select(
-      "id, full_name, gender, age, residence, religious_level, marital_status, height, occupation, education, image_urls, availability_status"
+      "id, full_name, gender, age, residence, religious_level, marital_status, height, occupation, education, image_urls, availability_status, about_me"
     )
     .eq("gender", oppositeGender)
     .neq("id", candidateId);
@@ -133,6 +133,7 @@ export default async function RecommendationsPage({
         <RecommendationsClient
           matches={topMatches}
           gender={myGender}
+          candidateId={candidateId}
         />
       </main>
     </div>

@@ -1,14 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import type { ScoredMatch } from "@/lib/matching";
+import { sendInterestEmail } from "./actions";
 
 interface Props {
   matches: ScoredMatch[];
   gender: string;
+  candidateId: number;
 }
 
-export function RecommendationsClient({ matches, gender }: Props) {
+export function RecommendationsClient({ matches, gender, candidateId }: Props) {
+  const [selectedMatch, setSelectedMatch] = useState<ScoredMatch | null>(null);
+
   return (
     <div className="space-y-6" dir="rtl">
       {/* Intro */}
@@ -33,20 +38,47 @@ export function RecommendationsClient({ matches, gender }: Props) {
       ) : (
         <div className="space-y-4">
           {matches.map((match, index) => (
-            <MatchCard key={match.candidate.id} match={match} rank={index + 1} />
+            <MatchCard
+              key={match.candidate.id}
+              match={match}
+              rank={index + 1}
+              onClick={() => setSelectedMatch(match)}
+            />
           ))}
         </div>
+      )}
+
+      {/* Detail Modal */}
+      {selectedMatch && (
+        <MatchDetailModal
+          match={selectedMatch}
+          gender={gender}
+          candidateId={candidateId}
+          onClose={() => setSelectedMatch(null)}
+        />
       )}
     </div>
   );
 }
 
-function MatchCard({ match, rank }: { match: ScoredMatch; rank: number }) {
+function MatchCard({
+  match,
+  rank,
+  onClick,
+}: {
+  match: ScoredMatch;
+  rank: number;
+  onClick: () => void;
+}) {
   const c = match.candidate;
   const img = (c.image_urls as string[] | null)?.[0];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-right bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md hover:border-pink-200 transition-all cursor-pointer"
+    >
       <div className="flex">
         {/* Photo */}
         <div className="relative w-32 sm:w-40 flex-shrink-0 bg-gray-100">
@@ -95,8 +127,135 @@ function MatchCard({ match, rank }: { match: ScoredMatch; rank: number }) {
               </span>
             )}
           </div>
+
+          <p className="text-[10px] text-pink-400 mt-2 font-medium">לחצו לפרטים נוספים</p>
         </div>
       </div>
+    </button>
+  );
+}
+
+function MatchDetailModal({
+  match,
+  gender,
+  candidateId,
+  onClose,
+}: {
+  match: ScoredMatch;
+  gender: string;
+  candidateId: number;
+  onClose: () => void;
+}) {
+  const c = match.candidate;
+  const imgs = (c.image_urls as string[] | null) ?? [];
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const handleInterest = async () => {
+    setSending(true);
+    setResult(null);
+    const res = await sendInterestEmail(candidateId, c.id as number);
+    setResult(res);
+    setSending(false);
+  };
+
+  const interestedText =
+    gender === "זכר" ? "אני מעוניין להכיר" : "אני מעוניינת להכיר";
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        {/* Photo */}
+        <div className="relative w-full bg-gray-900 rounded-t-2xl overflow-hidden">
+          {imgs.length > 0 ? (
+            <div className="w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imgs[0]}
+                alt={c.full_name as string}
+                className="w-full max-h-[50vh] object-contain mx-auto"
+              />
+            </div>
+          ) : (
+            <div className="h-48 flex items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200">
+              <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+          )}
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 left-3 w-8 h-8 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition-colors z-10"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Details */}
+        <div className="p-5 space-y-4" dir="rtl">
+          <h2 className="text-xl font-bold text-gray-800">
+            {c.full_name as string}
+          </h2>
+
+          <div className="grid grid-cols-2 gap-3">
+            <DetailItem label="גיל" value={c.age != null ? String(c.age) : "-"} />
+            <DetailItem label="עיר" value={(c.residence as string) || "-"} />
+            <DetailItem label="רמה דתית" value={(c.religious_level as string) || "-"} />
+            <DetailItem label="מצב משפחתי" value={(c.marital_status as string) || "-"} />
+            <DetailItem label="תעסוקה" value={(c.occupation as string) || "-"} />
+            <DetailItem label="השכלה" value={(c.education as string) || "-"} />
+            {c.height && (
+              <DetailItem label="גובה" value={`${c.height} ס״מ`} />
+            )}
+          </div>
+
+          {c.about_me && (
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-[11px] text-gray-400 font-medium mb-1">קצת על עצמי</p>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                {c.about_me as string}
+              </p>
+            </div>
+          )}
+
+          {/* Interest button */}
+          {!result ? (
+            <button
+              onClick={handleInterest}
+              disabled={sending}
+              className="w-full py-3 bg-gradient-to-l from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:from-pink-600 hover:to-rose-600 active:from-pink-700 active:to-rose-700 disabled:opacity-50 transition-all shadow-sm text-sm"
+            >
+              {sending ? "שולח..." : `${interestedText} ❤️`}
+            </button>
+          ) : (
+            <div
+              className={`text-center py-3 px-4 rounded-xl text-sm font-medium ${
+                result.success
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+              }`}
+            >
+              {result.message}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[10px] text-gray-400 font-medium">{label}</p>
+      <p className="text-sm text-gray-800 font-medium">{value}</p>
     </div>
   );
 }

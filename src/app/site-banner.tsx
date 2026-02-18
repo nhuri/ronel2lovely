@@ -43,8 +43,8 @@ export async function SiteBanner() {
           className="w-14 h-14 rounded-full border-2 border-white/40 flex-shrink-0 bg-no-repeat"
           style={{
             backgroundImage: "url(/ronel-web.jpg)",
-            backgroundSize: "650%",
-            backgroundPosition: "90% 10%",
+            backgroundSize: "500%",
+            backgroundPosition: "97% 18%",
           }}
           role="img"
           aria-label="רונאל"
