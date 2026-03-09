@@ -16,6 +16,7 @@ type Candidate = {
 export function SendMessageTab({ candidates }: { candidates: Candidate[] }) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [genderFilter, setGenderFilter] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
   const [channel, setChannel] = useState<"sms" | "email">("sms");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -27,8 +28,12 @@ export function SendMessageTab({ candidates }: { candidates: Candidate[] }) {
   );
 
   const filtered = useMemo(
-    () => candidates.filter((c) => !genderFilter || c.gender === genderFilter),
-    [candidates, genderFilter]
+    () => candidates.filter((c) => {
+      if (genderFilter && c.gender !== genderFilter) return false;
+      if (search && !c.full_name?.includes(search)) return false;
+      return true;
+    }),
+    [candidates, genderFilter, search]
   );
 
   const allSelected = filtered.length > 0 && filtered.every((c) => selected.has(c.id));
@@ -120,20 +125,29 @@ export function SendMessageTab({ candidates }: { candidates: Candidate[] }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Candidates list */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
-                onChange={toggleAll}
-                className="w-4 h-4 rounded accent-sky-500"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                {allSelected ? "בטל הכל" : "בחר הכל"}
-              </span>
-            </label>
-            <span className="text-xs text-gray-400">{filtered.length} מועמדים</span>
+          <div className="px-4 py-3 border-b border-gray-100 space-y-2">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="חיפוש לפי שם..."
+              className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white transition-all"
+            />
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                  onChange={toggleAll}
+                  className="w-4 h-4 rounded accent-sky-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  {allSelected ? "בטל הכל" : "בחר הכל"}
+                </span>
+              </label>
+              <span className="text-xs text-gray-400">{filtered.length} מועמדים</span>
+            </div>
           </div>
           <div className="divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
             {filtered.map((c) => {
