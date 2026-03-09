@@ -1,12 +1,12 @@
 /**
- * Send an SMS via Twilio REST API.
+ * Send an SMS via Twilio REST API using a Messaging Service SID.
  */
 export async function sendTwilioSms(to: string, body: string) {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
+  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
 
-  if (!accountSid || !authToken || !from) {
+  if (!accountSid || !authToken || !messagingServiceSid) {
     throw new Error("Missing Twilio environment variables");
   }
 
@@ -18,7 +18,7 @@ export async function sendTwilioSms(to: string, body: string) {
         Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({ To: to, From: from, Body: body }),
+      body: new URLSearchParams({ To: to, MessagingServiceSid: messagingServiceSid, Body: body }),
     }
   );
 
