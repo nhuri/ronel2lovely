@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -48,6 +48,9 @@ export function ProfileClient({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [c, setC] = useState(initial);
+  const [editImages, setEditImages] = useState<File[]>([]);
+  const [keepImages, setKeepImages] = useState<string[]>(initial.image_urls ?? []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mandatory email modal state (for phone-auth users)
   const [showEmailModal, setShowEmailModal] = useState(needsEmail);
@@ -74,6 +77,8 @@ export function ProfileClient({
     setSaving(true);
 
     const formData = new FormData(e.currentTarget);
+    keepImages.forEach((url) => formData.append("keep_images", url));
+    editImages.forEach((file) => formData.append("new_images", file));
     const result = await updateMyProfile(formData, candidateId);
 
     if (result.fieldErrors) {
@@ -86,12 +91,15 @@ export function ProfileClient({
       // Update local state from form values
       const updated = { ...c };
       formData.forEach((val, key) => {
-        if (key !== "images") updated[key] = val;
+        if (key !== "keep_images" && key !== "new_images") updated[key] = val;
       });
       if (updated.children_count)
         updated.children_count = parseInt(updated.children_count, 10);
       if (updated.height) updated.height = parseInt(updated.height, 10);
+      if (result.imageUrls) updated.image_urls = result.imageUrls;
       setC(updated);
+      setEditImages([]);
+      setKeepImages(result.imageUrls ?? keepImages);
       setSaving(false);
       setMode("view");
       router.refresh();
@@ -362,7 +370,7 @@ export function ProfileClient({
             </div>
           </div>
           <button
-            onClick={() => { setMode("view"); setFieldErrors({}); setError(null); }}
+            onClick={() => { setMode("view"); setFieldErrors({}); setError(null); setEditImages([]); setKeepImages(c.image_urls ?? []); }}
             className="px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
           >
             ביטול
@@ -372,6 +380,59 @@ export function ProfileClient({
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         <form onSubmit={handleUpdate} className="space-y-6">
+          <EditSection title="תמונות פרופיל">
+            <div className="flex flex-wrap gap-3">
+              {keepImages.map((url, i) => (
+                <div key={url} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 group flex-shrink-0">
+                  <Image src={url} alt={`תמונה ${i + 1}`} fill className="object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setKeepImages(keepImages.filter((_, j) => j !== i))}
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                  >✕</button>
+                </div>
+              ))}
+              {editImages.map((file, i) => (
+                <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-sky-300 group flex-shrink-0">
+                  <Image src={URL.createObjectURL(file)} alt={`תמונה חדשה ${i + 1}`} fill className="object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setEditImages(editImages.filter((_, j) => j !== i))}
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                  >✕</button>
+                </div>
+              ))}
+              {(keepImages.length + editImages.length) < 3 && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 hover:border-sky-400 text-gray-400 hover:text-sky-500 flex flex-col items-center justify-center gap-1 transition-colors flex-shrink-0"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="text-[10px]">הוסף תמונה</span>
+                </button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && keepImages.length + editImages.length < 3) {
+                  setEditImages([...editImages, file]);
+                }
+                e.target.value = "";
+              }}
+            />
+            {keepImages.length + editImages.length === 0 && (
+              <p className="text-xs text-gray-400 mt-1">לא נבחרו תמונות. ניתן להוסיף עד 3 תמונות.</p>
+            )}
+          </EditSection>
+
           <EditSection title="פרטים אישיים">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <EditInput name="full_name" label="שם מלא" required defaultValue={c.full_name} error={fieldErrors.full_name} />

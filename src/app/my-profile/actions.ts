@@ -10,6 +10,7 @@ export type ProfileActionResult = {
   error?: string;
   fieldErrors?: FieldErrors;
   success?: boolean;
+  imageUrls?: string[];
 };
 
 const REQUIRED_FIELDS: { key: string; label: string }[] = [
@@ -179,6 +180,35 @@ export async function updateMyProfile(
     return { fieldErrors };
   }
 
+  // ── Handle images ──
+  const keepImages: string[] = formData.getAll("keep_images") as string[];
+  const newImageFiles: File[] = formData.getAll("new_images").filter(
+    (f): f is File => f instanceof File && f.size > 0
+  );
+
+  const totalImages = keepImages.length + newImageFiles.length;
+  if (totalImages > 3) {
+    return { error: "ניתן להעלות עד 3 תמונות" };
+  }
+
+  const uploadedUrls: string[] = [];
+  for (const file of newImageFiles) {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("candidate-images")
+      .upload(path, file);
+    if (uploadError) {
+      return { error: `שגיאה בהעלאת תמונה: ${uploadError.message}` };
+    }
+    const { data: { publicUrl } } = supabase.storage
+      .from("candidate-images")
+      .getPublicUrl(path);
+    uploadedUrls.push(publicUrl);
+  }
+
+  const finalImageUrls = [...keepImages, ...uploadedUrls];
+
   // ── Update only the candidate's own record ──
   const { error } = await supabase
     .from("candidates")
@@ -202,6 +232,7 @@ export async function updateMyProfile(
       contact_person: raw.contact_person,
       contact_person_phone: raw.contact_person_phone,
       age: calculateAge(raw.birth_date),
+      image_urls: finalImageUrls,
     })
     .eq("id", ctx.candidateId);
 
@@ -209,7 +240,7 @@ export async function updateMyProfile(
     return { error: error.message };
   }
 
-  return { success: true };
+  return { success: true, imageUrls: finalImageUrls };
 }
 
 export async function deleteMyProfile(

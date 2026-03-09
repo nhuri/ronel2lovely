@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { CandidatesGrid } from "./candidates-grid";
+import { AdminTabs } from "./admin-tabs";
 import { logout } from "@/app/login/actions";
 import Link from "next/link";
 
@@ -91,8 +91,9 @@ export default async function AdminDashboard() {
 
       {/* Main */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <CandidatesGrid
+        <AdminTabs
           candidates={candidates ?? []}
+          allCandidates={allCandidates ?? []}
           genders={genders}
           religiousLevels={religiousLevels}
         />
