@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { isTerminalStatus } from "@/lib/proposals";
 import { toE164 } from "@/lib/phone";
@@ -192,19 +192,22 @@ export async function updateMyProfile(
   }
 
   const uploadedUrls: string[] = [];
-  for (const file of newImageFiles) {
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("candidate-images")
-      .upload(path, file);
-    if (uploadError) {
-      return { error: `שגיאה בהעלאת תמונה: ${uploadError.message}` };
+  if (newImageFiles.length > 0) {
+    const adminClient = createSupabaseAdminClient();
+    for (const file of newImageFiles) {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await adminClient.storage
+        .from("candidate-images")
+        .upload(path, file);
+      if (uploadError) {
+        return { error: `שגיאה בהעלאת תמונה: ${uploadError.message}` };
+      }
+      const { data: { publicUrl } } = adminClient.storage
+        .from("candidate-images")
+        .getPublicUrl(path);
+      uploadedUrls.push(publicUrl);
     }
-    const { data: { publicUrl } } = supabase.storage
-      .from("candidate-images")
-      .getPublicUrl(path);
-    uploadedUrls.push(publicUrl);
   }
 
   const finalImageUrls = [...keepImages, ...uploadedUrls];
