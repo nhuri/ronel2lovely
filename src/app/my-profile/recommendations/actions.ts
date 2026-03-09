@@ -24,7 +24,7 @@ export async function sendInterestEmail(
     supabase
       .from("candidates")
       .select(
-        "id, full_name, gender, age, residence, religious_level, marital_status, occupation, contact_person, contact_person_phone, phone, email"
+        "id, full_name, gender, age, residence, religious_level, marital_status, occupation, contact_person, contact_person_phone, phone_number, email"
       )
       .eq("id", candidateId)
       .single(),
@@ -59,7 +59,7 @@ export async function sendInterestEmail(
   const dear = recipientGender === "זכר" ? "היקר" : "היקרה";
 
   const contactPhone =
-    (sender.contact_person_phone as string) || (sender.phone as string) || "";
+    (sender.contact_person_phone as string) || (sender.phone_number as string) || "";
   const contactName = (sender.contact_person as string) || senderName;
 
   const emailHtml = `
