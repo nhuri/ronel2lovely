@@ -44,7 +44,7 @@ export async function SiteBanner() {
           style={{
             backgroundImage: "url(/ronel-web.jpg)",
             backgroundSize: "500%",
-            backgroundPosition: "90% 18%",
+            backgroundPosition: "92% 18%",
           }}
           role="img"
           aria-label="רונאל"
