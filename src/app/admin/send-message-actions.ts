@@ -72,7 +72,7 @@ export async function sendBulkMessage(
       }
       try {
         await resend.emails.send({
-          from: "Ronel Lovely <onboarding@resend.dev>",
+          from: "Ronel Lovely <noreply@ronel-lovely.com>",
           replyTo: "ronel2lovely@gmail.com",
           to: email,
           subject: "הודעה מ-Ronel Lovely",

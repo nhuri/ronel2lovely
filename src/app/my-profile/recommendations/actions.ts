@@ -118,7 +118,7 @@ export async function sendInterestEmail(
 
   try {
     await resend.emails.send({
-      from: "Ronel Lovely <onboarding@resend.dev>",
+      from: "Ronel Lovely <noreply@ronel-lovely.com>",
       replyTo: "ronel2lovely@gmail.com",
       to: recipientEmail,
       subject: `${senderName} ${senderWants} לבדוק התאמה איתך — Ronel Lovely`,
