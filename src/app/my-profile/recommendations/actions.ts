@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -51,12 +51,17 @@ export async function sendInterestEmail(
   const senderGender = sender.gender as string;
   const recipientName = recipient.full_name as string;
   const recipientGender = recipient.gender as string;
+  const senderEmail = sender.email as string | null;
+  const showSenderEmail = senderEmail && !senderEmail.endsWith("@sms.ronellovely.co.il");
 
   // Gender-aware Hebrew text
-  const heWouldLike = senderGender === "זכר" ? "ישמח" : "תשמח";
-  const areYouInterested =
-    recipientGender === "זכר" ? "האם אתה מעוניין" : "האם את מעוניינת";
+  const senderWants = senderGender === "זכר" ? "מעוניין" : "מעוניינת";
+  const senderPronounObj = senderGender === "זכר" ? "אותו" : "אותה";
+  const senderPossessive = senderGender === "זכר" ? "שלו" : "שלה";
+  const recipientCanUpdate = recipientGender === "זכר" ? "תוכל לעדכן" : "תוכלי לעדכן";
+  const recipientThoughts = recipientGender === "זכר" ? "את מחשבותיך" : "את מחשבותייך";
   const dear = recipientGender === "זכר" ? "היקר" : "היקרה";
+  const heWouldLike = senderGender === "זכר" ? "ישמח" : "תשמח";
 
   const contactPhone =
     (sender.contact_person_phone as string) || (sender.phone_number as string) || "";
@@ -75,7 +80,11 @@ export async function sendInterestEmail(
         </h2>
 
         <p style="color: #4b5563; font-size: 15px; line-height: 1.7;">
-          <strong>${senderName}</strong> ${heWouldLike} לבדוק התאמה איתך!
+          המועמד/ת <strong>${senderName}</strong> ${senderWants} לבדוק התאמה לפתיחת הצעה איתך.
+        </p>
+
+        <p style="color: #4b5563; font-size: 15px; line-height: 1.7;">
+          ${recipientCanUpdate} ${senderPronounObj} ישירות לכתובת המייל ${senderPossessive} ${recipientThoughts} על ההצעה.
         </p>
 
         <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 16px 0;">
@@ -86,12 +95,9 @@ export async function sendInterestEmail(
             ${sender.religious_level ? `<tr><td style="padding: 4px 0; font-weight: bold;">רמה דתית:</td><td>${sender.religious_level}</td></tr>` : ""}
             ${sender.marital_status ? `<tr><td style="padding: 4px 0; font-weight: bold;">מצב משפחתי:</td><td>${sender.marital_status}</td></tr>` : ""}
             ${sender.occupation ? `<tr><td style="padding: 4px 0; font-weight: bold;">תעסוקה:</td><td>${sender.occupation}</td></tr>` : ""}
+            ${showSenderEmail ? `<tr><td style="padding: 4px 0; font-weight: bold;">מייל:</td><td><a href="mailto:${senderEmail}" style="color: #0284c7;">${senderEmail}</a></td></tr>` : ""}
           </table>
         </div>
-
-        <p style="color: #4b5563; font-size: 15px; line-height: 1.7;">
-          ${areYouInterested} לשמוע עוד פרטים ולבדוק התאמה?
-        </p>
 
         ${contactPhone ? `
         <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 16px; margin: 16px 0;">
@@ -115,9 +121,32 @@ export async function sendInterestEmail(
       from: "Ronel Lovely <onboarding@resend.dev>",
       replyTo: "ronel2lovely@gmail.com",
       to: recipientEmail,
-      subject: `${senderName} ${heWouldLike} להכיר אותך — Ronel Lovely`,
+      subject: `${senderName} ${senderWants} לבדוק התאמה איתך — Ronel Lovely`,
       html: emailHtml,
     });
+
+    // Create a proposal between the two candidates (non-critical — email already sent)
+    try {
+      const adminClient = createSupabaseAdminClient();
+      const { data: existing } = await adminClient
+        .from("proposals")
+        .select("id")
+        .or(
+          `and(candidate_id_1.eq.${candidateId},candidate_id_2.eq.${matchCandidateId}),and(candidate_id_1.eq.${matchCandidateId},candidate_id_2.eq.${candidateId})`
+        )
+        .limit(1)
+        .maybeSingle();
+
+      if (!existing) {
+        await adminClient.from("proposals").insert({
+          candidate_id_1: candidateId,
+          candidate_id_2: matchCandidateId,
+          status: "1",
+        });
+      }
+    } catch {
+      // Proposal creation failure is non-critical
+    }
 
     return { success: true, message: "המייל נשלח בהצלחה!" };
   } catch (err) {

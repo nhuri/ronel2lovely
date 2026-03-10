@@ -13,6 +13,11 @@ interface Props {
 
 export function RecommendationsClient({ matches, gender, candidateId }: Props) {
   const [selectedMatch, setSelectedMatch] = useState<ScoredMatch | null>(null);
+  const [sentToIds, setSentToIds] = useState<Set<number>>(new Set());
+
+  const handleSent = (id: number) => {
+    setSentToIds((prev) => new Set(prev).add(id));
+  };
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -42,6 +47,7 @@ export function RecommendationsClient({ matches, gender, candidateId }: Props) {
               key={match.candidate.id}
               match={match}
               rank={index + 1}
+              sent={sentToIds.has(match.candidate.id as number)}
               onClick={() => setSelectedMatch(match)}
             />
           ))}
@@ -54,6 +60,8 @@ export function RecommendationsClient({ matches, gender, candidateId }: Props) {
           match={selectedMatch}
           gender={gender}
           candidateId={candidateId}
+          alreadySent={sentToIds.has(selectedMatch.candidate.id as number)}
+          onSent={handleSent}
           onClose={() => setSelectedMatch(null)}
         />
       )}
@@ -64,10 +72,12 @@ export function RecommendationsClient({ matches, gender, candidateId }: Props) {
 function MatchCard({
   match,
   rank,
+  sent,
   onClick,
 }: {
   match: ScoredMatch;
   rank: number;
+  sent: boolean;
   onClick: () => void;
 }) {
   const c = match.candidate;
@@ -100,6 +110,12 @@ function MatchCard({
           <span className="absolute top-2 right-2 bg-pink-500 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shadow-sm">
             {rank}
           </span>
+          {/* Sent badge */}
+          {sent && (
+            <span className="absolute bottom-2 right-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+              נשלח ✓
+            </span>
+          )}
         </div>
 
         {/* Details */}
@@ -139,33 +155,50 @@ function MatchDetailModal({
   match,
   gender,
   candidateId,
+  alreadySent,
+  onSent,
   onClose,
 }: {
   match: ScoredMatch;
   gender: string;
   candidateId: number;
+  alreadySent: boolean;
+  onSent: (id: number) => void;
   onClose: () => void;
 }) {
   const c = match.candidate;
   const imgs = (c.image_urls as string[] | null) ?? [];
   const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
-  const handleInterest = async () => {
-    setSending(true);
-    setResult(null);
-    const res = await sendInterestEmail(candidateId, c.id as number);
-    setResult(res);
-    setSending(false);
-  };
+  const [error, setError] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  const interestedText =
-    gender === "זכר" ? "אני מעוניין להכיר" : "אני מעוניינת להכיר";
+  const matchId = c.id as number;
+  const recipientGender = c.gender as string;
+  const interestedText = gender === "זכר" ? "אני מעוניין להכיר" : "אני מעוניינת להכיר";
+  const sentLabel = recipientGender === "זכר" ? "נשלח מייל למועמד ✓" : "נשלח מייל למועמדת ✓";
+  const confirmText =
+    recipientGender === "זכר"
+      ? `לחיצה על אישור תשלח מייל ל${c.full_name}. הוא יקבל את הפרטים שלך וכתובת המייל שלך. ויוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.`
+      : `לחיצה על אישור תשלח מייל ל${c.full_name}. היא תקבל את הפרטים שלך וכתובת המייל שלך. ותוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.`;
+
+  const handleConfirm = async () => {
+    setSending(true);
+    setError(null);
+    setShowConfirm(false);
+    const res = await sendInterestEmail(candidateId, matchId);
+    setSending(false);
+    if (res.success) {
+      onSent(matchId);
+    } else {
+      setError(res.message);
+    }
+  };
 
   return (
     <div
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget && !showConfirm) onClose();
       }}
     >
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -225,25 +258,50 @@ function MatchDetailModal({
             </div>
           )}
 
-          {/* Interest button */}
-          {!result ? (
-            <button
-              onClick={handleInterest}
-              disabled={sending}
-              className="w-full py-3 bg-gradient-to-l from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:from-pink-600 hover:to-rose-600 active:from-pink-700 active:to-rose-700 disabled:opacity-50 transition-all shadow-sm text-sm"
-            >
-              {sending ? "שולח..." : `${interestedText} ❤️`}
-            </button>
-          ) : (
-            <div
-              className={`text-center py-3 px-4 rounded-xl text-sm font-medium ${
-                result.success
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : "bg-red-50 text-red-700 border border-red-200"
-              }`}
-            >
-              {result.message}
+          {/* Interest button area */}
+          {alreadySent ? (
+            <div className="w-full py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-semibold text-sm text-center">
+              {sentLabel}
             </div>
+          ) : showConfirm ? (
+            <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 space-y-3">
+              <p className="text-sm text-gray-700 leading-relaxed">{confirmText}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleConfirm}
+                  disabled={sending}
+                  className="flex-1 py-2.5 bg-gradient-to-l from-pink-500 to-rose-500 text-white rounded-xl font-semibold text-sm hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 transition-all"
+                >
+                  {sending ? "שולח..." : "אישור ❤️"}
+                </button>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  disabled={sending}
+                  className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                >
+                  ביטול
+                </button>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="space-y-2">
+              <div className="text-center py-3 px-4 rounded-xl text-sm font-medium bg-red-50 text-red-700 border border-red-200">
+                {error}
+              </div>
+              <button
+                onClick={() => setError(null)}
+                className="w-full py-2 text-sm text-gray-500 hover:text-gray-700"
+              >
+                נסה שוב
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="w-full py-3 bg-gradient-to-l from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:from-pink-600 hover:to-rose-600 active:from-pink-700 active:to-rose-700 transition-all shadow-sm text-sm"
+            >
+              {interestedText} ❤️
+            </button>
           )}
         </div>
       </div>
