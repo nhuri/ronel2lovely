@@ -24,7 +24,7 @@ export async function sendInterestEmail(
     supabase
       .from("candidates")
       .select(
-        "id, full_name, gender, age, residence, religious_level, marital_status, occupation, contact_person, contact_person_phone, phone_number, email"
+        "id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, image_urls, contact_person, contact_person_phone, phone_number, email"
       )
       .eq("id", candidateId)
       .single(),
@@ -67,6 +67,7 @@ export async function sendInterestEmail(
   const contactPhone =
     (sender.contact_person_phone as string) || (sender.phone_number as string) || "";
   const contactName = (sender.contact_person as string) || senderName;
+  const senderPhoto = (sender.image_urls as string[] | null)?.[0] ?? null;
 
   const emailHtml = `
     <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -89,15 +90,28 @@ export async function sendInterestEmail(
         </p>
 
         <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 16px 0;">
+          ${senderPhoto ? `
+          <div style="text-align: center; margin-bottom: 16px;">
+            <img src="${senderPhoto}" alt="${senderName}" style="width: 160px; height: 200px; object-fit: cover; border-radius: 10px; border: 2px solid #e5e7eb;" />
+          </div>
+          ` : ""}
           <h3 style="color: #374151; margin: 0 0 12px; font-size: 15px;">פרטים על ${senderName}:</h3>
           <table style="width: 100%; font-size: 14px; color: #4b5563;">
-            ${sender.age ? `<tr><td style="padding: 4px 0; font-weight: bold; width: 100px;">גיל:</td><td>${sender.age}</td></tr>` : ""}
+            ${sender.age ? `<tr><td style="padding: 4px 0; font-weight: bold; width: 110px;">גיל:</td><td>${sender.age}</td></tr>` : ""}
             ${sender.residence ? `<tr><td style="padding: 4px 0; font-weight: bold;">עיר:</td><td>${sender.residence}</td></tr>` : ""}
             ${sender.religious_level ? `<tr><td style="padding: 4px 0; font-weight: bold;">רמה דתית:</td><td>${sender.religious_level}</td></tr>` : ""}
             ${sender.marital_status ? `<tr><td style="padding: 4px 0; font-weight: bold;">מצב משפחתי:</td><td>${sender.marital_status}</td></tr>` : ""}
             ${sender.occupation ? `<tr><td style="padding: 4px 0; font-weight: bold;">תעסוקה:</td><td>${sender.occupation}</td></tr>` : ""}
+            ${sender.education ? `<tr><td style="padding: 4px 0; font-weight: bold;">השכלה:</td><td>${sender.education}</td></tr>` : ""}
+            ${sender.height ? `<tr><td style="padding: 4px 0; font-weight: bold;">גובה:</td><td>${sender.height} ס״מ</td></tr>` : ""}
             ${showSenderEmail ? `<tr><td style="padding: 4px 0; font-weight: bold;">מייל:</td><td><a href="mailto:${senderEmail}" style="color: #0284c7;">${senderEmail}</a></td></tr>` : ""}
           </table>
+          ${sender.about_me ? `
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 4px; font-weight: bold; font-size: 13px; color: #374151;">קצת על ${senderName}:</p>
+            <p style="margin: 0; font-size: 13px; color: #4b5563; line-height: 1.6; white-space: pre-line;">${sender.about_me}</p>
+          </div>
+          ` : ""}
         </div>
 
         ${contactPhone ? `
