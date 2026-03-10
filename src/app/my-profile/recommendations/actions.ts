@@ -55,6 +55,7 @@ export async function sendInterestEmail(
   const showSenderEmail = senderEmail && !senderEmail.endsWith("@sms.ronellovely.co.il");
 
   // Gender-aware Hebrew text
+  const senderTitle = senderGender === "זכר" ? "המועמד" : "המועמדת";
   const senderWants = senderGender === "זכר" ? "מעוניין" : "מעוניינת";
   const senderPronounObj = senderGender === "זכר" ? "אותו" : "אותה";
   const senderPossessive = senderGender === "זכר" ? "שלו" : "שלה";
@@ -80,7 +81,7 @@ export async function sendInterestEmail(
         </h2>
 
         <p style="color: #4b5563; font-size: 15px; line-height: 1.7;">
-          המועמד/ת <strong>${senderName}</strong> ${senderWants} לבדוק התאמה לפתיחת הצעה איתך.
+          ${senderTitle} <strong>${senderName}</strong> ${senderWants} לבדוק התאמה לפתיחת הצעה איתך.
         </p>
 
         <p style="color: #4b5563; font-size: 15px; line-height: 1.7;">
@@ -110,7 +111,7 @@ export async function sendInterestEmail(
 
         <p style="color: #9ca3af; font-size: 12px; margin-top: 24px; text-align: center;">
           הודעה זו נשלחה באמצעות מערכת Ronel Lovely<br/>
-          <a href="https://ronel-lovely.vercel.app" style="color: #0ea5e9;">ronel-lovely.vercel.app</a>
+          <a href="https://ronel-lovely.com" style="color: #0ea5e9;">ronel-lovely.com</a>
         </p>
       </div>
     </div>

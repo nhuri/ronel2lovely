@@ -188,7 +188,7 @@ function ProposalCard({
       <div className="flex h-44">
         <div className="relative w-1/2 bg-gray-100">
           {img1 ? (
-            <Image src={img1} alt={c1?.full_name ?? ""} fill className="object-cover object-top" />
+            <Image src={img1} alt={c1?.full_name ?? ""} fill className="object-contain" />
           ) : (
             <NoImage />
           )}
@@ -198,7 +198,7 @@ function ProposalCard({
         </div>
         <div className="relative w-1/2 bg-gray-100 border-r border-white">
           {img2 ? (
-            <Image src={img2} alt={c2?.full_name ?? ""} fill className="object-cover object-top" />
+            <Image src={img2} alt={c2?.full_name ?? ""} fill className="object-contain" />
           ) : (
             <NoImage />
           )}
