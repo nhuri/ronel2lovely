@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import type { ScoredMatch } from "@/lib/matching";
 import { sendInterestEmail } from "./actions";
@@ -171,6 +171,13 @@ function MatchDetailModal({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const confirmRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showConfirm && confirmRef.current) {
+      confirmRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [showConfirm]);
 
   const matchId = c.id as number;
   const recipientGender = c.gender as string;
@@ -263,21 +270,27 @@ function MatchDetailModal({
             <div className="w-full py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-semibold text-sm text-center">
               {sentLabel}
             </div>
+          ) : sending ? (
+            <div className="flex flex-col items-center justify-center py-6 gap-3">
+              <svg className="animate-spin w-10 h-10 text-pink-400" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+              <p className="text-sm text-gray-500">שולח מייל...</p>
+            </div>
           ) : showConfirm ? (
-            <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 space-y-3">
+            <div ref={confirmRef} className="bg-pink-50 border border-pink-200 rounded-xl p-4 space-y-3">
               <p className="text-sm text-gray-700 leading-relaxed">{confirmText}</p>
               <div className="flex gap-2">
                 <button
                   onClick={handleConfirm}
-                  disabled={sending}
-                  className="flex-1 py-2.5 bg-gradient-to-l from-pink-500 to-rose-500 text-white rounded-xl font-semibold text-sm hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 transition-all"
+                  className="flex-1 py-2.5 bg-gradient-to-l from-pink-500 to-rose-500 text-white rounded-xl font-semibold text-sm hover:from-pink-600 hover:to-rose-600 transition-all"
                 >
-                  {sending ? "שולח..." : "אישור ❤️"}
+                  אישור ❤️
                 </button>
                 <button
                   onClick={() => setShowConfirm(false)}
-                  disabled={sending}
-                  className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
                 >
                   ביטול
                 </button>
