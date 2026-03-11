@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { DonationButton } from "./donate/donation-button";
 
 export async function SiteBanner() {
   let candidateCount = 0;
@@ -49,6 +50,9 @@ export async function SiteBanner() {
           role="img"
           aria-label="רונאל"
         />
+
+        {/* Donation button */}
+        <DonationButton />
 
         {/* Text + Stats */}
         <div className="flex-1 min-w-0">
