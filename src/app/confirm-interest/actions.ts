@@ -2,11 +2,19 @@
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
+import { sendTwilioSms } from "@/lib/twilio";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export type ConfirmResult =
-  | { status: "success"; fromName: string; fromPhone: string; fromEmail: string | null }
+  | {
+      status: "success";
+      fromName: string;
+      fromPhone: string;
+      fromEmail: string | null;
+      notificationsSent: number;
+      notificationErrors: string[];
+    }
   | { status: "already_used" }
   | { status: "expired" }
   | { status: "invalid" }
@@ -16,13 +24,13 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
   const admin = createSupabaseAdminClient();
 
   // Fetch token record
-  const { data: tokenData } = await admin
+  const { data: tokenData, error: tokenError } = await admin
     .from("interest_tokens")
     .select("token, proposal_id, from_candidate_id, to_candidate_id, used_at, expires_at")
     .eq("token", token)
     .single();
 
-  if (!tokenData) return { status: "invalid" };
+  if (tokenError || !tokenData) return { status: "invalid" };
   if (tokenData.used_at) return { status: "already_used" };
   if (new Date(tokenData.expires_at) < new Date()) return { status: "expired" };
 
@@ -32,7 +40,7 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
     .update({ used_at: new Date().toISOString() })
     .eq("token", token);
 
-  // Update proposal status to "5" (דייטים מתקדם)
+  // Update proposal status to "5" (דייטים)
   if (tokenData.proposal_id) {
     await admin
       .from("proposals")
@@ -40,7 +48,7 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
       .eq("id", tokenData.proposal_id);
   }
 
-  // Fetch both candidates' full contact details
+  // Fetch both candidates
   const [{ data: fromCand }, { data: toCand }] = await Promise.all([
     admin
       .from("candidates")
@@ -58,33 +66,34 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
     return { status: "error", message: "שגיאה בטעינת פרטי המועמדים" };
   }
 
-  // Build contact detail helpers
-  const contactOf = (c: typeof fromCand) => ({
-    name: (c.full_name as string),
+  const isSmsEmail = (e: string | null) =>
+    !e || e.endsWith("@sms.ronellovely.co.il");
+
+  const infoOf = (c: typeof fromCand) => ({
+    name: c.full_name as string,
+    gender: c.gender as string,
     phone: (c.contact_person_phone as string) || (c.phone_number as string) || "",
-    email: (() => {
-      const e = c.email as string | null;
-      return e && !e.endsWith("@sms.ronellovely.co.il") ? e : null;
-    })(),
+    email: isSmsEmail(c.email as string | null) ? null : (c.email as string),
     contactPerson: (c.contact_person as string) || null,
     photo: (c.image_urls as string[] | null)?.[0] ?? null,
     age: c.age as number | null,
     residence: c.residence as string | null,
   });
 
-  const from = contactOf(fromCand);
-  const to = contactOf(toCand);
+  const from = infoOf(fromCand);
+  const to = infoOf(toCand);
 
-  const contactBlock = (person: typeof from) => `
-    <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 16px; margin: 16px 0;">
-      ${person.photo ? `<div style="text-align:center;margin-bottom:12px;"><img src="${person.photo}" style="width:120px;height:150px;object-fit:cover;border-radius:10px;border:2px solid #e5e7eb;" /></div>` : ""}
-      <h3 style="margin:0 0 10px;font-size:15px;color:#166534;">${person.name}</h3>
+  // ── HTML email helpers ─────────────────────────────────────────────────────
+  const contactBlock = (p: typeof from) => `
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px;margin:16px 0;">
+      ${p.photo ? `<div style="text-align:center;margin-bottom:12px;"><img src="${p.photo}" style="width:120px;height:150px;object-fit:cover;border-radius:10px;border:2px solid #e5e7eb;"/></div>` : ""}
+      <h3 style="margin:0 0 10px;font-size:15px;color:#166534;">${p.name}</h3>
       <table style="width:100%;font-size:14px;color:#374151;">
-        ${person.age ? `<tr><td style="padding:3px 0;font-weight:bold;width:100px;">גיל:</td><td>${person.age}</td></tr>` : ""}
-        ${person.residence ? `<tr><td style="padding:3px 0;font-weight:bold;">עיר:</td><td>${person.residence}</td></tr>` : ""}
-        ${person.phone ? `<tr><td style="padding:3px 0;font-weight:bold;">טלפון:</td><td><a href="tel:${person.phone}" style="color:#0284c7;">${person.phone}</a></td></tr>` : ""}
-        ${person.contactPerson ? `<tr><td style="padding:3px 0;font-weight:bold;">איש קשר:</td><td>${person.contactPerson}</td></tr>` : ""}
-        ${person.email ? `<tr><td style="padding:3px 0;font-weight:bold;">מייל:</td><td><a href="mailto:${person.email}" style="color:#0284c7;">${person.email}</a></td></tr>` : ""}
+        ${p.age ? `<tr><td style="padding:3px 0;font-weight:bold;width:100px;">גיל:</td><td>${p.age}</td></tr>` : ""}
+        ${p.residence ? `<tr><td style="padding:3px 0;font-weight:bold;">עיר:</td><td>${p.residence}</td></tr>` : ""}
+        ${p.phone ? `<tr><td style="padding:3px 0;font-weight:bold;">טלפון:</td><td><a href="tel:${p.phone}" style="color:#0284c7;">${p.phone}</a></td></tr>` : ""}
+        ${p.contactPerson ? `<tr><td style="padding:3px 0;font-weight:bold;">איש קשר:</td><td>${p.contactPerson}</td></tr>` : ""}
+        ${p.email ? `<tr><td style="padding:3px 0;font-weight:bold;">מייל:</td><td><a href="mailto:${p.email}" style="color:#0284c7;">${p.email}</a></td></tr>` : ""}
       </table>
     </div>`;
 
@@ -103,17 +112,20 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
       </div>
     </div>`;
 
-  const toGender = toCand.gender as string;
-  const toTitle = toGender === "נקבה" ? "המועמדת" : "המועמד";
-  const fromGender = fromCand.gender as string;
-  const fromTitle = fromGender === "נקבה" ? "המועמדת" : "המועמד";
+  const toTitle = to.gender === "נקבה" ? "המועמדת" : "המועמד";
+  const fromTitle = from.gender === "נקבה" ? "המועמדת" : "המועמד";
+  const toHeShe = to.gender === "נקבה" ? "היא" : "הוא";
+  const fromPossessive = from.gender === "נקבה" ? "שלה" : "שלו";
 
-  const emailPromises: Promise<unknown>[] = [];
+  // ── Send notifications — email first, SMS fallback ─────────────────────────
+  let notificationsSent = 0;
+  const notificationErrors: string[] = [];
 
-  // Email to the original sender (from)
+  // Notify original sender (from / A)
+  const fromContact = `${from.phone || from.email || ""}`.trim();
   if (from.email) {
-    emailPromises.push(
-      resend.emails.send({
+    try {
+      await resend.emails.send({
         from: "Ronel Lovely <noreply@ronel-lovely.com>",
         replyTo: "ronel2lovely@gmail.com",
         to: from.email,
@@ -121,19 +133,49 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
         html: emailWrapper(`
           <p style="color:#1f2937;font-size:16px;font-weight:bold;">בשורות טובות!</p>
           <p style="color:#4b5563;font-size:15px;line-height:1.7;">
-            ${toTitle} <strong>${to.name}</strong> אישר/ה שגם ${toGender === "נקבה" ? "היא" : "הוא"} מעוניינ/ת. הנה פרטי ההתקשרות:
+            ${toTitle} <strong>${to.name}</strong> אישר/ה שגם ${toHeShe} מעוניינ/ת. הנה פרטי ההתקשרות:
           </p>
           ${contactBlock(to)}
           <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
         `),
-      })
-    );
+      });
+      notificationsSent++;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("Email to sender failed:", msg);
+      notificationErrors.push(`מייל ל${from.name}: ${msg}`);
+      // SMS fallback
+      if (from.phone) {
+        try {
+          await sendTwilioSms(from.phone,
+            `🎉 Ronel Lovely: ${to.name} גם מעוניינ/ת! צרו קשר ב: ${to.phone || to.email || "ראה/י פרטים באתר"}`
+          );
+          notificationsSent++;
+        } catch (smsErr) {
+          const smsMsg = smsErr instanceof Error ? smsErr.message : String(smsErr);
+          console.error("SMS to sender failed:", smsMsg);
+          notificationErrors.push(`SMS ל${from.name}: ${smsMsg}`);
+        }
+      }
+    }
+  } else if (from.phone) {
+    // No email — send SMS directly
+    try {
+      await sendTwilioSms(from.phone,
+        `🎉 Ronel Lovely: ${to.name} גם מעוניינ/ת בהצעה! ניתן ליצור קשר ב: ${to.phone || to.email || "ראה/י פרטים באתר"}`
+      );
+      notificationsSent++;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("SMS to sender failed:", msg);
+      notificationErrors.push(`SMS ל${from.name}: ${msg}`);
+    }
   }
 
-  // Email to the confirmer (to)
+  // Notify confirmer (to / B)
   if (to.email) {
-    emailPromises.push(
-      resend.emails.send({
+    try {
+      await resend.emails.send({
         from: "Ronel Lovely <noreply@ronel-lovely.com>",
         replyTo: "ronel2lovely@gmail.com",
         to: to.email,
@@ -141,26 +183,51 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
         html: emailWrapper(`
           <p style="color:#1f2937;font-size:16px;font-weight:bold;">אישרת עניין בהצעה!</p>
           <p style="color:#4b5563;font-size:15px;line-height:1.7;">
-            שלחנו גם ל${fromTitle} <strong>${from.name}</strong> את פרטיך. הנה פרטי ההתקשרות ${fromGender === "נקבה" ? "שלה" : "שלו"}:
+            שלחנו גם ל${fromTitle} <strong>${from.name}</strong> את פרטיך. הנה פרטי ההתקשרות ${fromPossessive}:
           </p>
           ${contactBlock(from)}
           <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
         `),
-      })
-    );
-  }
-
-  const results = await Promise.allSettled(emailPromises);
-  results.forEach((r, i) => {
-    if (r.status === "rejected") {
-      console.error(`Mutual interest email [${i}] failed:`, r.reason);
+      });
+      notificationsSent++;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("Email to confirmer failed:", msg);
+      notificationErrors.push(`מייל ל${to.name}: ${msg}`);
+      // SMS fallback
+      if (to.phone) {
+        try {
+          await sendTwilioSms(to.phone,
+            `✓ Ronel Lovely: אישרת עניין! הנה פרטי ${from.name}: ${fromContact}`
+          );
+          notificationsSent++;
+        } catch (smsErr) {
+          const smsMsg = smsErr instanceof Error ? smsErr.message : String(smsErr);
+          console.error("SMS to confirmer failed:", smsMsg);
+          notificationErrors.push(`SMS ל${to.name}: ${smsMsg}`);
+        }
+      }
     }
-  });
+  } else if (to.phone) {
+    // No email — send SMS directly
+    try {
+      await sendTwilioSms(to.phone,
+        `✓ Ronel Lovely: אישרת עניין בהצעה! הנה פרטי ${from.name}: ${fromContact}`
+      );
+      notificationsSent++;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("SMS to confirmer failed:", msg);
+      notificationErrors.push(`SMS ל${to.name}: ${msg}`);
+    }
+  }
 
   return {
     status: "success",
     fromName: from.name,
     fromPhone: from.phone,
     fromEmail: from.email,
+    notificationsSent,
+    notificationErrors,
   };
 }

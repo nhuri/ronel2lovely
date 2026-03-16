@@ -9,9 +9,16 @@ type Props = {
   fromGender: string;
 };
 
+type SuccessData = {
+  fromPhone: string;
+  fromEmail: string | null;
+  notificationsSent: number;
+  notificationErrors: string[];
+};
+
 export function ConfirmButton({ token, fromName, fromGender }: Props) {
   const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [result, setResult] = useState<{ fromPhone: string; fromEmail: string | null } | null>(null);
+  const [successData, setSuccessData] = useState<SuccessData | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleConfirm = async () => {
@@ -19,10 +26,15 @@ export function ConfirmButton({ token, fromName, fromGender }: Props) {
     const res = await confirmMutualInterest(token);
     if (res.status === "success") {
       setState("success");
-      setResult({ fromPhone: res.fromPhone, fromEmail: res.fromEmail });
+      setSuccessData({
+        fromPhone: res.fromPhone,
+        fromEmail: res.fromEmail,
+        notificationsSent: res.notificationsSent,
+        notificationErrors: res.notificationErrors,
+      });
     } else if (res.status === "already_used") {
       setState("error");
-      setErrorMsg("קישור זה כבר שומש. בדוק את המייל שנשלח לשניכם.");
+      setErrorMsg("קישור זה כבר שומש. בדוק/י את ההודעה שנשלחה לשניכם.");
     } else if (res.status === "expired") {
       setState("error");
       setErrorMsg("קישור זה פג תוקף. צור/י קשר עם צוות האתר.");
@@ -32,7 +44,8 @@ export function ConfirmButton({ token, fromName, fromGender }: Props) {
     }
   };
 
-  if (state === "success") {
+  if (state === "success" && successData) {
+    const { fromPhone, fromEmail, notificationsSent, notificationErrors } = successData;
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mx-auto">
@@ -40,37 +53,51 @@ export function ConfirmButton({ token, fromName, fromGender }: Props) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-lg font-bold text-gray-800 text-center">
-          🎉 מזל טוב! ההתאמה נרשמה!
-        </h3>
+
+        <h3 className="text-lg font-bold text-gray-800 text-center">🎉 מזל טוב! ההתאמה נרשמה!</h3>
+
         <p className="text-sm text-gray-600 text-center">
-          שלחנו לשניכם מייל עם פרטי ההתקשרות. סטטוס ההצעה עודכן ל"דייטים".
+          {notificationsSent > 0
+            ? `נשלחו ${notificationsSent} הודעות עם פרטי ההתקשרות. סטטוס ההצעה עודכן ל"דייטים".`
+            : `סטטוס ההצעה עודכן ל"דייטים". פרטי ההתקשרות מופיעים מטה.`}
         </p>
-        {(result?.fromPhone || result?.fromEmail) && (
+
+        {/* Contact details always shown on page */}
+        {(fromPhone || fromEmail) && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
             <p className="text-sm font-bold text-emerald-800">פרטי קשר של {fromName}:</p>
-            {result.fromPhone && (
+            {fromPhone && (
               <a
-                href={`tel:${result.fromPhone}`}
+                href={`tel:${fromPhone}`}
                 className="flex items-center gap-2 text-sm text-sky-600 hover:text-sky-700"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-                {result.fromPhone}
+                {fromPhone}
               </a>
             )}
-            {result.fromEmail && (
+            {fromEmail && (
               <a
-                href={`mailto:${result.fromEmail}`}
+                href={`mailto:${fromEmail}`}
                 className="flex items-center gap-2 text-sm text-sky-600 hover:text-sky-700"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                {result.fromEmail}
+                {fromEmail}
               </a>
             )}
+          </div>
+        )}
+
+        {/* Show notification errors if any */}
+        {notificationErrors.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-1">
+            <p className="text-xs font-medium text-amber-700">שגיאות בשליחת הודעות:</p>
+            {notificationErrors.map((err, i) => (
+              <p key={i} className="text-xs text-amber-600">{err}</p>
+            ))}
           </div>
         )}
       </div>
