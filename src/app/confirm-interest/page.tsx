@@ -48,7 +48,7 @@ export default async function ConfirmInterestPage({
   // Fetch from_candidate details to display
   const { data: fromCand } = await admin
     .from("candidates")
-    .select("id, full_name, gender, age, residence, religious_level, marital_status, image_urls")
+    .select("id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, image_urls")
     .eq("id", tokenData.from_candidate_id)
     .single();
 
@@ -78,36 +78,60 @@ export default async function ConfirmInterestPage({
               <img
                 src={fromPhoto}
                 alt={fromName}
-                className="w-32 h-40 object-cover rounded-xl border border-gray-200 shadow-sm"
+                className="w-36 h-48 object-cover rounded-xl border border-gray-200 shadow-sm"
               />
             </div>
           )}
           <div className="p-4 space-y-1.5 text-sm text-gray-600">
             {fromCand.age && (
               <div className="flex gap-2">
-                <span className="font-medium text-gray-700 w-24">גיל:</span>
+                <span className="font-medium text-gray-700 w-28 flex-shrink-0">גיל:</span>
                 <span>{fromCand.age as number}</span>
               </div>
             )}
             {fromCand.residence && (
               <div className="flex gap-2">
-                <span className="font-medium text-gray-700 w-24">עיר:</span>
+                <span className="font-medium text-gray-700 w-28 flex-shrink-0">עיר:</span>
                 <span>{fromCand.residence as string}</span>
               </div>
             )}
             {fromCand.religious_level && (
               <div className="flex gap-2">
-                <span className="font-medium text-gray-700 w-24">רמה דתית:</span>
+                <span className="font-medium text-gray-700 w-28 flex-shrink-0">רמה דתית:</span>
                 <span>{fromCand.religious_level as string}</span>
               </div>
             )}
             {fromCand.marital_status && (
               <div className="flex gap-2">
-                <span className="font-medium text-gray-700 w-24">מצב משפחתי:</span>
+                <span className="font-medium text-gray-700 w-28 flex-shrink-0">מצב משפחתי:</span>
                 <span>{fromCand.marital_status as string}</span>
               </div>
             )}
+            {fromCand.occupation && (
+              <div className="flex gap-2">
+                <span className="font-medium text-gray-700 w-28 flex-shrink-0">תעסוקה:</span>
+                <span>{fromCand.occupation as string}</span>
+              </div>
+            )}
+            {fromCand.education && (
+              <div className="flex gap-2">
+                <span className="font-medium text-gray-700 w-28 flex-shrink-0">השכלה:</span>
+                <span>{fromCand.education as string}</span>
+              </div>
+            )}
+            {fromCand.height && (
+              <div className="flex gap-2">
+                <span className="font-medium text-gray-700 w-28 flex-shrink-0">גובה:</span>
+                <span>{fromCand.height as number} ס״מ</span>
+              </div>
+            )}
           </div>
+          {fromCand.about_me && (
+            <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+              <p className="text-xs font-medium text-gray-700 mb-1">קצת עליי:</p>
+              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{fromCand.about_me as string}</p>
+            </div>
+          )}
         </div>
 
         {/* Confirm button */}

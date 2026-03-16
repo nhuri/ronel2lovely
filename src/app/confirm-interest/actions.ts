@@ -103,45 +103,59 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
       </div>
     </div>`;
 
+  const toGender = toCand.gender as string;
+  const toTitle = toGender === "נקבה" ? "המועמדת" : "המועמד";
+  const fromGender = fromCand.gender as string;
+  const fromTitle = fromGender === "נקבה" ? "המועמדת" : "המועמד";
+
+  const emailPromises: Promise<unknown>[] = [];
+
   // Email to the original sender (from)
   if (from.email) {
-    const toGender = toCand.gender as string;
-    const toTitle = toGender === "נקבה" ? "המועמדת" : "המועמד";
-    await resend.emails.send({
-      from: "Ronel Lovely <noreply@ronel-lovely.com>",
-      replyTo: "ronel2lovely@gmail.com",
-      to: from.email,
-      subject: `🎉 ${to.name} גם מעוניינ/ת! הנה פרטי ההתקשרות — Ronel Lovely`,
-      html: emailWrapper(`
-        <p style="color:#1f2937;font-size:16px;font-weight:bold;">בשורות טובות!</p>
-        <p style="color:#4b5563;font-size:15px;line-height:1.7;">
-          ${toTitle} <strong>${to.name}</strong> לחץ/ה על הכפתור ואישר/ה שגם ${toGender === "נקבה" ? "היא" : "הוא"} מעוניינ/ת. הנה פרטי ההתקשרות:
-        </p>
-        ${contactBlock(to)}
-        <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
-      `),
-    }).catch(e => console.error("Mutual email to sender failed:", e));
+    emailPromises.push(
+      resend.emails.send({
+        from: "Ronel Lovely <noreply@ronel-lovely.com>",
+        replyTo: "ronel2lovely@gmail.com",
+        to: from.email,
+        subject: `🎉 ${to.name} גם מעוניינ/ת! הנה פרטי ההתקשרות — Ronel Lovely`,
+        html: emailWrapper(`
+          <p style="color:#1f2937;font-size:16px;font-weight:bold;">בשורות טובות!</p>
+          <p style="color:#4b5563;font-size:15px;line-height:1.7;">
+            ${toTitle} <strong>${to.name}</strong> אישר/ה שגם ${toGender === "נקבה" ? "היא" : "הוא"} מעוניינ/ת. הנה פרטי ההתקשרות:
+          </p>
+          ${contactBlock(to)}
+          <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
+        `),
+      })
+    );
   }
 
   // Email to the confirmer (to)
   if (to.email) {
-    const fromGender = fromCand.gender as string;
-    const fromTitle = fromGender === "נקבה" ? "המועמדת" : "המועמד";
-    await resend.emails.send({
-      from: "Ronel Lovely <noreply@ronel-lovely.com>",
-      replyTo: "ronel2lovely@gmail.com",
-      to: to.email,
-      subject: `✓ אישרת עניין — הנה פרטי ${from.name} — Ronel Lovely`,
-      html: emailWrapper(`
-        <p style="color:#1f2937;font-size:16px;font-weight:bold;">אישרת עניין בהצעה!</p>
-        <p style="color:#4b5563;font-size:15px;line-height:1.7;">
-          שלחנו גם ל${fromTitle} <strong>${from.name}</strong> את פרטיך. הנה פרטי ההתקשרות ${fromGender === "נקבה" ? "שלה" : "שלו"}:
-        </p>
-        ${contactBlock(from)}
-        <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
-      `),
-    }).catch(e => console.error("Mutual email to confirmer failed:", e));
+    emailPromises.push(
+      resend.emails.send({
+        from: "Ronel Lovely <noreply@ronel-lovely.com>",
+        replyTo: "ronel2lovely@gmail.com",
+        to: to.email,
+        subject: `✓ אישרת עניין — הנה פרטי ${from.name} — Ronel Lovely`,
+        html: emailWrapper(`
+          <p style="color:#1f2937;font-size:16px;font-weight:bold;">אישרת עניין בהצעה!</p>
+          <p style="color:#4b5563;font-size:15px;line-height:1.7;">
+            שלחנו גם ל${fromTitle} <strong>${from.name}</strong> את פרטיך. הנה פרטי ההתקשרות ${fromGender === "נקבה" ? "שלה" : "שלו"}:
+          </p>
+          ${contactBlock(from)}
+          <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
+        `),
+      })
+    );
   }
+
+  const results = await Promise.allSettled(emailPromises);
+  results.forEach((r, i) => {
+    if (r.status === "rejected") {
+      console.error(`Mutual interest email [${i}] failed:`, r.reason);
+    }
+  });
 
   return {
     status: "success",

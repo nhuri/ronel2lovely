@@ -6,11 +6,12 @@ export async function SiteBanner() {
   let proposalCount = 0;
   let marriedCount = 0;
   let engagedCount = 0;
+  let datingCount = 0;
 
   try {
     const supabase = await createSupabaseServerClient();
 
-    const [candidatesRes, proposalsRes, marriedRes, engagedRes] =
+    const [candidatesRes, proposalsRes, marriedRes, engagedRes, datingRes] =
       await Promise.all([
         supabase
           .from("candidates")
@@ -26,12 +27,17 @@ export async function SiteBanner() {
           .from("candidates")
           .select("id", { count: "exact", head: true })
           .eq("availability_status", "התארסו"),
+        supabase
+          .from("proposals")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "5"),
       ]);
 
     candidateCount = candidatesRes.count ?? 0;
     proposalCount = proposalsRes.count ?? 0;
     marriedCount = marriedRes.count ?? 0;
     engagedCount = engagedRes.count ?? 0;
+    datingCount = datingRes.count ?? 0;
   } catch {
     // Fail silently — banner still renders with zeros
   }
@@ -77,6 +83,13 @@ export async function SiteBanner() {
                 תהיו הראשונים לפתוח הצעה!
               </span>
             )}
+
+            {datingCount > 0 ? (
+              <span>
+                <strong className="text-white text-xs">{datingCount}</strong>{" "}
+                דייטים יוצאים
+              </span>
+            ) : null}
 
             {engagedCount > 0 ? (
               <span>

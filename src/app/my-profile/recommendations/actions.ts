@@ -74,7 +74,6 @@ export async function sendInterestEmail(
   try {
     const adminClient = createSupabaseAdminClient();
 
-    // Get or create proposal
     let proposalId: number | null = null;
     const { data: existing } = await adminClient
       .from("proposals")
@@ -135,16 +134,6 @@ export async function sendInterestEmail(
           ${recipientCan} לכתוב ישירות למייל ${senderPossessive} ${recipientThoughts} על ההצעה (מתאים או לא מתאים?).
         </p>
 
-        ${confirmUrl ? `
-        <div style="text-align: center; margin: 24px 0;">
-          <a href="${confirmUrl}"
-             style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #059669, #10b981); color: white; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: bold;">
-            ✓ ${recipientAlsoInterested}
-          </a>
-          <p style="font-size: 11px; color: #9ca3af; margin-top: 8px;">לחיצה על הכפתור תשלח לשניכם את פרטי ההתקשרות ותתחיל הצעה רשמית</p>
-        </div>
-        ` : ""}
-
         <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 16px 0;">
           ${senderPhoto ? `
           <div style="text-align: center; margin-bottom: 16px;">
@@ -176,6 +165,16 @@ export async function sendInterestEmail(
             <strong>לבירורים ופרטים נוספים:</strong><br/>
             ${contactName} — <a href="tel:${contactPhone}" style="color: #0284c7;">${contactPhone}</a>
           </p>
+        </div>
+        ` : ""}
+
+        ${confirmUrl ? `
+        <div style="text-align: center; margin: 24px 0 16px;">
+          <a href="${confirmUrl}"
+             style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #059669, #10b981); color: white; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: bold;">
+            ✓ ${recipientAlsoInterested}
+          </a>
+          <p style="font-size: 11px; color: #9ca3af; margin-top: 8px;">לחיצה על הכפתור תשלח לשניכם פרטי התקשרות ותפתח הצעה רשמית. הקישור תקף ל-14 יום.</p>
         </div>
         ` : ""}
 
