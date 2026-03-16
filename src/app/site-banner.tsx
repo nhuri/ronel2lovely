@@ -51,9 +51,6 @@ export async function SiteBanner() {
           aria-label="רונאל"
         />
 
-        {/* Donation button */}
-        <DonationButton />
-
         {/* Text + Stats */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold tracking-wide leading-tight">
@@ -100,6 +97,9 @@ export async function SiteBanner() {
             )}
           </div>
         </div>
+
+        {/* Donation button — right edge */}
+        <DonationButton />
       </div>
     </div>
   );

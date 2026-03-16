@@ -2,9 +2,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AdminTabs } from "./admin-tabs";
 import { logout } from "@/app/login/actions";
 import Link from "next/link";
+import { getMaxRecommendations } from "./settings-actions";
 
 export default async function AdminDashboard() {
   const supabase = await createSupabaseServerClient();
+
+  const maxRecommendations = await getMaxRecommendations();
 
   const { data: allCandidates } = await supabase
     .from("candidates")
@@ -96,6 +99,7 @@ export default async function AdminDashboard() {
           allCandidates={allCandidates ?? []}
           genders={genders}
           religiousLevels={religiousLevels}
+          maxRecommendations={maxRecommendations}
         />
       </main>
     </div>

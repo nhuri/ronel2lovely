@@ -5,6 +5,7 @@ import { RecommendationsClient } from "./recommendations-client";
 import { resolveCandidate } from "@/lib/candidate-resolver";
 import { CandidateSelectionPage } from "../candidate-selector";
 import { scoreAndRankMatches } from "@/lib/matching";
+import { getMaxRecommendations } from "@/app/admin/settings-actions";
 
 export default async function RecommendationsPage({
   searchParams,
@@ -83,7 +84,9 @@ export default async function RecommendationsPage({
     (m) => !proposalPartnerIds.has(Number(m.id))
   );
 
-  const topMatches = scoreAndRankMatches(candidate, eligibleMatches, 5);
+  const maxRec = await getMaxRecommendations();
+  const limit = maxRec === "all" ? eligibleMatches.length : maxRec;
+  const topMatches = scoreAndRankMatches(candidate, eligibleMatches, limit);
 
   return (
     <div className="min-h-screen bg-gray-100">

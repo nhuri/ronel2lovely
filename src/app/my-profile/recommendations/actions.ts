@@ -57,9 +57,8 @@ export async function sendInterestEmail(
   // Gender-aware Hebrew text
   const senderTitle = senderGender === "זכר" ? "המועמד" : "המועמדת";
   const senderWants = senderGender === "זכר" ? "מעוניין" : "מעוניינת";
-  const senderPronounObj = senderGender === "זכר" ? "אותו" : "אותה";
   const senderPossessive = senderGender === "זכר" ? "שלו" : "שלה";
-  const recipientCanUpdate = recipientGender === "זכר" ? "תוכל לעדכן" : "תוכלי לעדכן";
+  const recipientCan = recipientGender === "זכר" ? "תוכל" : "תוכלי";
   const recipientThoughts = recipientGender === "זכר" ? "את מחשבותיך" : "את מחשבותייך";
   const dear = recipientGender === "זכר" ? "היקר" : "היקרה";
   const heWouldLike = senderGender === "זכר" ? "ישמח" : "תשמח";
@@ -86,7 +85,7 @@ export async function sendInterestEmail(
         </p>
 
         <p style="color: #4b5563; font-size: 15px; line-height: 1.7;">
-          ${recipientCanUpdate} ${senderPronounObj} ישירות לכתובת המייל ${senderPossessive} ${recipientThoughts} על ההצעה.
+          ${recipientCan} לכתוב ישירות למייל ${senderPossessive} ${recipientThoughts} על ההצעה (מתאים או לא מתאים?).
         </p>
 
         <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 16px 0;">

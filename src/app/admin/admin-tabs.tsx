@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CandidatesGrid } from "./candidates-grid";
 import { SendMessageTab } from "./send-message-tab";
+import { SettingsTab } from "./settings-tab";
 
 type MessageCandidate = {
   id: number;
@@ -20,10 +21,11 @@ type AdminTabsProps = {
   allCandidates: any[];
   genders: string[];
   religiousLevels: string[];
+  maxRecommendations: number | "all";
 };
 
-export function AdminTabs({ candidates, allCandidates, genders, religiousLevels }: AdminTabsProps) {
-  const [activeTab, setActiveTab] = useState<"candidates" | "message">("candidates");
+export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations }: AdminTabsProps) {
+  const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings">("candidates");
 
   return (
     <div dir="rtl">
@@ -52,6 +54,16 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels 
         >
           שליחת הודעה
         </button>
+        <button
+          onClick={() => setActiveTab("settings")}
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "settings"
+              ? "bg-sky-500 text-white shadow-sm"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          הגדרות
+        </button>
       </div>
 
       {/* Tab content */}
@@ -64,6 +76,9 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels 
       )}
       {activeTab === "message" && (
         <SendMessageTab candidates={allCandidates as MessageCandidate[]} />
+      )}
+      {activeTab === "settings" && (
+        <SettingsTab initialValue={maxRecommendations} />
       )}
     </div>
   );
