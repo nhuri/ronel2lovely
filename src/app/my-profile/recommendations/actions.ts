@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 
@@ -61,12 +62,58 @@ export async function sendInterestEmail(
   const recipientCan = recipientGender === "זכר" ? "תוכל" : "תוכלי";
   const recipientThoughts = recipientGender === "זכר" ? "את מחשבותיך" : "את מחשבותייך";
   const dear = recipientGender === "זכר" ? "היקר" : "היקרה";
-  const heWouldLike = senderGender === "זכר" ? "ישמח" : "תשמח";
+  const recipientAlsoInterested = recipientGender === "זכר" ? "כן, גם אני מעוניין!" : "כן, גם אני מעוניינת!";
 
   const contactPhone =
     (sender.contact_person_phone as string) || (sender.phone_number as string) || "";
   const contactName = (sender.contact_person as string) || senderName;
   const senderPhoto = (sender.image_urls as string[] | null)?.[0] ?? null;
+
+  // ── Create proposal + interest token BEFORE building email ──────────────────
+  let confirmUrl: string | null = null;
+  try {
+    const adminClient = createSupabaseAdminClient();
+
+    // Get or create proposal
+    let proposalId: number | null = null;
+    const { data: existing } = await adminClient
+      .from("proposals")
+      .select("id")
+      .or(
+        `and(candidate_id_1.eq.${candidateId},candidate_id_2.eq.${matchCandidateId}),and(candidate_id_1.eq.${matchCandidateId},candidate_id_2.eq.${candidateId})`
+      )
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      proposalId = existing.id;
+    } else {
+      const { data: newProposal } = await adminClient
+        .from("proposals")
+        .insert({
+          candidate_id_1: candidateId,
+          candidate_id_2: matchCandidateId,
+          status: "1",
+        })
+        .select("id")
+        .single();
+      proposalId = newProposal?.id ?? null;
+    }
+
+    if (proposalId) {
+      const token = randomUUID();
+      await adminClient.from("interest_tokens").insert({
+        token,
+        proposal_id: proposalId,
+        from_candidate_id: candidateId,
+        to_candidate_id: matchCandidateId,
+      });
+      confirmUrl = `https://ronel-lovely.com/confirm-interest?token=${token}`;
+    }
+  } catch (e) {
+    console.error("Proposal/token creation error:", e);
+    // Non-critical — email will still be sent without the confirm button
+  }
 
   const emailHtml = `
     <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -87,6 +134,16 @@ export async function sendInterestEmail(
         <p style="color: #4b5563; font-size: 15px; line-height: 1.7;">
           ${recipientCan} לכתוב ישירות למייל ${senderPossessive} ${recipientThoughts} על ההצעה (מתאים או לא מתאים?).
         </p>
+
+        ${confirmUrl ? `
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${confirmUrl}"
+             style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #059669, #10b981); color: white; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: bold;">
+            ✓ ${recipientAlsoInterested}
+          </a>
+          <p style="font-size: 11px; color: #9ca3af; margin-top: 8px;">לחיצה על הכפתור תשלח לשניכם את פרטי ההתקשרות ותתחיל הצעה רשמית</p>
+        </div>
+        ` : ""}
 
         <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 16px 0;">
           ${senderPhoto ? `
@@ -138,29 +195,6 @@ export async function sendInterestEmail(
       subject: `${senderName} ${senderWants} לבדוק התאמה איתך — Ronel Lovely`,
       html: emailHtml,
     });
-
-    // Create a proposal between the two candidates (non-critical — email already sent)
-    try {
-      const adminClient = createSupabaseAdminClient();
-      const { data: existing } = await adminClient
-        .from("proposals")
-        .select("id")
-        .or(
-          `and(candidate_id_1.eq.${candidateId},candidate_id_2.eq.${matchCandidateId}),and(candidate_id_1.eq.${matchCandidateId},candidate_id_2.eq.${candidateId})`
-        )
-        .limit(1)
-        .maybeSingle();
-
-      if (!existing) {
-        await adminClient.from("proposals").insert({
-          candidate_id_1: candidateId,
-          candidate_id_2: matchCandidateId,
-          status: "1",
-        });
-      }
-    } catch {
-      // Proposal creation failure is non-critical
-    }
 
     return { success: true, message: "המייל נשלח בהצלחה!" };
   } catch (err) {
