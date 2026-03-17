@@ -13,6 +13,12 @@ export type OtpResult = {
 
 const ADMIN_EMAIL = "ronel2lovely@gmail.com";
 
+/** Only allow redirecting to our own /my-profile paths (prevents open redirect) */
+function safeNext(next?: string | null, fallback = "/my-profile"): string {
+  if (next && next.startsWith("/my-profile")) return next;
+  return fallback;
+}
+
 /** Step 1 – Send an OTP code to the user's email (with pre-verification) */
 export async function sendOtp(email: string): Promise<OtpResult> {
   const supabase = await createSupabaseServerClient();
@@ -62,7 +68,8 @@ export async function sendOtp(email: string): Promise<OtpResult> {
 /** Step 2 – Verify the OTP code the user received via email */
 export async function verifyOtp(
   email: string,
-  token: string
+  token: string,
+  next?: string
 ): Promise<OtpResult> {
   const supabase = await createSupabaseServerClient();
 
@@ -109,7 +116,7 @@ export async function verifyOtp(
         .is("manager_id", null);
     }
 
-    redirect(role === "candidate" ? "/my-profile" : "/admin");
+    redirect(role === "candidate" ? safeNext(next) : "/admin");
   }
 
   // Backfill manager_id on every login (for candidates migrated after initial login)
@@ -131,7 +138,7 @@ export async function verifyOtp(
     }
   }
 
-  redirect(currentRole === "candidate" ? "/my-profile" : "/admin");
+  redirect(currentRole === "candidate" ? safeNext(next) : "/admin");
 }
 
 /** Send SMS OTP via Twilio to a phone number (only for candidates without email) */
@@ -182,7 +189,8 @@ export async function sendSmsOtp(phone: string): Promise<OtpResult> {
 /** Verify SMS OTP (Twilio-based) and log the user in */
 export async function verifySmsOtp(
   phone: string,
-  token: string
+  token: string,
+  next?: string
 ): Promise<OtpResult> {
   const supabase = await createSupabaseServerClient();
 
@@ -289,7 +297,7 @@ export async function verifySmsOtp(
       .is("manager_id", null);
   }
 
-  redirect("/my-profile");
+  redirect(safeNext(next));
 }
 
 /** Send OTP for manager/matchmaker registration (no candidate record needed) */

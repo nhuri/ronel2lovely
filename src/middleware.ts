@@ -43,7 +43,9 @@ export async function middleware(request: NextRequest) {
   // ── Protect /my-profile route ──
   if (pathname.startsWith("/my-profile")) {
     if (!user) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
+      return NextResponse.redirect(loginUrl);
     }
     // Only candidates can access their profile page
     if (!isCandidate) {

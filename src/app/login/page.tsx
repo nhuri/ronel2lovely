@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { sendOtp, verifyOtp, sendSmsOtp, verifySmsOtp, sendManagerOtp, verifyManagerOtp } from "./actions";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,7 +9,10 @@ import Link from "next/link";
 type Step = "email" | "otp";
 type SmsStep = "phone" | "code";
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? undefined;
+
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
@@ -52,7 +56,7 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    const result = await verifyOtp(email, token);
+    const result = await verifyOtp(email, token, next);
 
     if (result?.error) {
       setError(result.error);
@@ -82,7 +86,7 @@ export default function LoginPage() {
     setSmsError(null);
     setSmsLoading(true);
 
-    const result = await verifySmsOtp(smsPhone, smsToken);
+    const result = await verifySmsOtp(smsPhone, smsToken, next);
 
     if (result?.error) {
       setSmsError(result.error);
@@ -562,5 +566,13 @@ export default function LoginPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }
