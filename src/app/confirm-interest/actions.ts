@@ -1,10 +1,7 @@
 "use server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
-import { Resend } from "resend";
-import { sendTwilioSms } from "@/lib/twilio";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmailWithLog } from "@/lib/email";
 
 export type ConfirmResult =
   | {
@@ -117,109 +114,50 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
   const toHeShe = to.gender === "נקבה" ? "היא" : "הוא";
   const fromPossessive = from.gender === "נקבה" ? "שלה" : "שלו";
 
-  // ── Send notifications — email first, SMS fallback ─────────────────────────
+  // ── Send email notifications ───────────────────────────────────────────────
   let notificationsSent = 0;
   const notificationErrors: string[] = [];
 
   // Notify original sender (from / A)
-  const fromContact = `${from.phone || from.email || ""}`.trim();
   if (from.email) {
-    try {
-      await resend.emails.send({
-        from: "Ronel Lovely <noreply@ronel-lovely.com>",
-        replyTo: "ronel2lovely@gmail.com",
-        to: from.email,
-        subject: `🎉 ${to.name} גם מעוניינ/ת! הנה פרטי ההתקשרות — Ronel Lovely`,
-        html: emailWrapper(`
-          <p style="color:#1f2937;font-size:16px;font-weight:bold;">בשורות טובות!</p>
-          <p style="color:#4b5563;font-size:15px;line-height:1.7;">
-            ${toTitle} <strong>${to.name}</strong> אישר/ה שגם ${toHeShe} מעוניינ/ת. הנה פרטי ההתקשרות:
-          </p>
-          ${contactBlock(to)}
-          <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
-        `),
-      });
-      notificationsSent++;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error("Email to sender failed:", msg);
-      notificationErrors.push(`מייל ל${from.name}: ${msg}`);
-      // SMS fallback
-      if (from.phone) {
-        try {
-          await sendTwilioSms(from.phone,
-            `🎉 Ronel Lovely: ${to.name} גם מעוניינ/ת! צרו קשר ב: ${to.phone || to.email || "ראה/י פרטים באתר"}`
-          );
-          notificationsSent++;
-        } catch (smsErr) {
-          const smsMsg = smsErr instanceof Error ? smsErr.message : String(smsErr);
-          console.error("SMS to sender failed:", smsMsg);
-          notificationErrors.push(`SMS ל${from.name}: ${smsMsg}`);
-        }
-      }
-    }
-  } else if (from.phone) {
-    // No email — send SMS directly
-    try {
-      await sendTwilioSms(from.phone,
-        `🎉 Ronel Lovely: ${to.name} גם מעוניינ/ת בהצעה! ניתן ליצור קשר ב: ${to.phone || to.email || "ראה/י פרטים באתר"}`
-      );
-      notificationsSent++;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error("SMS to sender failed:", msg);
-      notificationErrors.push(`SMS ל${from.name}: ${msg}`);
-    }
+    const result = await sendEmailWithLog({
+      to: from.email,
+      subject: `🎉 ${to.name} גם מעוניינ/ת! הנה פרטי ההתקשרות — Ronel Lovely`,
+      html: emailWrapper(`
+        <p style="color:#1f2937;font-size:16px;font-weight:bold;">בשורות טובות!</p>
+        <p style="color:#4b5563;font-size:15px;line-height:1.7;">
+          ${toTitle} <strong>${to.name}</strong> אישר/ה שגם ${toHeShe} מעוניינ/ת. הנה פרטי ההתקשרות:
+        </p>
+        ${contactBlock(to)}
+        <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
+      `),
+      context: "mutual_confirmation_from",
+      fromCandidateId: tokenData.from_candidate_id as number,
+      toCandidateId: tokenData.to_candidate_id as number,
+    });
+    if (result.success) notificationsSent++;
+    else notificationErrors.push(`מייל ל${from.name}: ${result.error}`);
   }
 
   // Notify confirmer (to / B)
   if (to.email) {
-    try {
-      await resend.emails.send({
-        from: "Ronel Lovely <noreply@ronel-lovely.com>",
-        replyTo: "ronel2lovely@gmail.com",
-        to: to.email,
-        subject: `✓ אישרת עניין — הנה פרטי ${from.name} — Ronel Lovely`,
-        html: emailWrapper(`
-          <p style="color:#1f2937;font-size:16px;font-weight:bold;">אישרת עניין בהצעה!</p>
-          <p style="color:#4b5563;font-size:15px;line-height:1.7;">
-            שלחנו גם ל${fromTitle} <strong>${from.name}</strong> את פרטיך. הנה פרטי ההתקשרות ${fromPossessive}:
-          </p>
-          ${contactBlock(from)}
-          <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
-        `),
-      });
-      notificationsSent++;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error("Email to confirmer failed:", msg);
-      notificationErrors.push(`מייל ל${to.name}: ${msg}`);
-      // SMS fallback
-      if (to.phone) {
-        try {
-          await sendTwilioSms(to.phone,
-            `✓ Ronel Lovely: אישרת עניין! הנה פרטי ${from.name}: ${fromContact}`
-          );
-          notificationsSent++;
-        } catch (smsErr) {
-          const smsMsg = smsErr instanceof Error ? smsErr.message : String(smsErr);
-          console.error("SMS to confirmer failed:", smsMsg);
-          notificationErrors.push(`SMS ל${to.name}: ${smsMsg}`);
-        }
-      }
-    }
-  } else if (to.phone) {
-    // No email — send SMS directly
-    try {
-      await sendTwilioSms(to.phone,
-        `✓ Ronel Lovely: אישרת עניין בהצעה! הנה פרטי ${from.name}: ${fromContact}`
-      );
-      notificationsSent++;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.error("SMS to confirmer failed:", msg);
-      notificationErrors.push(`SMS ל${to.name}: ${msg}`);
-    }
+    const result = await sendEmailWithLog({
+      to: to.email,
+      subject: `✓ אישרת עניין — הנה פרטי ${from.name} — Ronel Lovely`,
+      html: emailWrapper(`
+        <p style="color:#1f2937;font-size:16px;font-weight:bold;">אישרת עניין בהצעה!</p>
+        <p style="color:#4b5563;font-size:15px;line-height:1.7;">
+          שלחנו גם ל${fromTitle} <strong>${from.name}</strong> את פרטיך. הנה פרטי ההתקשרות ${fromPossessive}:
+        </p>
+        ${contactBlock(from)}
+        <p style="color:#6b7280;font-size:13px;">סטטוס ההצעה עודכן אוטומטית ל"דייטים".</p>
+      `),
+      context: "mutual_confirmation_to",
+      fromCandidateId: tokenData.from_candidate_id as number,
+      toCandidateId: tokenData.to_candidate_id as number,
+    });
+    if (result.success) notificationsSent++;
+    else notificationErrors.push(`מייל ל${to.name}: ${result.error}`);
   }
 
   return {

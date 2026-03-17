@@ -2,9 +2,7 @@
 
 import { randomUUID } from "crypto";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmailWithLog } from "@/lib/email";
 
 export async function sendInterestEmail(
   candidateId: number,
@@ -186,18 +184,15 @@ export async function sendInterestEmail(
     </div>
   `;
 
-  try {
-    await resend.emails.send({
-      from: "Ronel Lovely <noreply@ronel-lovely.com>",
-      replyTo: "ronel2lovely@gmail.com",
-      to: recipientEmail,
-      subject: `${senderName} ${senderWants} לבדוק התאמה איתך — Ronel Lovely`,
-      html: emailHtml,
-    });
+  const result = await sendEmailWithLog({
+    to: recipientEmail,
+    subject: `${senderName} ${senderWants} לבדוק התאמה איתך — Ronel Lovely`,
+    html: emailHtml,
+    context: "interest_email",
+    fromCandidateId: candidateId,
+    toCandidateId: matchCandidateId,
+  });
 
-    return { success: true, message: "המייל נשלח בהצלחה!" };
-  } catch (err) {
-    console.error("Resend error:", err);
-    return { success: false, message: "שגיאה בשליחת המייל. נסה שוב מאוחר יותר." };
-  }
+  if (result.success) return { success: true, message: "המייל נשלח בהצלחה!" };
+  return { success: false, message: "שגיאה בשליחת המייל. נסה שוב מאוחר יותר." };
 }

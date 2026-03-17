@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CandidatesGrid } from "./candidates-grid";
 import { SendMessageTab } from "./send-message-tab";
 import { SettingsTab } from "./settings-tab";
+import { EmailLogsTab } from "./email-logs-tab";
 
 type MessageCandidate = {
   id: number;
@@ -25,7 +26,7 @@ type AdminTabsProps = {
 };
 
 export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations }: AdminTabsProps) {
-  const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings">("candidates");
+  const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings" | "emails">("candidates");
 
   return (
     <div dir="rtl">
@@ -64,6 +65,16 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
         >
           הגדרות
         </button>
+        <button
+          onClick={() => setActiveTab("emails")}
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "emails"
+              ? "bg-sky-500 text-white shadow-sm"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          מיילים
+        </button>
       </div>
 
       {/* Tab content */}
@@ -79,6 +90,9 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
       )}
       {activeTab === "settings" && (
         <SettingsTab initialValue={maxRecommendations} />
+      )}
+      {activeTab === "emails" && (
+        <EmailLogsTab />
       )}
     </div>
   );
