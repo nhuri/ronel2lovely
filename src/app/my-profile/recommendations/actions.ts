@@ -117,23 +117,12 @@ export async function sendInterestEmail(
         ${senderTitle} <strong>${senderName}</strong> ${senderWants} לבדוק התאמה לפתיחת הצעה איתך.
       </p>
 
-      ${matchUrl ? `
-      <div style="text-align: center; margin: 0 0 16px;">
-        <a href="${matchUrl}"
-           style="display: inline-block; padding: 13px 28px; background: #0284c7; color: white; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: bold;">
-          צפה/י בפרופיל המלא
-        </a>
-        <p style="font-size: 11px; color: #9ca3af; margin: 8px 0 0;">הקישור מחייב כניסה לאתר</p>
-      </div>
-      ` : ""}
-
       ${confirmUrl ? `
-      <div style="text-align: center; margin: 8px 0 0;">
+      <div style="text-align: center; margin: 0 0 8px;">
         <a href="${confirmUrl}"
            style="display: inline-block; padding: 13px 28px; background: #059669; color: white; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: bold;">
-          ✓ ${recipientAlsoInterested}
+          צפייה בפרופיל
         </a>
-        <p style="font-size: 11px; color: #9ca3af; margin: 8px 0 0;">לחיצה תשלח לשניכם פרטי התקשרות. הקישור תקף ל-14 יום.</p>
       </div>
       ` : ""}
 

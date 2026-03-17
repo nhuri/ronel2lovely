@@ -48,7 +48,7 @@ export default async function ConfirmInterestPage({
   // Fetch from_candidate details to display
   const { data: fromCand } = await admin
     .from("candidates")
-    .select("id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, image_urls")
+    .select("id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, image_urls, contact_person, contact_person_phone, phone_number")
     .eq("id", tokenData.from_candidate_id)
     .single();
 
@@ -60,6 +60,11 @@ export default async function ConfirmInterestPage({
   const fromGender = fromCand.gender as string;
   const fromTitle = fromGender === "זכר" ? "המועמד" : "המועמדת";
   const fromPhoto = (fromCand.image_urls as string[] | null)?.[0] ?? null;
+  const contactPerson = (fromCand.contact_person as string) || null;
+  const contactPhone =
+    (fromCand.contact_person_phone as string) ||
+    (fromCand.phone_number as string) ||
+    null;
 
   return (
     <PageShell>
@@ -134,14 +139,25 @@ export default async function ConfirmInterestPage({
           )}
         </div>
 
+        {/* Contact info */}
+        {contactPhone && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-2">
+            <p className="text-sm font-bold text-emerald-800">מספר לבירורים</p>
+            <a
+              href={`tel:${contactPhone}`}
+              className="flex items-center gap-2 text-sm text-sky-600 hover:text-sky-700"
+            >
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              {contactPerson ? `${contactPerson}: ` : ""}{contactPhone}
+            </a>
+          </div>
+        )}
+
         {/* Confirm button */}
         <ConfirmButton token={token} fromName={fromName} fromGender={fromGender} />
-
-        <p className="text-center text-xs text-gray-400">
-          לחיצה תשלח לשניכם מייל עם פרטי ההתקשרות
-          <br />
-          ותעדכן את הסטטוס ל&quot;דייטים&quot; אוטומטית
-        </p>
       </div>
     </PageShell>
   );
