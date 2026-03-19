@@ -151,7 +151,6 @@ export function NewCandidateForm({
           <Section title="פרטים אישיים">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InputField name="full_name" label="שם מלא" required placeholder="שם פרטי ומשפחה" error={fieldErrors.full_name} />
-              <InputField name="id_number" label="מספר ת.ז." required placeholder="012345678" dir="ltr" error={fieldErrors.id_number} />
               <SelectField name="gender" label="מין" required options={["זכר", "נקבה"]} error={fieldErrors.gender} onChange={setSelectedGender} />
               <InputField name="birth_date" label="תאריך לידה" type="date" required dir="ltr" error={fieldErrors.birth_date} />
               <InputField name="residence" label="עיר מגורים" required placeholder="למשל: ירושלים" error={fieldErrors.residence} />

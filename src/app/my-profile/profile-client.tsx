@@ -9,6 +9,7 @@ import {
   updateMyProfile,
   deleteMyProfile,
   updateCandidateEmail,
+  toggleAvailability,
   type FieldErrors,
 } from "./actions";
 
@@ -50,6 +51,7 @@ export function ProfileClient({
   const [c, setC] = useState(initial);
   const [editImages, setEditImages] = useState<File[]>([]);
   const [keepImages, setKeepImages] = useState<string[]>(initial.image_urls ?? []);
+  const [togglingAvail, setTogglingAvail] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mandatory email modal state (for phone-auth users)
@@ -104,6 +106,13 @@ export function ProfileClient({
       setMode("view");
       router.refresh();
     }
+  }
+
+  async function handleToggleAvailability(newValue: boolean) {
+    setTogglingAvail(true);
+    const result = await toggleAvailability(newValue, candidateId);
+    if (!result?.error) setC({ ...c, is_available: newValue });
+    setTogglingAvail(false);
   }
 
   async function handleDelete() {
@@ -273,7 +282,6 @@ export function ProfileClient({
           <ViewSection title="פרטים אישיים">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <Field label="שם מלא" value={c.full_name} />
-              <Field label="ת.ז." value={c.id_number} dir="ltr" />
               <Field label="מין" value={c.gender} />
               <Field label="גיל" value={age != null ? String(age) : null} />
               <Field label="עיר מגורים" value={c.residence} />
@@ -310,6 +318,27 @@ export function ProfileClient({
               </div>
             </div>
           </ViewSection>
+
+          {/* Availability toggle */}
+          {!readOnly && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+              <p className="text-sm font-bold text-gray-700 mb-3">סטטוס זמינות</p>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${c.is_available === false ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+                  {c.is_available === false
+                    ? (c.gender === "נקבה" ? "תפוסה" : "תפוס")
+                    : (c.gender === "נקבה" ? "פנויה" : "פנוי")}
+                </span>
+                <button
+                  onClick={() => handleToggleAvailability(c.is_available === false)}
+                  disabled={togglingAvail}
+                  className="text-sm text-sky-600 hover:text-sky-700 underline disabled:opacity-50"
+                >
+                  {togglingAvail ? "שומר..." : c.is_available === false ? "סמן כפנוי/ה" : "סמן כתפוס/ה"}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Freeze Profile */}
           {!readOnly && <div className="pt-4 border-t border-gray-200">
@@ -436,7 +465,6 @@ export function ProfileClient({
           <EditSection title="פרטים אישיים">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <EditInput name="full_name" label="שם מלא" required defaultValue={c.full_name} error={fieldErrors.full_name} />
-              <EditInput name="id_number" label="מספר ת.ז." required defaultValue={c.id_number ?? ""} dir="ltr" error={fieldErrors.id_number} />
               <EditInput name="phone_number" label="מספר טלפון" type="tel" required defaultValue={c.phone_number} dir="ltr" error={fieldErrors.phone_number} />
               <EditSelect name="gender" label="מין" required options={["זכר", "נקבה"]} defaultValue={c.gender} error={fieldErrors.gender} />
               <EditInput name="birth_date" label="תאריך לידה" type="date" required defaultValue={c.birth_date ?? ""} dir="ltr" error={fieldErrors.birth_date} />

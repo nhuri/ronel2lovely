@@ -27,13 +27,17 @@ export async function sendInterestEmail(
       .single(),
     supabase
       .from("candidates")
-      .select("id, full_name, gender, email")
+      .select("id, full_name, gender, email, is_available")
       .eq("id", matchCandidateId)
       .single(),
   ]);
 
   if (!sender || !recipient) {
     return { success: false, message: "לא נמצאו פרטי המועמדים" };
+  }
+
+  if (recipient.is_available === false) {
+    return { success: false, message: "מועמד/ת זו אינה זמינה כרגע." };
   }
 
   const recipientEmail = recipient.email as string | null;
@@ -143,4 +147,36 @@ export async function sendInterestEmail(
 
   if (result.success) return { success: true, message: "המייל נשלח בהצלחה!" };
   return { success: false, message: "שגיאה בשליחת המייל. נסה שוב מאוחר יותר." };
+}
+
+export async function rejectRecommendation(
+  myCandidateId: number,
+  rejectedId: number,
+  reason: string
+): Promise<{ success: boolean }> {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false };
+
+  // Verify the current user owns myCandidateId
+  const { data: myCandidate } = await supabase
+    .from("candidates")
+    .select("id")
+    .eq("id", myCandidateId)
+    .eq("manager_id", user.id)
+    .maybeSingle();
+
+  if (!myCandidate) return { success: false };
+
+  const admin = createSupabaseAdminClient();
+  await admin.from("recommendation_rejections").upsert(
+    {
+      candidate_id: myCandidateId,
+      rejected_candidate_id: rejectedId,
+      rejection_reason: reason.trim() || null,
+    },
+    { onConflict: "candidate_id,rejected_candidate_id" }
+  );
+
+  return { success: true };
 }

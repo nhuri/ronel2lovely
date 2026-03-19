@@ -49,27 +49,32 @@ export default async function RecommendationsPage({
   const { data: allPotentialMatches } = await supabase
     .from("candidates")
     .select(
-      "id, full_name, gender, age, residence, religious_level, marital_status, height, occupation, education, image_urls, availability_status, about_me"
+      "id, full_name, gender, age, residence, religious_level, marital_status, height, occupation, education, image_urls, availability_status, is_available, about_me"
     )
     .eq("gender", oppositeGender)
     .neq("id", candidateId);
 
-  // Only keep active candidates (null or empty status)
+  // Only keep active, available candidates
   const potentialMatches = (allPotentialMatches ?? []).filter(
     (c) =>
-      !c.availability_status ||
-      (c.availability_status !== "הקפאה" &&
-        c.availability_status !== "התחתנו" &&
-        c.availability_status !== "התארסו")
+      c.is_available !== false &&
+      (!c.availability_status ||
+        (c.availability_status !== "הקפאה" &&
+          c.availability_status !== "התחתנו" &&
+          c.availability_status !== "התארסו"))
   );
 
-  // Fetch existing proposals involving this candidate (to exclude)
-  const { data: existingProposals } = await supabase
-    .from("proposals")
-    .select("candidate_id_1, candidate_id_2")
-    .or(
-      `candidate_id_1.eq.${candidateId},candidate_id_2.eq.${candidateId}`
-    );
+  // Fetch existing proposals + rejected candidates (to exclude)
+  const [{ data: existingProposals }, { data: rejectedRows }] = await Promise.all([
+    supabase
+      .from("proposals")
+      .select("candidate_id_1, candidate_id_2")
+      .or(`candidate_id_1.eq.${candidateId},candidate_id_2.eq.${candidateId}`),
+    supabase
+      .from("recommendation_rejections")
+      .select("rejected_candidate_id")
+      .eq("candidate_id", candidateId),
+  ]);
 
   const proposalPartnerIds = new Set<number>();
   for (const p of existingProposals ?? []) {
@@ -80,8 +85,12 @@ export default async function RecommendationsPage({
     }
   }
 
+  const rejectedIds = new Set<number>(
+    (rejectedRows ?? []).map((r) => Number(r.rejected_candidate_id))
+  );
+
   const eligibleMatches = potentialMatches.filter(
-    (m) => !proposalPartnerIds.has(Number(m.id))
+    (m) => !proposalPartnerIds.has(Number(m.id)) && !rejectedIds.has(Number(m.id))
   );
 
   const maxRec = await getMaxRecommendations();

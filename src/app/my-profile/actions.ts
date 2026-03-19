@@ -26,7 +26,6 @@ const REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "occupation", label: "תעסוקה" },
   { key: "about_me", label: "תיאור אישי" },
   { key: "looking_for", label: "מה חשוב לי בבן/בת הזוג" },
-  { key: "id_number", label: "מספר ת.ז." },
   { key: "contact_person", label: "איש קשר" },
   { key: "contact_person_phone", label: "טלפון איש קשר" },
 ];
@@ -231,7 +230,6 @@ export async function updateMyProfile(
       occupation: raw.occupation,
       about_me: raw.about_me,
       looking_for: raw.looking_for,
-      id_number: raw.id_number,
       contact_person: raw.contact_person,
       contact_person_phone: raw.contact_person_phone,
       age: calculateAge(raw.birth_date),
@@ -350,6 +348,23 @@ export async function updateCandidateEmail(
     return { error: authError.message };
   }
 
+  return { success: true };
+}
+
+export async function toggleAvailability(
+  isAvailable: boolean,
+  candidateId?: number
+): Promise<ProfileActionResult> {
+  const ctx = await verifyCandidate(candidateId);
+  if (!ctx) return { error: "אין הרשאה לבצע פעולה זו" };
+
+  const { supabase } = ctx;
+  const { error } = await supabase
+    .from("candidates")
+    .update({ is_available: isAvailable })
+    .eq("id", ctx.candidateId);
+
+  if (error) return { error: error.message };
   return { success: true };
 }
 

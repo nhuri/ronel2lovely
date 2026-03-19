@@ -37,13 +37,19 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
     .update({ used_at: new Date().toISOString() })
     .eq("token", token);
 
-  // Update proposal status to "5" (דייטים)
+  // Update proposal status to "5" (התחלנו להפגש)
   if (tokenData.proposal_id) {
     await admin
       .from("proposals")
       .update({ status: "5" })
       .eq("id", tokenData.proposal_id);
   }
+
+  // Mark both candidates as unavailable
+  await admin
+    .from("candidates")
+    .update({ is_available: false })
+    .in("id", [tokenData.from_candidate_id, tokenData.to_candidate_id]);
 
   // Fetch both candidates — only what we need for emails
   const [{ data: fromCand }, { data: toCand }] = await Promise.all([
