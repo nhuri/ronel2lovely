@@ -62,8 +62,8 @@ export default async function RecommendationsPage({
       c.availability_status !== "התארסו"
   );
 
-  // Fetch existing proposals + rejected candidates
-  const [{ data: existingProposals }, { data: rejectedRows }] = await Promise.all([
+  // Fetch existing proposals, rejected candidates, and preference filters
+  const [{ data: existingProposals }, { data: rejectedRows }, { data: prefData }] = await Promise.all([
     supabase
       .from("proposals")
       .select("candidate_id_1, candidate_id_2")
@@ -72,7 +72,24 @@ export default async function RecommendationsPage({
       .from("recommendation_rejections")
       .select("rejected_candidate_id")
       .eq("candidate_id", candidateId),
+    supabase
+      .from("candidates")
+      .select("preference_filters")
+      .eq("id", candidateId)
+      .single(),
   ]);
+
+  type PrefFilters = {
+    allowed_religious_levels?: string[];
+    min_age?: number;
+    max_age?: number;
+  };
+  const pref = (prefData?.preference_filters ?? {}) as PrefFilters;
+  const preferenceFilters = {
+    ...(pref.allowed_religious_levels?.length ? { allowedReligiousLevels: pref.allowed_religious_levels } : {}),
+    ...(pref.min_age ? { minAge: pref.min_age } : {}),
+    ...(pref.max_age ? { maxAge: pref.max_age } : {}),
+  };
 
   const proposalPartnerIds = new Set<number>();
   for (const p of existingProposals ?? []) {
@@ -87,8 +104,13 @@ export default async function RecommendationsPage({
     (rejectedRows ?? []).map((r) => Number(r.rejected_candidate_id))
   );
 
-  // Exclude proposal partners from all pools
-  const pool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
+  // Exclude proposal partners from all pools, then apply preference filters
+  let pool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
+  if (pref.allowed_religious_levels?.length) {
+    pool = pool.filter((m) => pref.allowed_religious_levels!.includes(m.religious_level as string));
+  }
+  if (pref.min_age) pool = pool.filter((m) => (m.age as number) >= pref.min_age!);
+  if (pref.max_age) pool = pool.filter((m) => (m.age as number) <= pref.max_age!);
 
   // Split into: available (not תפוס, not rejected), unavailable (תפוס, not rejected), rejected
   const availablePool = pool.filter(
@@ -157,6 +179,7 @@ export default async function RecommendationsPage({
           rejectedMatches={rejectedMatches}
           gender={myGender}
           candidateId={candidateId}
+          preferenceFilters={preferenceFilters}
         />
       </main>
     </div>

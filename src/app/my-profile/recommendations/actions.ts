@@ -152,7 +152,12 @@ export async function sendInterestEmail(
 export async function rejectRecommendation(
   myCandidateId: number,
   rejectedId: number,
-  reason: string
+  reason: string,
+  preferenceUpdate?: {
+    allowedReligiousLevels?: string[];
+    minAge?: number;
+    maxAge?: number;
+  }
 ): Promise<{ success: boolean }> {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -169,6 +174,23 @@ export async function rejectRecommendation(
   if (!myCandidate) return { success: false };
 
   const admin = createSupabaseAdminClient();
+
+  // Update preference_filters if provided
+  if (preferenceUpdate) {
+    const { data: current } = await admin
+      .from("candidates")
+      .select("preference_filters")
+      .eq("id", myCandidateId)
+      .single();
+    const existing = (current?.preference_filters ?? {}) as Record<string, unknown>;
+    const updated = { ...existing };
+    if (preferenceUpdate.allowedReligiousLevels !== undefined)
+      updated.allowed_religious_levels = preferenceUpdate.allowedReligiousLevels;
+    if (preferenceUpdate.minAge !== undefined) updated.min_age = preferenceUpdate.minAge;
+    if (preferenceUpdate.maxAge !== undefined) updated.max_age = preferenceUpdate.maxAge;
+    await admin.from("candidates").update({ preference_filters: updated }).eq("id", myCandidateId);
+  }
+
   await admin.from("recommendation_rejections").upsert(
     {
       candidate_id: myCandidateId,
@@ -178,6 +200,55 @@ export async function rejectRecommendation(
     { onConflict: "candidate_id,rejected_candidate_id" }
   );
 
+  return { success: true };
+}
+
+export async function updatePreferenceFilters(
+  myCandidateId: number,
+  update: {
+    allowedReligiousLevels?: string[] | null;
+    minAge?: number | null;
+    maxAge?: number | null;
+  }
+): Promise<{ success: boolean }> {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false };
+
+  const { data: myCandidate } = await supabase
+    .from("candidates")
+    .select("id")
+    .eq("id", myCandidateId)
+    .eq("manager_id", user.id)
+    .maybeSingle();
+  if (!myCandidate) return { success: false };
+
+  const admin = createSupabaseAdminClient();
+  const { data: current } = await admin
+    .from("candidates")
+    .select("preference_filters")
+    .eq("id", myCandidateId)
+    .single();
+  const existing = (current?.preference_filters ?? {}) as Record<string, unknown>;
+  const updated = { ...existing };
+
+  if (update.allowedReligiousLevels === null) {
+    delete updated.allowed_religious_levels;
+  } else if (update.allowedReligiousLevels !== undefined) {
+    updated.allowed_religious_levels = update.allowedReligiousLevels;
+  }
+  if (update.minAge === null) {
+    delete updated.min_age;
+  } else if (update.minAge !== undefined) {
+    updated.min_age = update.minAge;
+  }
+  if (update.maxAge === null) {
+    delete updated.max_age;
+  } else if (update.maxAge !== undefined) {
+    updated.max_age = update.maxAge;
+  }
+
+  await admin.from("candidates").update({ preference_filters: updated }).eq("id", myCandidateId);
   return { success: true };
 }
 

@@ -2,8 +2,17 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import type { ScoredMatch } from "@/lib/matching";
-import { sendInterestEmail, rejectRecommendation, unrejectRecommendation } from "./actions";
+import { sendInterestEmail, rejectRecommendation, unrejectRecommendation, updatePreferenceFilters } from "./actions";
+
+type PreferenceFilters = {
+  allowedReligiousLevels?: string[];
+  minAge?: number;
+  maxAge?: number;
+};
+
+const ALL_RELIGIOUS_LEVELS = ["חרדי", "דתי-לאומי", "דתי", "מסורתי", "חילוני"] as const;
 
 interface Props {
   matches: ScoredMatch[];           // available, non-rejected
@@ -11,6 +20,7 @@ interface Props {
   rejectedMatches: ScoredMatch[];   // rejected
   gender: string;
   candidateId: number;
+  preferenceFilters: PreferenceFilters;
 }
 
 type TabId = "available" | "unavailable" | "rejected";
@@ -21,10 +31,11 @@ export function RecommendationsClient({
   rejectedMatches,
   gender,
   candidateId,
+  preferenceFilters,
 }: Props) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("available");
   const [sentToIds, setSentToIds] = useState<Set<number>>(new Set());
-  // Track which IDs have been rejected this session (adds to rejectedMatches list)
   const [localRejectedIds, setLocalRejectedIds] = useState<Set<number>>(
     new Set(rejectedMatches.map((m) => m.candidate.id as number))
   );
@@ -32,15 +43,15 @@ export function RecommendationsClient({
   const [selectedMatch, setSelectedMatch] = useState<ScoredMatch | null>(null);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [selectedUnavail, setSelectedUnavail] = useState<ScoredMatch | null>(null);
+  const [activePreferences, setActivePreferences] = useState<PreferenceFilters>(preferenceFilters);
 
   const handleSent = (id: number) => {
     setSentToIds((prev) => new Set(prev).add(id));
   };
 
-  const handleReject = async (matchId: number, reason: string) => {
-    await rejectRecommendation(candidateId, matchId, reason);
+  const handleReject = async (matchId: number, reason: string, prefUpdate?: PreferenceFilters) => {
+    await rejectRecommendation(candidateId, matchId, reason, prefUpdate);
     setLocalRejectedIds((prev) => new Set(prev).add(matchId));
-    // Add to localRejectedMatches if not already in rejectedMatches
     const source = matches.find((m) => (m.candidate.id as number) === matchId)
       ?? unavailableMatches.find((m) => (m.candidate.id as number) === matchId);
     if (source && !rejectedMatches.some((r) => (r.candidate.id as number) === matchId)) {
@@ -49,6 +60,24 @@ export function RecommendationsClient({
     setRejectingId(null);
     if (selectedMatch && (selectedMatch.candidate.id as number) === matchId) setSelectedMatch(null);
     if (selectedUnavail && (selectedUnavail.candidate.id as number) === matchId) setSelectedUnavail(null);
+    if (prefUpdate) {
+      setActivePreferences((prev) => ({ ...prev, ...prefUpdate }));
+      router.refresh();
+    }
+  };
+
+  const handleRemoveFilter = async (filterType: "religion" | "age") => {
+    const update: { allowedReligiousLevels?: null; minAge?: null; maxAge?: null } = {};
+    if (filterType === "religion") update.allowedReligiousLevels = null;
+    if (filterType === "age") { update.minAge = null; update.maxAge = null; }
+    await updatePreferenceFilters(candidateId, update);
+    setActivePreferences((prev) => {
+      const next = { ...prev };
+      if (filterType === "religion") delete next.allowedReligiousLevels;
+      if (filterType === "age") { delete next.minAge; delete next.maxAge; }
+      return next;
+    });
+    router.refresh();
   };
 
   const handleUnreject = async (matchId: number) => {
@@ -105,6 +134,9 @@ export function RecommendationsClient({
             : "בחרנו עבורך את המועמדות המתאימות ביותר לפרופיל שלך."}
         </p>
       </div>
+
+      {/* Active preference filters panel */}
+      <ActiveFiltersPanel preferences={activePreferences} onRemove={handleRemoveFilter} />
 
       {/* Tabs */}
       <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm overflow-x-auto">
@@ -193,6 +225,8 @@ export function RecommendationsClient({
         <RejectModal
           matchId={rejectingId}
           matchName={rejectSource.candidate.full_name as string}
+          matchReligiousLevel={rejectSource.candidate.religious_level as string | null}
+          currentPreferences={activePreferences}
           onConfirm={handleReject}
           onCancel={() => setRejectingId(null)}
         />
@@ -361,20 +395,67 @@ function MatchCard({
 function RejectModal({
   matchId,
   matchName,
+  matchReligiousLevel,
+  currentPreferences,
   onConfirm,
   onCancel,
 }: {
   matchId: number;
   matchName: string;
-  onConfirm: (matchId: number, reason: string) => void;
+  matchReligiousLevel?: string | null;
+  currentPreferences: PreferenceFilters;
+  onConfirm: (matchId: number, reason: string, prefUpdate?: PreferenceFilters) => void;
   onCancel: () => void;
 }) {
   const [reason, setReason] = useState("");
+  const [religionFilter, setReligionFilter] = useState(false);
+  const [ageFilter, setAgeFilter] = useState(false);
+
+  // Initial allowed levels: from current prefs, or all levels
+  const initLevels = currentPreferences.allowedReligiousLevels
+    ? [...currentPreferences.allowedReligiousLevels]
+    : [...ALL_RELIGIOUS_LEVELS];
+  // Pre-uncheck the rejected candidate's level as a suggestion
+  const [allowedLevels, setAllowedLevels] = useState<string[]>(
+    matchReligiousLevel && initLevels.includes(matchReligiousLevel)
+      ? initLevels.filter((l) => l !== matchReligiousLevel)
+      : initLevels
+  );
+  const [minAge, setMinAge] = useState(
+    currentPreferences.minAge ? String(currentPreferences.minAge) : ""
+  );
+  const [maxAge, setMaxAge] = useState(
+    currentPreferences.maxAge ? String(currentPreferences.maxAge) : ""
+  );
+
+  const toggleLevel = (level: string) => {
+    setAllowedLevels((prev) =>
+      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]
+    );
+  };
+
+  const handleConfirm = () => {
+    const prefUpdate: PreferenceFilters = {};
+    if (religionFilter && allowedLevels.length > 0) {
+      prefUpdate.allowedReligiousLevels = allowedLevels;
+    }
+    if (ageFilter) {
+      const min = parseInt(minAge);
+      const max = parseInt(maxAge);
+      if (!isNaN(min)) prefUpdate.minAge = min;
+      if (!isNaN(max)) prefUpdate.maxAge = max;
+    }
+    onConfirm(matchId, reason, Object.keys(prefUpdate).length > 0 ? prefUpdate : undefined);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" dir="rtl">
-      <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-4">
+      <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <h3 className="text-base font-bold text-gray-800">סימון כלא מתאים/ה</h3>
-        <p className="text-sm text-gray-600">{matchName} יסומן/תסומן כלא מתאים/ה. תוכל/י לבטל זאת בטאב "שלא התאימו".</p>
+        <p className="text-sm text-gray-600">
+          {matchName} יסומן/תסומן כלא מתאים/ה. תוכל/י לבטל זאת בטאב &quot;שלא התאימו&quot;.
+        </p>
+
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -382,9 +463,88 @@ function RejectModal({
           rows={2}
           className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-gray-300"
         />
-        <div className="flex gap-2">
+
+        {/* Preference filters */}
+        <div className="border-t border-gray-100 pt-3 space-y-3">
+          <p className="text-xs text-gray-500 font-medium">עדכון העדפות להמלצות עתידיות (אופציונלי):</p>
+
+          {/* Religion */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={religionFilter}
+              onChange={(e) => setReligionFilter(e.target.checked)}
+              className="w-4 h-4 accent-pink-500"
+            />
+            <span className="text-sm text-gray-700">הסיבה קשורה לרמה הדתית</span>
+          </label>
+          {religionFilter && (
+            <div className="mr-6 bg-gray-50 rounded-xl p-3 space-y-1.5">
+              <p className="text-xs text-gray-500 mb-2">אילו רמות דתיות יוצגו לי?</p>
+              {ALL_RELIGIOUS_LEVELS.map((level) => (
+                <label key={level} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={allowedLevels.includes(level)}
+                    onChange={() => toggleLevel(level)}
+                    className="w-4 h-4 accent-pink-500"
+                  />
+                  <span className="text-sm text-gray-700">{level}</span>
+                  {level === matchReligiousLevel && (
+                    <span className="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">
+                      רמת המועמד/ת
+                    </span>
+                  )}
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Age */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={ageFilter}
+              onChange={(e) => setAgeFilter(e.target.checked)}
+              className="w-4 h-4 accent-pink-500"
+            />
+            <span className="text-sm text-gray-700">הסיבה קשורה לגיל</span>
+          </label>
+          {ageFilter && (
+            <div className="mr-6 bg-gray-50 rounded-xl p-3">
+              <p className="text-xs text-gray-500 mb-2">טווח גיל מועדף להצגה:</p>
+              <div className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <label className="text-[11px] text-gray-400">גיל מינימלי</label>
+                  <input
+                    type="number"
+                    value={minAge}
+                    onChange={(e) => setMinAge(e.target.value)}
+                    min={18} max={120}
+                    placeholder="18"
+                    className="w-full mt-1 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white"
+                  />
+                </div>
+                <span className="text-gray-400 pb-2">—</span>
+                <div className="flex-1">
+                  <label className="text-[11px] text-gray-400">גיל מקסימלי</label>
+                  <input
+                    type="number"
+                    value={maxAge}
+                    onChange={(e) => setMaxAge(e.target.value)}
+                    min={18} max={120}
+                    placeholder="99"
+                    className="w-full mt-1 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2 pt-1">
           <button
-            onClick={() => onConfirm(matchId, reason)}
+            onClick={handleConfirm}
             className="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-semibold text-sm hover:bg-red-600 transition-colors"
           >
             סמן כלא מתאים/ה
@@ -397,6 +557,46 @@ function RejectModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ActiveFiltersPanel({
+  preferences,
+  onRemove,
+}: {
+  preferences: PreferenceFilters;
+  onRemove: (filterType: "religion" | "age") => void;
+}) {
+  const hasReligion =
+    preferences.allowedReligiousLevels !== undefined &&
+    preferences.allowedReligiousLevels.length > 0;
+  const hasAge =
+    preferences.minAge !== undefined || preferences.maxAge !== undefined;
+
+  if (!hasReligion && !hasAge) return null;
+
+  return (
+    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 flex flex-wrap gap-2 items-center" dir="rtl">
+      <span className="text-xs text-blue-600 font-medium">פילטרים פעילים:</span>
+      {hasReligion && (
+        <button
+          onClick={() => onRemove("religion")}
+          className="flex items-center gap-1.5 bg-white border border-blue-200 rounded-full px-2.5 py-1 text-xs text-blue-700 hover:bg-blue-50 transition-colors"
+        >
+          רמה דתית: {preferences.allowedReligiousLevels!.join(", ")}
+          <span className="text-blue-400">×</span>
+        </button>
+      )}
+      {hasAge && (
+        <button
+          onClick={() => onRemove("age")}
+          className="flex items-center gap-1.5 bg-white border border-blue-200 rounded-full px-2.5 py-1 text-xs text-blue-700 hover:bg-blue-50 transition-colors"
+        >
+          גיל: {preferences.minAge ?? ""}–{preferences.maxAge ?? ""}
+          <span className="text-blue-400">×</span>
+        </button>
+      )}
     </div>
   );
 }
