@@ -21,6 +21,7 @@ interface Props {
   gender: string;
   candidateId: number;
   preferenceFilters: PreferenceFilters;
+  allReligiousLevels: string[];
 }
 
 type TabId = "available" | "unavailable" | "rejected";
@@ -32,6 +33,7 @@ export function RecommendationsClient({
   gender,
   candidateId,
   preferenceFilters,
+  allReligiousLevels,
 }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("available");
@@ -227,6 +229,7 @@ export function RecommendationsClient({
           matchName={rejectSource.candidate.full_name as string}
           matchReligiousLevel={rejectSource.candidate.religious_level as string | null}
           currentPreferences={activePreferences}
+          availableReligiousLevels={allReligiousLevels}
           onConfirm={handleReject}
           onCancel={() => setRejectingId(null)}
         />
@@ -397,6 +400,7 @@ function RejectModal({
   matchName,
   matchReligiousLevel,
   currentPreferences,
+  availableReligiousLevels,
   onConfirm,
   onCancel,
 }: {
@@ -404,6 +408,7 @@ function RejectModal({
   matchName: string;
   matchReligiousLevel?: string | null;
   currentPreferences: PreferenceFilters;
+  availableReligiousLevels: string[];
   onConfirm: (matchId: number, reason: string, prefUpdate?: PreferenceFilters) => void;
   onCancel: () => void;
 }) {
@@ -411,10 +416,10 @@ function RejectModal({
   const [religionFilter, setReligionFilter] = useState(false);
   const [ageFilter, setAgeFilter] = useState(false);
 
-  // Initial allowed levels: from current prefs, or all levels
+  // Initial allowed levels: from current prefs, or all levels on the site
   const initLevels = currentPreferences.allowedReligiousLevels
     ? [...currentPreferences.allowedReligiousLevels]
-    : [...ALL_RELIGIOUS_LEVELS];
+    : [...availableReligiousLevels];
   // Pre-uncheck the rejected candidate's level as a suggestion
   const [allowedLevels, setAllowedLevels] = useState<string[]>(
     matchReligiousLevel && initLevels.includes(matchReligiousLevel)
@@ -481,7 +486,7 @@ function RejectModal({
           {religionFilter && (
             <div className="mr-6 bg-gray-50 rounded-xl p-3 space-y-1.5">
               <p className="text-xs text-gray-500 mb-2">אילו רמות דתיות יוצגו לי?</p>
-              {ALL_RELIGIOUS_LEVELS.map((level) => (
+              {availableReligiousLevels.map((level) => (
                 <label key={level} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"

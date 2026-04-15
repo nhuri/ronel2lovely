@@ -128,6 +128,12 @@ export default async function RecommendationsPage({
   const unavailableMatches = scoreAndRankMatches(candidate, unavailablePool, unavailablePool.length);
   const rejectedMatches = scoreAndRankMatches(candidate, rejectedPool, rejectedPool.length);
 
+  // All distinct religious levels on the site (candidate's own + all opposite-gender candidates)
+  const allReligiousLevels = [...new Set([
+    candidate.religious_level as string,
+    ...(allPotentialMatches ?? []).map((c) => c.religious_level as string),
+  ].filter(Boolean))];
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -180,6 +186,7 @@ export default async function RecommendationsPage({
           gender={myGender}
           candidateId={candidateId}
           preferenceFilters={preferenceFilters}
+          allReligiousLevels={allReligiousLevels}
         />
       </main>
     </div>
