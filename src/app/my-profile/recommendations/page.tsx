@@ -45,26 +45,24 @@ export default async function RecommendationsPage({
   const myGender = candidate.gender as string;
   const oppositeGender = myGender === "זכר" ? "נקבה" : "זכר";
 
-  // Fetch opposite-gender candidates (filter availability in code to handle null & empty)
+  // Fetch ALL opposite-gender candidates (excluding only frozen/married/engaged)
   const { data: allPotentialMatches } = await supabase
     .from("candidates")
     .select(
-      "id, full_name, gender, age, residence, religious_level, marital_status, height, occupation, education, image_urls, availability_status, is_available, about_me"
+      "id, full_name, gender, age, residence, religious_level, marital_status, height, occupation, education, image_urls, availability_status, about_me"
     )
     .eq("gender", oppositeGender)
     .neq("id", candidateId);
 
-  // Only keep active, available candidates
-  const potentialMatches = (allPotentialMatches ?? []).filter(
+  // Exclude truly inactive statuses
+  const activeMatches = (allPotentialMatches ?? []).filter(
     (c) =>
-      c.is_available !== false &&
-      (!c.availability_status ||
-        (c.availability_status !== "הקפאה" &&
-          c.availability_status !== "התחתנו" &&
-          c.availability_status !== "התארסו"))
+      c.availability_status !== "הקפאה" &&
+      c.availability_status !== "התחתנו" &&
+      c.availability_status !== "התארסו"
   );
 
-  // Fetch existing proposals + rejected candidates (to exclude)
+  // Fetch existing proposals + rejected candidates
   const [{ data: existingProposals }, { data: rejectedRows }] = await Promise.all([
     supabase
       .from("proposals")
@@ -89,13 +87,24 @@ export default async function RecommendationsPage({
     (rejectedRows ?? []).map((r) => Number(r.rejected_candidate_id))
   );
 
-  const eligibleMatches = potentialMatches.filter(
-    (m) => !proposalPartnerIds.has(Number(m.id)) && !rejectedIds.has(Number(m.id))
+  // Exclude proposal partners from all pools
+  const pool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
+
+  // Split into: available (not תפוס, not rejected), unavailable (תפוס, not rejected), rejected
+  const availablePool = pool.filter(
+    (m) => m.availability_status !== "תפוס" && !rejectedIds.has(Number(m.id))
   );
+  const unavailablePool = pool.filter(
+    (m) => m.availability_status === "תפוס" && !rejectedIds.has(Number(m.id))
+  );
+  const rejectedPool = pool.filter((m) => rejectedIds.has(Number(m.id)));
 
   const maxRec = await getMaxRecommendations();
-  const limit = maxRec === "all" ? eligibleMatches.length : maxRec;
-  const topMatches = scoreAndRankMatches(candidate, eligibleMatches, limit);
+  const limit = maxRec === "all" ? availablePool.length : maxRec;
+
+  const topMatches = scoreAndRankMatches(candidate, availablePool, limit);
+  const unavailableMatches = scoreAndRankMatches(candidate, unavailablePool, unavailablePool.length);
+  const rejectedMatches = scoreAndRankMatches(candidate, rejectedPool, rejectedPool.length);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -144,6 +153,8 @@ export default async function RecommendationsPage({
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         <RecommendationsClient
           matches={topMatches}
+          unavailableMatches={unavailableMatches}
+          rejectedMatches={rejectedMatches}
           gender={myGender}
           candidateId={candidateId}
         />

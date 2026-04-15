@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendEmailWithLog } from "@/lib/email";
+import { getFollowupDelays, followupDelayToMs } from "@/app/admin/settings-actions";
 
 export const runtime = "nodejs";
 
@@ -22,7 +23,6 @@ function followupEmailHtml(
       </p>
 
       <p style="font-size:16px;font-weight:bold;color:#374151;margin:0 0 16px;">שלום ${recipientName},</p>
-
       <p style="font-size:15px;line-height:1.8;margin:0 0 20px;">${question}</p>
 
       <div style="display:flex;flex-direction:column;gap:8px;margin:0 0 20px;">
@@ -65,23 +65,26 @@ export async function GET(request: Request) {
   }
 
   const admin = createSupabaseAdminClient();
+  const delays = await getFollowupDelays();
   const results = {
     weeklyProcessed: 0,
     monthlyProcessed: 0,
     errors: [] as string[],
   };
 
-  // ── Step 1: Weekly follow-up ──────────────────────────────────────────────
-  // Proposals at status "5" (התחלנו להפגש) with no week follow-up, updated 7+ days ago
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: weeklyProposals } = await admin
+  // ── Step 1: First follow-up ───────────────────────────────────────────────
+  // Proposals at status "3" (התחלנו להפגש) with no first follow-up yet
+  const firstDelayMs = followupDelayToMs(delays.first);
+  const firstCutoff = new Date(Date.now() - firstDelayMs).toISOString();
+
+  const { data: firstProposals } = await admin
     .from("proposals")
     .select("id, candidate_id_1, candidate_id_2")
-    .eq("status", "5")
+    .eq("status", "3")
     .is("follow_up_week_sent_at", null)
-    .lt("updated_at", weekAgo);
+    .lt("updated_at", firstCutoff);
 
-  for (const proposal of weeklyProposals ?? []) {
+  for (const proposal of firstProposals ?? []) {
     try {
       const [{ data: c1 }, { data: c2 }] = await Promise.all([
         admin
@@ -97,15 +100,15 @@ export async function GET(request: Request) {
       ]);
       if (!c1 || !c2) continue;
 
-      // Create tokens for status options: נפגשו, פסלו, חתכו
-      const [tok3, tok2, tok4] = await Promise.all([
-        createToken(admin, proposal.id as number, "3"),
+      // Status options: "כן נפגשנו" → "5" (דייטים מתקדם), "לא טרם יצאנו" → "2", "חתכנו" → "4"
+      const [tok5, tok2, tok4] = await Promise.all([
+        createToken(admin, proposal.id as number, "5"),
         createToken(admin, proposal.id as number, "2"),
         createToken(admin, proposal.id as number, "4"),
       ]);
 
       const statusOptions = [
-        { label: "כן, נפגשנו", token: tok3 },
+        { label: "כן, נפגשנו", token: tok5 },
         { label: "לא, טרם יצאנו", token: tok2 },
         { label: "חתכנו לאחר פגישה", token: tok4 },
       ].filter((o) => o.token !== null) as { label: string; token: string }[];
@@ -134,23 +137,23 @@ export async function GET(request: Request) {
 
       results.weeklyProcessed++;
     } catch (e) {
-      results.errors.push(`Proposal ${proposal.id} (week): ${String(e)}`);
+      results.errors.push(`Proposal ${proposal.id} (first): ${String(e)}`);
     }
   }
 
-  // ── Step 2: Monthly follow-up ─────────────────────────────────────────────
-  // Proposals at status "3" (נפגשו) with no month follow-up, updated 30+ days ago
-  const monthAgo = new Date(
-    Date.now() - 30 * 24 * 60 * 60 * 1000
-  ).toISOString();
-  const { data: monthlyProposals } = await admin
+  // ── Step 2: Second follow-up ──────────────────────────────────────────────
+  // Proposals at status "5" (דייטים מתקדם) with no second follow-up yet
+  const secondDelayMs = followupDelayToMs(delays.second);
+  const secondCutoff = new Date(Date.now() - secondDelayMs).toISOString();
+
+  const { data: secondProposals } = await admin
     .from("proposals")
     .select("id, candidate_id_1, candidate_id_2")
-    .eq("status", "3")
+    .eq("status", "5")
     .is("follow_up_month_sent_at", null)
-    .lt("updated_at", monthAgo);
+    .lt("updated_at", secondCutoff);
 
-  for (const proposal of monthlyProposals ?? []) {
+  for (const proposal of secondProposals ?? []) {
     try {
       const [{ data: c1 }, { data: c2 }] = await Promise.all([
         admin
@@ -166,13 +169,16 @@ export async function GET(request: Request) {
       ]);
       if (!c1 || !c2) continue;
 
-      const [tok5, tok6] = await Promise.all([
+      // Status options: continue dating → "5" (stay), התארסו → "7", סיימנו → "6"
+      const [tok5, tok7, tok6] = await Promise.all([
         createToken(admin, proposal.id as number, "5"),
+        createToken(admin, proposal.id as number, "7"),
         createToken(admin, proposal.id as number, "6"),
       ]);
 
       const statusOptions = [
         { label: "ממשיכים להפגש", token: tok5 },
+        { label: "התארסנו!", token: tok7 },
         { label: "סיימנו לאחר תקופה", token: tok6 },
       ].filter((o) => o.token !== null) as { label: string; token: string }[];
 
@@ -200,7 +206,7 @@ export async function GET(request: Request) {
 
       results.monthlyProcessed++;
     } catch (e) {
-      results.errors.push(`Proposal ${proposal.id} (month): ${String(e)}`);
+      results.errors.push(`Proposal ${proposal.id} (second): ${String(e)}`);
     }
   }
 

@@ -2,12 +2,15 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AdminTabs } from "./admin-tabs";
 import { logout } from "@/app/login/actions";
 import Link from "next/link";
-import { getMaxRecommendations } from "./settings-actions";
+import { getMaxRecommendations, getFollowupDelays } from "./settings-actions";
 
 export default async function AdminDashboard() {
   const supabase = await createSupabaseServerClient();
 
-  const maxRecommendations = await getMaxRecommendations();
+  const [maxRecommendations, followupDelays] = await Promise.all([
+    getMaxRecommendations(),
+    getFollowupDelays(),
+  ]);
 
   const { data: allCandidates } = await supabase
     .from("candidates")
@@ -100,6 +103,8 @@ export default async function AdminDashboard() {
           genders={genders}
           religiousLevels={religiousLevels}
           maxRecommendations={maxRecommendations}
+          followupFirst={followupDelays.first}
+          followupSecond={followupDelays.second}
         />
       </main>
     </div>

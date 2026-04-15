@@ -27,7 +27,7 @@ export async function sendInterestEmail(
       .single(),
     supabase
       .from("candidates")
-      .select("id, full_name, gender, email, is_available")
+      .select("id, full_name, gender, email, availability_status")
       .eq("id", matchCandidateId)
       .single(),
   ]);
@@ -36,7 +36,7 @@ export async function sendInterestEmail(
     return { success: false, message: "לא נמצאו פרטי המועמדים" };
   }
 
-  if (recipient.is_available === false) {
+  if (recipient.availability_status === "תפוס") {
     return { success: false, message: "מועמד/ת זו אינה זמינה כרגע." };
   }
 
@@ -177,6 +177,33 @@ export async function rejectRecommendation(
     },
     { onConflict: "candidate_id,rejected_candidate_id" }
   );
+
+  return { success: true };
+}
+
+export async function unrejectRecommendation(
+  myCandidateId: number,
+  rejectedId: number
+): Promise<{ success: boolean }> {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false };
+
+  const { data: myCandidate } = await supabase
+    .from("candidates")
+    .select("id")
+    .eq("id", myCandidateId)
+    .eq("manager_id", user.id)
+    .maybeSingle();
+
+  if (!myCandidate) return { success: false };
+
+  const admin = createSupabaseAdminClient();
+  await admin
+    .from("recommendation_rejections")
+    .delete()
+    .eq("candidate_id", myCandidateId)
+    .eq("rejected_candidate_id", rejectedId);
 
   return { success: true };
 }

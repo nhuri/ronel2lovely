@@ -108,10 +108,13 @@ export function ProfileClient({
     }
   }
 
-  async function handleToggleAvailability(newValue: boolean) {
+  async function handleToggleAvailability(currentlyUnavailable: boolean) {
     setTogglingAvail(true);
-    const result = await toggleAvailability(newValue, candidateId);
-    if (!result?.error) setC({ ...c, is_available: newValue });
+    // currentlyUnavailable=true → want to become available; pass isAvailable=true
+    const result = await toggleAvailability(!currentlyUnavailable, candidateId);
+    if (!result?.error) {
+      setC({ ...c, availability_status: currentlyUnavailable ? null : "תפוס" });
+    }
     setTogglingAvail(false);
   }
 
@@ -324,17 +327,17 @@ export function ProfileClient({
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
               <p className="text-sm font-bold text-gray-700 mb-3">סטטוס זמינות</p>
               <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${c.is_available === false ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
-                  {c.is_available === false
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${c.availability_status === "תפוס" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+                  {c.availability_status === "תפוס"
                     ? (c.gender === "נקבה" ? "תפוסה" : "תפוס")
                     : (c.gender === "נקבה" ? "פנויה" : "פנוי")}
                 </span>
                 <button
-                  onClick={() => handleToggleAvailability(c.is_available === false)}
+                  onClick={() => handleToggleAvailability(c.availability_status === "תפוס")}
                   disabled={togglingAvail}
                   className="text-sm text-sky-600 hover:text-sky-700 underline disabled:opacity-50"
                 >
-                  {togglingAvail ? "שומר..." : c.is_available === false ? "סמן כפנוי/ה" : "סמן כתפוס/ה"}
+                  {togglingAvail ? "שומר..." : c.availability_status === "תפוס" ? "סמן כפנוי/ה" : "סמן כתפוס/ה"}
                 </button>
               </div>
             </div>

@@ -359,9 +359,11 @@ export async function toggleAvailability(
   if (!ctx) return { error: "אין הרשאה לבצע פעולה זו" };
 
   const { supabase } = ctx;
+  // isAvailable=true → clear "תפוס"; isAvailable=false → set "תפוס"
+  const newStatus = isAvailable ? null : "תפוס";
   const { error } = await supabase
     .from("candidates")
-    .update({ is_available: isAvailable })
+    .update({ availability_status: newStatus })
     .eq("id", ctx.candidateId);
 
   if (error) return { error: error.message };

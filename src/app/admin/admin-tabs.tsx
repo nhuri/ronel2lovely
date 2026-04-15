@@ -5,6 +5,7 @@ import { CandidatesGrid } from "./candidates-grid";
 import { SendMessageTab } from "./send-message-tab";
 import { SettingsTab } from "./settings-tab";
 import { EmailLogsTab } from "./email-logs-tab";
+import type { FollowupDelay } from "./settings-actions";
 
 type MessageCandidate = {
   id: number;
@@ -23,9 +24,11 @@ type AdminTabsProps = {
   genders: string[];
   religiousLevels: string[];
   maxRecommendations: number | "all";
+  followupFirst: FollowupDelay;
+  followupSecond: FollowupDelay;
 };
 
-export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations }: AdminTabsProps) {
+export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond }: AdminTabsProps) {
   const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings" | "emails">("candidates");
 
   return (
@@ -89,7 +92,11 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
         <SendMessageTab candidates={allCandidates as MessageCandidate[]} />
       )}
       {activeTab === "settings" && (
-        <SettingsTab initialValue={maxRecommendations} />
+        <SettingsTab
+          initialValue={maxRecommendations}
+          initialFollowupFirst={followupFirst}
+          initialFollowupSecond={followupSecond}
+        />
       )}
       {activeTab === "emails" && (
         <EmailLogsTab />
