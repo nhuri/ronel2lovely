@@ -5,7 +5,7 @@ import { CandidatesGrid } from "./candidates-grid";
 import { SendMessageTab } from "./send-message-tab";
 import { SettingsTab } from "./settings-tab";
 import { EmailLogsTab } from "./email-logs-tab";
-import type { FollowupDelay } from "./settings-actions";
+import type { FollowupDelay } from "@/lib/followup";
 
 type MessageCandidate = {
   id: number;

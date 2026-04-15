@@ -1,6 +1,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendEmailWithLog } from "@/lib/email";
-import { getFollowupDelays, followupDelayToMs } from "@/app/admin/settings-actions";
+import { getFollowupDelays } from "@/app/admin/settings-actions";
+import { followupDelayToMs } from "@/lib/followup";
 
 export const runtime = "nodejs";
 
@@ -73,7 +74,7 @@ export async function GET(request: Request) {
   };
 
   // ── Step 1: First follow-up ───────────────────────────────────────────────
-  // Proposals at status "3" (התחלנו להפגש) with no first follow-up yet
+  // Proposals at status "3" (2 המועמדים מעוניינים) with no first follow-up yet
   const firstDelayMs = followupDelayToMs(delays.first);
   const firstCutoff = new Date(Date.now() - firstDelayMs).toISOString();
 
@@ -100,17 +101,17 @@ export async function GET(request: Request) {
       ]);
       if (!c1 || !c2) continue;
 
-      // Status options: "כן נפגשנו" → "5" (דייטים מתקדם), "לא טרם יצאנו" → "2", "חתכנו" → "4"
-      const [tok5, tok2, tok4] = await Promise.all([
-        createToken(admin, proposal.id as number, "5"),
-        createToken(admin, proposal.id as number, "2"),
+      // Status options: "נפגשנו" → "4" (נפגשו), "לא יצאנו" → "2", "חתכנו" → "5" (חתכו לאחר שנפגשו)
+      const [tok4, tok2, tok5] = await Promise.all([
         createToken(admin, proposal.id as number, "4"),
+        createToken(admin, proposal.id as number, "2"),
+        createToken(admin, proposal.id as number, "5"),
       ]);
 
       const statusOptions = [
-        { label: "כן, נפגשנו", token: tok5 },
+        { label: "כן, נפגשנו", token: tok4 },
         { label: "לא, טרם יצאנו", token: tok2 },
-        { label: "חתכנו לאחר פגישה", token: tok4 },
+        { label: "חתכנו לאחר פגישה", token: tok5 },
       ].filter((o) => o.token !== null) as { label: string; token: string }[];
 
       for (const cand of [c1, c2]) {
@@ -142,14 +143,14 @@ export async function GET(request: Request) {
   }
 
   // ── Step 2: Second follow-up ──────────────────────────────────────────────
-  // Proposals at status "5" (דייטים מתקדם) with no second follow-up yet
+  // Proposals at status "4" (נפגשו) with no second follow-up yet
   const secondDelayMs = followupDelayToMs(delays.second);
   const secondCutoff = new Date(Date.now() - secondDelayMs).toISOString();
 
   const { data: secondProposals } = await admin
     .from("proposals")
     .select("id, candidate_id_1, candidate_id_2")
-    .eq("status", "5")
+    .eq("status", "4")
     .is("follow_up_month_sent_at", null)
     .lt("updated_at", secondCutoff);
 
@@ -169,17 +170,15 @@ export async function GET(request: Request) {
       ]);
       if (!c1 || !c2) continue;
 
-      // Status options: continue dating → "5" (stay), התארסו → "7", סיימנו → "6"
-      const [tok5, tok7, tok6] = await Promise.all([
-        createToken(admin, proposal.id as number, "5"),
-        createToken(admin, proposal.id as number, "7"),
+      // Status options: ממשיכים → "6" (דייטים מתקדם), סיימנו → "7" (חתכו לאחר תקופה)
+      const [tok6, tok7] = await Promise.all([
         createToken(admin, proposal.id as number, "6"),
+        createToken(admin, proposal.id as number, "7"),
       ]);
 
       const statusOptions = [
-        { label: "ממשיכים להפגש", token: tok5 },
-        { label: "התארסנו!", token: tok7 },
-        { label: "סיימנו לאחר תקופה", token: tok6 },
+        { label: "ממשיכים להפגש", token: tok6 },
+        { label: "סיימנו לאחר תקופה", token: tok7 },
       ].filter((o) => o.token !== null) as { label: string; token: string }[];
 
       for (const cand of [c1, c2]) {

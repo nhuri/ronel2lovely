@@ -1,12 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  saveMaxRecommendations,
-  saveFollowupDelays,
-  FOLLOWUP_DELAY_OPTIONS,
-  type FollowupDelay,
-} from "./settings-actions";
+import { saveMaxRecommendations, saveFollowupDelays } from "./settings-actions";
+import { FOLLOWUP_DELAY_OPTIONS, type FollowupDelay } from "@/lib/followup";
 
 type Props = {
   initialValue: number | "all";

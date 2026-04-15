@@ -1,12 +1,13 @@
 export const PROPOSAL_STATUSES: Record<string, string> = {
   "1": "ההצעה נפתחה",
   "2": "פסלו טרם יצאו",
-  "3": "התחלנו להפגש",
-  "4": "חתכו לאחר פגישה",
-  "5": "דייטים מתקדם",
-  "6": "חתכו לאחר תקופה",
-  "7": "התארסו",
-  "8": "התחתנו",
+  "3": "2 המועמדים מעוניינים",
+  "4": "נפגשו",
+  "5": "חתכו לאחר שנפגשו",
+  "6": "דייטים מתקדם",
+  "7": "חתכו לאחר תקופה",
+  "8": "התארסו",
+  "9": "התחתנו",
 };
 
 /** Return gender-appropriate text. male=זכר version, female=נקבה version */
@@ -33,14 +34,16 @@ export function getStatusColor(status: string): string {
     case "3":
       return "bg-amber-50 text-amber-700";
     case "4":
-      return "bg-red-50 text-red-700";
+      return "bg-amber-50 text-amber-700";
     case "5":
-      return "bg-purple-50 text-purple-700";
-    case "6":
       return "bg-red-50 text-red-700";
+    case "6":
+      return "bg-purple-50 text-purple-700";
     case "7":
-      return "bg-emerald-50 text-emerald-700";
+      return "bg-red-50 text-red-700";
     case "8":
+      return "bg-emerald-50 text-emerald-700";
+    case "9":
       return "bg-emerald-50 text-emerald-700";
     default:
       return "bg-gray-50 text-gray-700";
@@ -48,5 +51,5 @@ export function getStatusColor(status: string): string {
 }
 
 export function isTerminalStatus(status: string): boolean {
-  return status === "7" || status === "8";
+  return status === "8" || status === "9";
 }
