@@ -58,15 +58,15 @@ export default async function AdminDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-3">
             <span className="text-sm text-gray-500 hidden sm:inline">
               {candidates?.length ?? 0} מועמדים
             </span>
             <Link
               href="/admin/inquiries"
-              className="relative px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
+              className="relative px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
             >
-              פניות מועמדים
+              פניות
               {(unreadInquiries ?? 0) > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
                   {unreadInquiries}
@@ -75,20 +75,20 @@ export default async function AdminDashboard() {
             </Link>
             <Link
               href="/admin/proposals"
-              className="px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
+              className="hidden sm:block px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
             >
               הצעות שידוך
             </Link>
             <Link
               href="/admin/new"
-              className="px-4 py-1.5 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors"
+              className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors whitespace-nowrap"
             >
-              + הוסף מועמד חדש
+              + הוסף
             </Link>
             <form action={logout}>
               <button
                 type="submit"
-                className="px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 התנתקות
               </button>

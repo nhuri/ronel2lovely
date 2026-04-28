@@ -37,10 +37,10 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
   return (
     <div dir="rtl">
       {/* Tab bar */}
-      <div className="flex gap-1 mb-5 bg-white border border-gray-200 rounded-xl p-1 shadow-sm w-fit">
+      <div className="flex gap-1 mb-5 bg-white border border-gray-200 rounded-xl p-1 shadow-sm overflow-x-auto">
         <button
           onClick={() => setActiveTab("candidates")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
             activeTab === "candidates"
               ? "bg-sky-500 text-white shadow-sm"
               : "text-gray-600 hover:bg-gray-100"
@@ -53,7 +53,7 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
         </button>
         <button
           onClick={() => setActiveTab("message")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
             activeTab === "message"
               ? "bg-sky-500 text-white shadow-sm"
               : "text-gray-600 hover:bg-gray-100"
@@ -63,7 +63,7 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
         </button>
         <button
           onClick={() => setActiveTab("settings")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
             activeTab === "settings"
               ? "bg-sky-500 text-white shadow-sm"
               : "text-gray-600 hover:bg-gray-100"
@@ -73,7 +73,7 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
         </button>
         <button
           onClick={() => setActiveTab("emails")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
             activeTab === "emails"
               ? "bg-sky-500 text-white shadow-sm"
               : "text-gray-600 hover:bg-gray-100"
@@ -83,7 +83,7 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
         </button>
         <button
           onClick={() => setActiveTab("analytics")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
             activeTab === "analytics"
               ? "bg-sky-500 text-white shadow-sm"
               : "text-gray-600 hover:bg-gray-100"

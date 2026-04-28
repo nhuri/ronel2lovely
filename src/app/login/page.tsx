@@ -167,7 +167,7 @@ function LoginContent() {
       </div>
 
       {/* ── Left side: Login Form ── */}
-      <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-8 py-12">
+      <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-8 sm:py-12">
         {/* Mobile-only image */}
         <div className="lg:hidden w-full max-w-sm mb-8 rounded-2xl overflow-hidden shadow-lg bg-sky-100">
           <Image
@@ -289,7 +289,7 @@ function LoginContent() {
             <button
               type="button"
               onClick={openSmsModal}
-              className="w-full py-3 bg-gradient-to-l from-rose-500 to-pink-500 text-white rounded-xl font-semibold hover:from-rose-600 hover:to-pink-600 active:from-rose-700 active:to-pink-700 transition-all shadow-sm text-xs whitespace-nowrap"
+              className="w-full py-3 bg-gradient-to-l from-rose-500 to-pink-500 text-white rounded-xl font-semibold hover:from-rose-600 hover:to-pink-600 active:from-rose-700 active:to-pink-700 transition-all shadow-sm text-xs leading-snug"
             >
               התחברות עבור מועמדים שנרשמו לאתר בגרסה הישנה (ללא מייל)
             </button>

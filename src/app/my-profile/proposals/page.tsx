@@ -80,23 +80,23 @@ export default async function MyProposalsPage({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Link
               href={`/my-profile${cidParam}`}
-              className="px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
+              className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
             >
               הפרופיל שלי
             </Link>
             <Link
               href={`/my-profile/recommendations${cidParam}`}
-              className="px-4 py-1.5 text-sm font-medium text-pink-600 hover:text-pink-700 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors"
+              className="hidden sm:block px-4 py-1.5 text-sm font-medium text-pink-600 hover:text-pink-700 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors"
             >
               הצעות מומלצות
             </Link>
             <form action={logout}>
               <button
                 type="submit"
-                className="px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 התנתקות
               </button>

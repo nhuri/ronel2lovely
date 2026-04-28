@@ -67,7 +67,7 @@ export async function SiteBanner() {
           </p>
 
           {/* Stats row */}
-          <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-2 text-[10px] text-sky-100">
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-[11px] text-sky-100">
             <span>
               <strong className="text-white text-xs">{candidateCount}</strong>{" "}
               מועמדים רשומים
