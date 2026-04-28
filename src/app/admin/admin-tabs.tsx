@@ -5,7 +5,9 @@ import { CandidatesGrid } from "./candidates-grid";
 import { SendMessageTab } from "./send-message-tab";
 import { SettingsTab } from "./settings-tab";
 import { EmailLogsTab } from "./email-logs-tab";
+import { AnalyticsTab } from "./analytics-tab";
 import type { FollowupDelay } from "@/lib/followup";
+import type { AnalyticsStats } from "./analytics-actions";
 
 type MessageCandidate = {
   id: number;
@@ -26,10 +28,11 @@ type AdminTabsProps = {
   maxRecommendations: number | "all";
   followupFirst: FollowupDelay;
   followupSecond: FollowupDelay;
+  analyticsStats: AnalyticsStats;
 };
 
-export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond }: AdminTabsProps) {
-  const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings" | "emails">("candidates");
+export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond, analyticsStats }: AdminTabsProps) {
+  const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings" | "emails" | "analytics">("candidates");
 
   return (
     <div dir="rtl">
@@ -78,6 +81,16 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
         >
           מיילים
         </button>
+        <button
+          onClick={() => setActiveTab("analytics")}
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === "analytics"
+              ? "bg-sky-500 text-white shadow-sm"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          אנליטיקה
+        </button>
       </div>
 
       {/* Tab content */}
@@ -100,6 +113,9 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
       )}
       {activeTab === "emails" && (
         <EmailLogsTab />
+      )}
+      {activeTab === "analytics" && (
+        <AnalyticsTab stats={analyticsStats} />
       )}
     </div>
   );
