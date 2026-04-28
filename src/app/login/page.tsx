@@ -182,10 +182,12 @@ function LoginContent() {
 
         <div className="w-full max-w-sm">
           <div className="mb-8">
-            <div className="w-12 h-12 bg-sky-500 rounded-xl flex items-center justify-center mb-4">
-              <span className="text-white text-lg font-bold">RL</span>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-base font-bold">RL</span>
+              </div>
+              <h1 className="text-2xl font-bold text-gray-800">ברוכים הבאים</h1>
             </div>
-            <h1 className="text-2xl font-bold text-gray-800">ברוכים הבאים</h1>
             <p className="text-gray-400 mt-1">
               {step === "email"
                 ? "הכנס אימייל לקבלת קוד אימות"
