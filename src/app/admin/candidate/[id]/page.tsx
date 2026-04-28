@@ -148,7 +148,7 @@ export default async function AdminCandidateViewPage({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 overflow-x-hidden">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between" dir="rtl">

@@ -14,7 +14,7 @@ export function CandidateTabs({ tabs }: { tabs: Tab[] }) {
   const [activeTab, setActiveTab] = useState(tabs[0]?.key ?? "");
 
   return (
-    <div dir="rtl">
+    <div dir="rtl" className="overflow-x-hidden">
       {/* Tab bar */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <div className="flex gap-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-1">

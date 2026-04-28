@@ -262,7 +262,7 @@ export function ProfileClient({
         <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
           {imgs.length > 0 && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className={`flex gap-1 overflow-x-auto p-1 ${imgs.length === 1 ? "justify-center" : ""}`}>
+              <div className={`flex gap-1 overflow-x-auto overscroll-x-contain p-1 ${imgs.length === 1 ? "justify-center" : ""}`}>
                 {imgs.map((url, i) => (
                   <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="relative flex-shrink-0 w-60 h-72 rounded-xl overflow-hidden block cursor-pointer">
                     <Image src={url} alt={`${c.full_name} ${i + 1}`} fill className="object-cover" />
