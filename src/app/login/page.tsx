@@ -157,7 +157,7 @@ function LoginContent() {
       {/* ── Right side: Memorial Image ── */}
       <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-center justify-center">
         <Image
-          src="/ronel-web.jpg"
+          src="/ronel-web-new.png"
           alt="Ronel Lovely"
           width={1400}
           height={788}
@@ -171,7 +171,7 @@ function LoginContent() {
         {/* Mobile-only image */}
         <div className="lg:hidden w-full max-w-sm mb-4 rounded-2xl overflow-hidden shadow-lg bg-sky-100">
           <Image
-            src="/ronel-web.jpg"
+            src="/ronel-web-new.png"
             alt="Ronel Lovely"
             width={800}
             height={450}
