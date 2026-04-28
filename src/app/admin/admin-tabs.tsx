@@ -37,7 +37,7 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
   return (
     <div dir="rtl">
       {/* Tab bar */}
-      <div className="flex gap-1 mb-5 bg-white border border-gray-200 rounded-xl p-1 shadow-sm overflow-x-auto">
+      <div className="flex flex-wrap gap-1 mb-5 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
         <button
           onClick={() => setActiveTab("candidates")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${

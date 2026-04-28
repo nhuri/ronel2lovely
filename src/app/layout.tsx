@@ -14,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="he" dir="rtl">
-      <body className="bg-gray-50 text-gray-900 min-h-screen">
+    <html lang="he" dir="rtl" className="overflow-x-hidden">
+      <body className="bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden">
         <VisitTracker />
         <SiteBanner />
         {children}

@@ -169,7 +169,7 @@ function LoginContent() {
       {/* ── Left side: Login Form ── */}
       <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-8 sm:py-12">
         {/* Mobile-only image */}
-        <div className="lg:hidden w-full max-w-sm mb-8 rounded-2xl overflow-hidden shadow-lg bg-sky-100">
+        <div className="lg:hidden w-full max-w-sm mb-4 rounded-2xl overflow-hidden shadow-lg bg-sky-100">
           <Image
             src="/ronel-web.jpg"
             alt="Ronel Lovely"

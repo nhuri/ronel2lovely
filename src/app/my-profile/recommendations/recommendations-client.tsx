@@ -141,7 +141,7 @@ export function RecommendationsClient({
       <ActiveFiltersPanel preferences={activePreferences} onRemove={handleRemoveFilter} />
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm overflow-x-auto">
+      <div className="flex flex-wrap gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
         {tabBtn("available", "הצעות מומלצות", matches.length)}
         {tabBtn("unavailable", "הצעות מומלצות תפוסות", unavailableMatches.length)}
         {tabBtn("rejected", "הצעות שלא התאימו", allRejected.length)}

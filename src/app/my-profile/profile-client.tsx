@@ -213,58 +213,48 @@ export function ProfileClient({
       <div className={`${readOnly ? "" : "min-h-screen"} bg-gray-100`} dir="rtl">
         {!hideHeader && (
           <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">RL</span>
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-2 sm:py-3">
+              {/* Row 1: logo + logout (mobile) / all nav (desktop) */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">RL</span>
+                  </div>
+                  <div>
+                    <h1 className="text-base font-bold text-gray-800 leading-tight">{readOnly ? "צפייה בפרופיל" : "הפרופיל שלי"}</h1>
+                    <p className="text-[11px] text-gray-400 leading-tight">{c.full_name}</p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-base font-bold text-gray-800 leading-tight">{readOnly ? "צפייה בפרופיל" : "הפרופיל שלי"}</h1>
-                  <p className="text-[11px] text-gray-400 leading-tight">{c.full_name}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 sm:gap-2">
                 {readOnly ? (
-                  <Link
-                    href={backUrl ?? "/admin"}
-                    className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                  >
+                  <Link href={backUrl ?? "/admin"} className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
                     חזרה לניהול
                   </Link>
                 ) : (
                   <>
-                    <Link
-                      href={`/my-profile/proposals${cidParam}`}
-                      className="hidden sm:block px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
-                    >
-                      ההצעות שלי
-                    </Link>
-                    <Link
-                      href={`/my-profile/inquiries${cidParam}`}
-                      className="hidden sm:block px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
-                    >
-                      פניות
-                    </Link>
-                    <Link
-                      href={`/my-profile/recommendations${cidParam}`}
-                      className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-pink-600 hover:text-pink-700 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors"
-                    >
-                      הצעות מומלצות
-                    </Link>
-                    <button
-                      onClick={() => setMode("edit")}
-                      className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors"
-                    >
-                      עריכת פרופיל
-                    </button>
-                    <form action={logout}>
-                      <button type="submit" className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                        התנתקות
-                      </button>
+                    {/* Desktop: all buttons */}
+                    <div className="hidden sm:flex items-center gap-2">
+                      <Link href={`/my-profile/proposals${cidParam}`} className="px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">ההצעות שלי</Link>
+                      <Link href={`/my-profile/inquiries${cidParam}`} className="px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">פניות</Link>
+                      <Link href={`/my-profile/recommendations${cidParam}`} className="px-4 py-1.5 text-sm font-medium text-pink-600 hover:text-pink-700 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors">הצעות מומלצות</Link>
+                      <button onClick={() => setMode("edit")} className="px-4 py-1.5 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors">עריכת פרופיל</button>
+                      <form action={logout}><button type="submit" className="px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">התנתקות</button></form>
+                    </div>
+                    {/* Mobile: only logout in top row */}
+                    <form action={logout} className="sm:hidden">
+                      <button type="submit" className="px-2.5 py-1.5 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">התנתקות</button>
                     </form>
                   </>
                 )}
               </div>
+              {/* Row 2 (mobile only): nav links */}
+              {!readOnly && (
+                <div className="flex items-center gap-1 mt-1.5 sm:hidden">
+                  <Link href={`/my-profile/proposals${cidParam}`} className="px-2.5 py-1 text-xs font-medium text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">ההצעות שלי</Link>
+                  <Link href={`/my-profile/inquiries${cidParam}`} className="px-2.5 py-1 text-xs font-medium text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">פניות</Link>
+                  <Link href={`/my-profile/recommendations${cidParam}`} className="px-2.5 py-1 text-xs font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors">הצעות מומלצות</Link>
+                  <button onClick={() => setMode("edit")} className="px-2.5 py-1 text-xs font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors">עריכת פרופיל</button>
+                </div>
+              )}
             </div>
           </header>
         )}
