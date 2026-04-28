@@ -6,6 +6,7 @@ import { resolveCandidate } from "@/lib/candidate-resolver";
 import { CandidateSelectionPage } from "../candidate-selector";
 import { scoreAndRankMatches } from "@/lib/matching";
 import { getMaxRecommendations } from "@/app/admin/settings-actions";
+import { signAllCandidateImages } from "@/lib/storage";
 
 export default async function RecommendationsPage({
   searchParams,
@@ -46,7 +47,7 @@ export default async function RecommendationsPage({
   const oppositeGender = myGender === "זכר" ? "נקבה" : "זכר";
 
   // Fetch ALL opposite-gender candidates (excluding only frozen/married/engaged)
-  const { data: allPotentialMatches } = await supabase
+  const { data: rawPotentialMatches } = await supabase
     .from("candidates")
     .select(
       "id, full_name, gender, age, residence, religious_level, marital_status, height, occupation, education, image_urls, availability_status, about_me"
@@ -54,8 +55,10 @@ export default async function RecommendationsPage({
     .eq("gender", oppositeGender)
     .neq("id", candidateId);
 
+  const allPotentialMatches = await signAllCandidateImages(rawPotentialMatches ?? []);
+
   // Exclude truly inactive statuses
-  const activeMatches = (allPotentialMatches ?? []).filter(
+  const activeMatches = allPotentialMatches.filter(
     (c) =>
       c.availability_status !== "הקפאה" &&
       c.availability_status !== "התחתנו" &&
@@ -131,7 +134,7 @@ export default async function RecommendationsPage({
   // All distinct religious levels on the site (candidate's own + all opposite-gender candidates)
   const allReligiousLevels = [...new Set([
     candidate.religious_level as string,
-    ...(allPotentialMatches ?? []).map((c) => c.religious_level as string),
+    ...allPotentialMatches.map((c) => c.religious_level as string),
   ].filter(Boolean))];
 
   return (

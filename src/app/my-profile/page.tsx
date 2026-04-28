@@ -4,6 +4,7 @@ import { restoreMyProfile } from "./actions";
 import { ProfileClient } from "./profile-client";
 import { resolveCandidate } from "@/lib/candidate-resolver";
 import { CandidateSelectionPage } from "./candidate-selector";
+import { signCandidateImages } from "@/lib/storage";
 
 export default async function MyProfilePage({
   searchParams,
@@ -110,9 +111,11 @@ export default async function MyProfilePage({
 
   const wasRestored = params.restored === "1";
 
+  const signedCandidate = await signCandidateImages(candidate);
+
   return (
     <ProfileClient
-      candidate={candidate}
+      candidate={signedCandidate}
       candidateId={candidate.id as number}
       allCandidates={allCandidates.map((c) => ({
         id: c.id as number,

@@ -4,6 +4,7 @@ import { logout } from "@/app/login/actions";
 import Link from "next/link";
 import { getMaxRecommendations, getFollowupDelays } from "./settings-actions";
 import { getAnalyticsStats } from "./analytics-actions";
+import { signAllCandidateImages } from "@/lib/storage";
 
 export default async function AdminDashboard() {
   const supabase = await createSupabaseServerClient();
@@ -14,13 +15,15 @@ export default async function AdminDashboard() {
     getAnalyticsStats(),
   ]);
 
-  const { data: allCandidates } = await supabase
+  const { data: rawCandidates } = await supabase
     .from("candidates")
     .select("*")
     .order("id", { ascending: true });
 
+  const allCandidates = await signAllCandidateImages(rawCandidates ?? []);
+
   // Filter out frozen and married candidates from the main grid
-  const candidates = (allCandidates ?? []).filter(
+  const candidates = allCandidates.filter(
     (c) => !c.availability_status || (c.availability_status !== "הקפאה" && c.availability_status !== "התחתנו" && c.availability_status !== "התארסו")
   );
 

@@ -7,6 +7,7 @@ import { CreateProposalButton } from "./create-proposal-button";
 import { AdminNotesSection } from "./admin-notes-section";
 import { InquiriesSection } from "./inquiries-section";
 import { CandidateTabs } from "./candidate-tabs";
+import { signCandidateImages, signAllCandidateImages, signProposalImages } from "@/lib/storage";
 
 export default async function AdminCandidateViewPage({
   params,
@@ -31,18 +32,20 @@ export default async function AdminCandidateViewPage({
   }
 
   // Fetch candidate
-  const { data: candidate } = await supabase
+  const { data: rawCandidate } = await supabase
     .from("candidates")
     .select("*")
     .eq("id", candidateId)
     .maybeSingle();
 
-  if (!candidate) {
+  if (!rawCandidate) {
     redirect("/admin");
   }
 
+  const candidate = await signCandidateImages(rawCandidate);
+
   // Fetch proposals for this candidate
-  const { data: proposals } = await supabase
+  const { data: rawProposals } = await supabase
     .from("proposals")
     .select(
       "*, candidate_1:candidates!candidate_id_1(id, full_name, image_urls, gender, age, residence), candidate_2:candidates!candidate_id_2(id, full_name, image_urls, gender, age, residence), proposal_notes(id, note_text, author_type, created_at)"
@@ -52,13 +55,16 @@ export default async function AdminCandidateViewPage({
     )
     .order("updated_at", { ascending: false });
 
+  const proposals = await signProposalImages(rawProposals ?? []);
+
   // Fetch active candidates for new proposal modal
-  const { data: allCandidates } = await supabase
+  const { data: rawAllCandidates } = await supabase
     .from("candidates")
     .select("id, full_name, gender, age, residence, image_urls, availability_status")
     .order("full_name", { ascending: true });
 
-  const activeCandidates = (allCandidates ?? []).filter(
+  const signedAllCandidates = await signAllCandidateImages(rawAllCandidates ?? []);
+  const activeCandidates = signedAllCandidates.filter(
     (c) =>
       !c.availability_status ||
       (c.availability_status !== "הקפאה" &&

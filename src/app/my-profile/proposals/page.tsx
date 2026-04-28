@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MyProposalsClient } from "./proposals-client";
 import { resolveCandidate } from "@/lib/candidate-resolver";
 import { CandidateSelectionPage } from "../candidate-selector";
+import { signProposalImages, signAllCandidateImages } from "@/lib/storage";
 
 export default async function MyProposalsPage({
   searchParams,
@@ -39,7 +40,7 @@ export default async function MyProposalsPage({
   const cidParam = allCandidates.length > 1 ? `?candidate_id=${candidateId}` : "";
 
   // Fetch proposals where this candidate is involved
-  const { data: proposals } = await supabase
+  const { data: rawProposals } = await supabase
     .from("proposals")
     .select(
       "*, candidate_1:candidates!candidate_id_1(id, full_name, image_urls, gender, age, residence), candidate_2:candidates!candidate_id_2(id, full_name, image_urls, gender, age, residence), proposal_notes(id, note_text, author_type, created_at)"
@@ -49,13 +50,17 @@ export default async function MyProposalsPage({
     )
     .order("updated_at", { ascending: false });
 
+  const proposals = await signProposalImages(rawProposals ?? []);
+
   // Fetch active candidates for new proposal modal
-  const { data: allCandidatesForProposal } = await supabase
+  const { data: rawAllCandidatesForProposal } = await supabase
     .from("candidates")
     .select("id, full_name, gender, age, residence, image_urls, availability_status")
     .order("full_name", { ascending: true });
 
-  const activeCandidates = (allCandidatesForProposal ?? []).filter(
+  const allCandidatesForProposal = await signAllCandidateImages(rawAllCandidatesForProposal ?? []);
+
+  const activeCandidates = allCandidatesForProposal.filter(
     (c) =>
       !c.availability_status ||
       (c.availability_status !== "הקפאה" &&
@@ -108,7 +113,7 @@ export default async function MyProposalsPage({
       {/* Main */}
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         <MyProposalsClient
-          proposals={proposals ?? []}
+          proposals={proposals}
           candidateId={candidateId}
           candidateInfo={{
             id: candidateId,
