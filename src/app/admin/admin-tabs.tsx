@@ -35,7 +35,7 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
   const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings" | "emails" | "analytics">("candidates");
 
   return (
-    <div dir="rtl">
+    <div dir="rtl" className="overflow-x-hidden">
       {/* Tab bar */}
       <div className="flex flex-wrap gap-1 mb-5 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
         <button

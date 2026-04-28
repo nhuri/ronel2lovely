@@ -74,41 +74,38 @@ export function CandidatesGrid({
     <>
       {/* ── Filters Bar ── */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[200px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div>
             <label className="block text-xs font-medium text-gray-400 mb-1">חיפוש לפי שם</label>
             <input type="text" placeholder="הקלד שם..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
           </div>
-          <div className="min-w-[130px]">
+          <div>
             <label className="block text-xs font-medium text-gray-400 mb-1">מין</label>
             <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all">
               <option value="">הכל</option>
               {genders.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
-          <div className="min-w-[150px]">
+          <div>
             <label className="block text-xs font-medium text-gray-400 mb-1">רמה דתית</label>
             <select value={religiousFilter} onChange={(e) => setReligiousFilter(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all">
               <option value="">הכל</option>
               {religiousLevels.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
-          <div className="flex gap-2 items-end">
-            <div className="w-[80px]">
-              <label className="block text-xs font-medium text-gray-400 mb-1">גיל מ-</label>
-              <input type="number" placeholder="18" value={ageMin} onChange={(e) => setAgeMin(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
-            </div>
-            <div className="w-[80px]">
-              <label className="block text-xs font-medium text-gray-400 mb-1">עד</label>
-              <input type="number" placeholder="99" value={ageMax} onChange={(e) => setAgeMax(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">טווח גיל</label>
+            <div className="flex gap-2">
+              <input type="number" placeholder="מ-" value={ageMin} onChange={(e) => setAgeMin(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
+              <input type="number" placeholder="עד" value={ageMax} onChange={(e) => setAgeMax(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
             </div>
           </div>
-          {hasActiveFilters && (
-            <button onClick={clearFilters} className="px-4 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">נקה סינון</button>
-          )}
         </div>
         {hasActiveFilters && (
-          <p className="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-100">מציג {filtered.length} מתוך {candidates.length} מועמדים</p>
+          <button onClick={clearFilters} className="mt-3 px-4 py-1.5 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">נקה סינון</button>
+        )}
+        {hasActiveFilters && (
+          <p className="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100">מציג {filtered.length} מתוך {candidates.length} מועמדים</p>
         )}
       </div>
 
@@ -230,7 +227,7 @@ function CandidateCard({ candidate: c, onView }: { candidate: Candidate; onView:
 
   return (
     <div onClick={onView} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
-      <div className="relative w-full aspect-square bg-gray-100">
+      <div className="relative w-full h-56 sm:h-auto sm:aspect-square bg-gray-100">
         {imgs.length > 0 ? (
           <ImageCarousel urls={imgs} alt={c.full_name} className="w-full h-full" />
         ) : (

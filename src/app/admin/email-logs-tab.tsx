@@ -83,7 +83,7 @@ export function EmailLogsTab() {
           <p className="text-xs">מיילים יופיעו כאן לאחר שישלחו</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+        <div className="overflow-x-auto overscroll-x-contain rounded-xl border border-gray-200 shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
