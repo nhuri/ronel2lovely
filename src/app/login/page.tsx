@@ -166,9 +166,9 @@ function LoginContent() {
       </div>
 
       {/* ── Left side: Login Form ── */}
-      <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-6 sm:py-10">
-        {/* Mobile-only image — capped height so form stays visible without scrolling */}
-        <div className="lg:hidden w-full max-w-sm mb-3 rounded-2xl overflow-hidden shadow-lg bg-sky-100" style={{ maxHeight: "28vh" }}>
+      <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-3 sm:py-10">
+        {/* Mobile-only image — capped height accounting for site banner */}
+        <div className="lg:hidden w-full max-w-sm mb-2 rounded-xl overflow-hidden shadow bg-sky-100" style={{ maxHeight: "20vh" }}>
           <Image
             src="/ronel%20ben%20moshe.png"
             alt="סמ״ר רונאל בן משה ז״ל"
@@ -180,7 +180,7 @@ function LoginContent() {
         </div>
 
         <div className="w-full max-w-sm">
-          <div className="mb-8">
+          <div className="mb-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-base font-bold">RL</span>
