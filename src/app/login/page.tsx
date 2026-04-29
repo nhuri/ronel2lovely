@@ -157,8 +157,8 @@ function LoginContent() {
       {/* ── Right side: Memorial Image ── */}
       <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-center justify-center">
         <Image
-          src="/ronel-web-new.png"
-          alt="Ronel Lovely"
+          src="/ronel%20ben%20moshe.png"
+          alt="סמ״ר רונאל בן משה ז״ל"
           width={1400}
           height={788}
           className="w-full h-full object-contain"
@@ -171,8 +171,8 @@ function LoginContent() {
         {/* Mobile-only image */}
         <div className="lg:hidden w-full max-w-sm mb-4 rounded-2xl overflow-hidden shadow-lg bg-sky-100">
           <Image
-            src="/ronel-web-new.png"
-            alt="Ronel Lovely"
+            src="/ronel%20ben%20moshe.png"
+            alt="סמ״ר רונאל בן משה ז״ל"
             width={800}
             height={450}
             className="w-full object-contain"
@@ -188,6 +188,9 @@ function LoginContent() {
               </div>
               <h1 className="text-2xl font-bold text-gray-800">ברוכים הבאים</h1>
             </div>
+            <h2 className="text-sm font-semibold text-sky-600 mb-2">
+              הניצחון של רונאל הוא השמחה של כולנו
+            </h2>
             <p className="text-gray-400 mt-1">
               {step === "email"
                 ? "הכנס אימייל לקבלת קוד אימות"
