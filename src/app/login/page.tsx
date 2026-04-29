@@ -155,27 +155,26 @@ function LoginContent() {
   return (
     <div className="min-h-screen flex" dir="rtl">
       {/* ── Right side: Memorial Image ── */}
-      <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-center justify-center">
+      <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-start justify-center overflow-hidden">
         <Image
           src="/ronel%20ben%20moshe.png"
           alt="סמ״ר רונאל בן משה ז״ל"
-          width={1400}
-          height={788}
-          className="w-full h-full object-contain"
+          fill
+          className="object-contain object-top"
           priority
         />
       </div>
 
       {/* ── Left side: Login Form ── */}
-      <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-8 sm:py-12">
-        {/* Mobile-only image */}
-        <div className="lg:hidden w-full max-w-sm mb-4 rounded-2xl overflow-hidden shadow-lg bg-sky-100">
+      <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-6 sm:py-10">
+        {/* Mobile-only image — capped height so form stays visible without scrolling */}
+        <div className="lg:hidden w-full max-w-sm mb-3 rounded-2xl overflow-hidden shadow-lg bg-sky-100" style={{ maxHeight: "28vh" }}>
           <Image
             src="/ronel%20ben%20moshe.png"
             alt="סמ״ר רונאל בן משה ז״ל"
             width={800}
             height={450}
-            className="w-full object-contain"
+            className="w-full h-full object-contain object-top"
             priority
           />
         </div>
