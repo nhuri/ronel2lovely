@@ -157,7 +157,7 @@ function LoginContent() {
       {/* ── Right side: Memorial Image ── */}
       <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-start justify-center overflow-hidden">
         <Image
-          src="/ronel%20ben%20moshe.png"
+          src="/ronel-web-new.png"
           alt="סמ״ר רונאל בן משה ז״ל"
           fill
           className="object-contain object-top"
@@ -170,7 +170,7 @@ function LoginContent() {
         {/* Mobile-only image — capped height accounting for site banner */}
         <div className="lg:hidden w-full max-w-sm mb-2 rounded-xl overflow-hidden shadow bg-sky-100" style={{ maxHeight: "20vh" }}>
           <Image
-            src="/ronel%20ben%20moshe.png"
+            src="/ronel-web-new.png"
             alt="סמ״ר רונאל בן משה ז״ל"
             width={800}
             height={450}
