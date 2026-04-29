@@ -46,7 +46,7 @@ export async function SiteBanner() {
     <div className="bg-gradient-to-l from-sky-600 to-sky-700 text-white py-3 px-4">
       <div className="max-w-3xl mx-auto">
 
-        {/* Row 1: photo + text + stats */}
+        {/* Single row: photo + text/stats + donation button */}
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 sm:w-14 sm:h-14 rounded-full border-2 border-white/40 flex-shrink-0 bg-no-repeat"
@@ -106,11 +106,9 @@ export async function SiteBanner() {
               )}
             </div>
           </div>
-        </div>
-
-        {/* Row 2: donation button */}
-        <div className="mt-2.5 flex justify-end">
-          <DonationButton />
+          <div className="flex-shrink-0">
+            <DonationButton />
+          </div>
         </div>
 
       </div>
