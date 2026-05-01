@@ -19,21 +19,17 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
     <>
       {/* Video strip — below site banner, only on login page */}
       {/* dir=ltr on wrapper so flex order is predictable: spacer(left/form) then strip(right/image) */}
-      <div className="flex" dir="ltr">
-        {/* Left: form-panel side — colored strip with link */}
-        <div className="w-full lg:w-2/5 bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex items-center" dir="rtl">
-          <a
-            href="/VID-20260429-WA0055.mp4"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-white text-xs font-medium"
-          >
-            <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] flex-shrink-0">▶</span>
-            סרטון הסבר על האתר
-          </a>
-        </div>
-        {/* Right: image-panel side — seamless bg (no visible banner above image) */}
-        <div className="hidden lg:block lg:flex-1 bg-sky-100" />
+      {/* Video strip — mobile only; on desktop the link lives inside the form column */}
+      <div className="lg:hidden bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex items-center" dir="rtl">
+        <a
+          href="/VID-20260429-WA0055.mp4"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-white text-xs font-medium"
+        >
+          <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] flex-shrink-0">▶</span>
+          סרטון הסבר על האתר
+        </a>
       </div>
       {children}
     </>

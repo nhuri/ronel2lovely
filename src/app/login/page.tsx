@@ -202,6 +202,17 @@ function LoginContent() {
           />
         </div>
 
+        {/* Desktop-only video link — inside form column, no strip above image */}
+        <a
+          href="/VID-20260429-WA0055.mp4"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden lg:flex self-start items-center gap-1.5 text-sky-500 hover:text-sky-600 text-xs font-medium mb-4 transition-colors"
+        >
+          <span className="w-5 h-5 rounded-full bg-sky-100 flex items-center justify-center text-[10px] flex-shrink-0">▶</span>
+          סרטון הסבר על האתר
+        </a>
+
         <div className="w-full max-w-sm">
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-2">
