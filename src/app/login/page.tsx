@@ -154,14 +154,13 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen flex" dir="rtl">
-      {/* ── Right side: Memorial Image ── */}
-      <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-start justify-center overflow-hidden">
-        <Image
-          src="/ronel-web-new.png"
-          alt="סמ״ר רונאל בן משה ז״ל"
-          fill
-          className="object-contain object-top"
-          priority
+      {/* ── Right side: Explainer Video ── */}
+      <div className="hidden lg:flex lg:w-3/5 relative bg-black items-center justify-center overflow-hidden">
+        <video
+          src="/VID-20260429-WA0055.mp4"
+          controls
+          playsInline
+          className="w-full h-full object-contain"
         />
       </div>
 
@@ -313,6 +312,16 @@ function LoginContent() {
             >
               הצטרפו כשגרירים: רשמו חברים ובני משפחה למערכת
             </button>
+          </div>
+
+          {/* Mobile-only video */}
+          <div className="lg:hidden mt-5 w-full rounded-xl overflow-hidden bg-black">
+            <video
+              src="/VID-20260429-WA0055.mp4"
+              controls
+              playsInline
+              className="w-full"
+            />
           </div>
 
           <div className="mt-6 flex justify-center gap-4 text-xs text-gray-400">
