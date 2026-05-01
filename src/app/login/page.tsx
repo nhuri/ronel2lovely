@@ -202,8 +202,8 @@ function LoginContent() {
           />
         </div>
 
-        {/* Memorial links — visible on all screens */}
-        <div className="flex w-full justify-start gap-4 mb-2 flex-wrap">
+        {/* Memorial links — desktop only, aligned with video link below */}
+        <div className="hidden lg:flex w-full justify-end gap-4 mb-1 flex-wrap">
           <a
             href="https://chaim-beronel.org/"
             target="_blank"
