@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DonationButton } from "./donate/donation-button";
 
@@ -106,7 +107,20 @@ export async function SiteBanner() {
               )}
             </div>
           </div>
-          <div className="flex-shrink-0">
+          {/* Logo + sponsorship text + donation button */}
+          <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
+            <div className="flex flex-col items-center">
+              <Image
+                src="/chaim%20beronel.jpg"
+                alt="עמותת חיים ברונאל"
+                width={48}
+                height={48}
+                className="rounded-lg h-9 w-auto object-contain"
+              />
+              <span className="text-[9px] text-sky-100 text-center leading-tight mt-0.5 max-w-[60px]">
+                בחסות עמותת חיים ברונאל
+              </span>
+            </div>
             <DonationButton />
           </div>
         </div>
