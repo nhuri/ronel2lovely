@@ -20,7 +20,7 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
       {/* Video strip — below site banner, only on login page */}
       {/* dir=ltr on wrapper so flex order is predictable: spacer(left/form) then strip(right/image) */}
       {/* Mobile strip: video link (right) + memorial icon links (left) */}
-      <div className="lg:hidden bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex items-center justify-between" dir="rtl">
+      <div className="bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex items-center justify-between" dir="rtl">
         <a
           href="/VID-20260429-WA0055.mp4"
           target="_blank"
@@ -30,7 +30,7 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
           <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] flex-shrink-0">▶</span>
           סרטון הסבר על האתר
         </a>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-1.5 items-center">
           <a href="https://chaim-beronel.org/" target="_blank" rel="noopener noreferrer" title="אתר זיכרון לרונאל" className="text-white/80 hover:text-white transition-colors">
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
