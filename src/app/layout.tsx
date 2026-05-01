@@ -35,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="he" dir="rtl" className="overflow-x-hidden w-full">
-      <head>
+      <body className="bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden overscroll-x-none w-full">
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-XR1DPKSR97"
           strategy="afterInteractive"
@@ -48,8 +48,6 @@ export default function RootLayout({
             gtag('config', 'G-XR1DPKSR97');
           `}
         </Script>
-      </head>
-      <body className="bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden overscroll-x-none w-full">
         <VisitTracker />
         <SiteBanner />
         {children}
