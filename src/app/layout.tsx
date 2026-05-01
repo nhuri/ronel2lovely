@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { SiteBanner } from "./site-banner";
 import { VisitTracker } from "./visit-tracker";
@@ -34,6 +35,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="he" dir="rtl" className="overflow-x-hidden w-full">
+      <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-XR1DPKSR97"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-XR1DPKSR97');
+          `}
+        </Script>
+      </head>
       <body className="bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden overscroll-x-none w-full">
         <VisitTracker />
         <SiteBanner />
