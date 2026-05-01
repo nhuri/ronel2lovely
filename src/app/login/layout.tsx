@@ -15,5 +15,21 @@ export const metadata: Metadata = {
 };
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      {/* Video strip — appears directly below the site banner, only on the login page */}
+      <div className="bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex justify-end">
+        <a
+          href="/VID-20260429-WA0055.mp4"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-white text-xs font-medium"
+        >
+          <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] flex-shrink-0">▶</span>
+          סרטון הסבר על האתר
+        </a>
+      </div>
+      {children}
+    </>
+  );
 }

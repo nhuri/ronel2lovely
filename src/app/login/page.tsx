@@ -161,19 +161,6 @@ function LoginContent() {
   return (
     <div className="min-h-screen flex flex-col" dir="rtl">
 
-      {/* ── Mobile-only video strip (below site banner, same side as donation button) ── */}
-      <div className="lg:hidden bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex justify-end">
-        <a
-          href="/VID-20260429-WA0055.mp4"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-white text-xs font-medium"
-        >
-          <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] flex-shrink-0">▶</span>
-          סרטון הסבר על האתר
-        </a>
-      </div>
-
       {/* ── Two-column content ── */}
       <div className="flex flex-1">
 
