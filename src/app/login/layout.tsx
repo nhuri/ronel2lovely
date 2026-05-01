@@ -20,8 +20,8 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
       {/* Video strip — below site banner, only on login page */}
       {/* dir=ltr on wrapper so flex order is predictable: spacer(left/form) then strip(right/image) */}
       <div className="flex" dir="ltr">
-        <div className="hidden lg:block lg:w-2/5 bg-white border-t border-gray-100" />
-        <div className="w-full lg:flex-1 bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex items-center" dir="rtl">
+        {/* Left: form-panel side — colored strip with link */}
+        <div className="w-full lg:w-2/5 bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex items-center" dir="rtl">
           <a
             href="/VID-20260429-WA0055.mp4"
             target="_blank"
@@ -32,6 +32,8 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
             סרטון הסבר על האתר
           </a>
         </div>
+        {/* Right: image-panel side — matches image panel background */}
+        <div className="hidden lg:block lg:flex-1 bg-sky-100 border-t border-sky-200" />
       </div>
       {children}
     </>

@@ -13,10 +13,14 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? undefined;
 
-  // Prevent page-level scroll on the landing page
+  // Prevent page-level scroll on the landing page (both html and body)
   useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
   }, []);
 
   const [step, setStep] = useState<Step>("email");
