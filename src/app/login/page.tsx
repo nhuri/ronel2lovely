@@ -173,23 +173,10 @@ function LoginContent() {
           className="object-contain object-top"
           priority
         />
-        {/* Video play button — bottom-left corner */}
-        <a
-          href="/VID-20260429-WA0055.mp4"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/70 hover:bg-black/90 text-white rounded-xl px-3 py-2 text-xs font-medium transition-colors shadow-lg"
-          title="צפו בסרטון הסבר"
-        >
-          <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-            ▶
-          </span>
-          סרטון הסבר על האתר
-        </a>
       </div>
 
       {/* ── Left side: Login Form ── */}
-      <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-3 sm:py-10">
+      <div className="w-full lg:w-2/5 flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 pt-4 pb-3 sm:py-10">
         {/* Mobile-only image — capped height accounting for site banner */}
         <div className="lg:hidden w-full max-w-sm mb-2 rounded-xl overflow-hidden shadow bg-sky-100" style={{ maxHeight: "20vh" }}>
           <Image
