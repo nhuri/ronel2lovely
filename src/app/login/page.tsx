@@ -203,7 +203,7 @@ function LoginContent() {
         </div>
 
         {/* Desktop-only video link — right-aligned in form column */}
-        <div className="hidden lg:flex w-full justify-start mb-4">
+        <div className="hidden lg:flex w-full justify-end mb-4">
           <a
             href="/VID-20260429-WA0055.mp4"
             target="_blank"
