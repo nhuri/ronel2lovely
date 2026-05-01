@@ -13,13 +13,22 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? undefined;
 
-  // Prevent page-level scroll on the landing page (both html and body)
+  // Lock viewport to exactly 100dvh: no scroll, body becomes a flex column so
+  // the login page fills the remaining height after banner + video strip.
   useEffect(() => {
     document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.height = "100dvh";
     document.body.style.overflow = "hidden";
+    document.body.style.height = "100%";
+    document.body.style.display = "flex";
+    document.body.style.flexDirection = "column";
     return () => {
       document.documentElement.style.overflow = "";
+      document.documentElement.style.height = "";
       document.body.style.overflow = "";
+      document.body.style.height = "";
+      document.body.style.display = "";
+      document.body.style.flexDirection = "";
     };
   }, []);
 
@@ -163,10 +172,10 @@ function LoginContent() {
   }
 
   return (
-    <div className="flex flex-col lg:min-h-screen" dir="rtl">
+    <div className="flex-1 min-h-0 flex flex-col" dir="rtl">
 
       {/* ── Two-column content ── */}
-      <div className="flex lg:flex-1">
+      <div className="flex flex-1 min-h-0">
 
       {/* ── Right side: Image + video thumbnail ── */}
       <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-start justify-center overflow-hidden">
@@ -180,9 +189,9 @@ function LoginContent() {
       </div>
 
       {/* ── Left side: Login Form ── */}
-      <div className="w-full lg:w-2/5 flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 py-4 lg:py-10">
+      <div className="w-full lg:w-2/5 flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 pt-3 pb-2 lg:py-10">
         {/* Mobile-only image — capped height accounting for site banner */}
-        <div className="lg:hidden w-full max-w-sm mb-2 rounded-xl overflow-hidden shadow bg-sky-100" style={{ maxHeight: "20vh" }}>
+        <div className="lg:hidden w-full max-w-sm mb-4 rounded-xl overflow-hidden shadow bg-sky-100" style={{ maxHeight: "20vh" }}>
           <Image
             src="/ronel-web-new.png"
             alt="סמ״ר רונאל בן משה ז״ל"

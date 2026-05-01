@@ -32,8 +32,8 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
             סרטון הסבר על האתר
           </a>
         </div>
-        {/* Right: image-panel side — matches image panel background */}
-        <div className="hidden lg:block lg:flex-1 bg-sky-100 border-t border-sky-200" />
+        {/* Right: image-panel side — seamless bg (no visible banner above image) */}
+        <div className="hidden lg:block lg:flex-1 bg-sky-100" />
       </div>
       {children}
     </>
