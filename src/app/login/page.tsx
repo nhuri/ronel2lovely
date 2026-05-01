@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { sendOtp, verifyOtp, sendSmsOtp, verifySmsOtp, sendManagerOtp, verifyManagerOtp } from "./actions";
 import Image from "next/image";
@@ -12,6 +12,12 @@ type SmsStep = "phone" | "code";
 function LoginContent() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? undefined;
+
+  // Prevent page-level scroll on the landing page
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
 
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -153,7 +159,24 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex" dir="rtl">
+    <div className="min-h-screen flex flex-col" dir="rtl">
+
+      {/* ── Mobile-only video strip (below site banner, same side as donation button) ── */}
+      <div className="lg:hidden bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex justify-end">
+        <a
+          href="/VID-20260429-WA0055.mp4"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-white text-xs font-medium"
+        >
+          <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] flex-shrink-0">▶</span>
+          סרטון הסבר על האתר
+        </a>
+      </div>
+
+      {/* ── Two-column content ── */}
+      <div className="flex flex-1">
+
       {/* ── Right side: Image + video thumbnail ── */}
       <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-start justify-center overflow-hidden">
         <Image
@@ -328,21 +351,6 @@ function LoginContent() {
             </button>
           </div>
 
-          {/* Mobile: small video button */}
-          <div className="lg:hidden mt-4 flex justify-center">
-            <a
-              href="/VID-20260429-WA0055.mp4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-colors shadow"
-            >
-              <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                ▶
-              </span>
-              סרטון הסבר על האתר
-            </a>
-          </div>
-
           <div className="mt-6 flex justify-center gap-4 text-xs text-gray-400">
             <Link href="/about" className="hover:text-gray-600 transition-colors">
               איך האתר עובד?
@@ -358,6 +366,8 @@ function LoginContent() {
           </p>
         </div>
       </div>
+
+      </div>{/* end flex-1 two-column */}
 
       {/* ── SMS Login Modal ── */}
       {showSmsModal && (
