@@ -159,10 +159,10 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" dir="rtl">
+    <div className="flex flex-col lg:min-h-screen" dir="rtl">
 
       {/* ── Two-column content ── */}
-      <div className="flex flex-1">
+      <div className="flex lg:flex-1">
 
       {/* ── Right side: Image + video thumbnail ── */}
       <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-start justify-center overflow-hidden">
@@ -176,7 +176,7 @@ function LoginContent() {
       </div>
 
       {/* ── Left side: Login Form ── */}
-      <div className="w-full lg:w-2/5 flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 pt-4 pb-3 sm:py-10">
+      <div className="w-full lg:w-2/5 flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 py-4 lg:py-10">
         {/* Mobile-only image — capped height accounting for site banner */}
         <div className="lg:hidden w-full max-w-sm mb-2 rounded-xl overflow-hidden shadow bg-sky-100" style={{ maxHeight: "20vh" }}>
           <Image

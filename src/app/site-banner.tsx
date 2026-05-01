@@ -113,9 +113,9 @@ export async function SiteBanner() {
               <Image
                 src="/chaim%20beronel.jpg"
                 alt="עמותת חיים ברונאל"
-                width={48}
-                height={48}
-                className="rounded-lg h-9 w-auto object-contain"
+                width={300}
+                height={120}
+                className="rounded-lg h-14 w-auto object-contain"
               />
               <span className="text-[9px] text-sky-100 text-center leading-tight mt-0.5 max-w-[60px]">
                 בחסות עמותת חיים ברונאל

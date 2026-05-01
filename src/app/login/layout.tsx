@@ -17,10 +17,11 @@ export const metadata: Metadata = {
 export default function LoginLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* Video strip — appears directly below the site banner, only on the login page */}
-      {/* On desktop: only covers the image panel (right 3/5); form panel (left 2/5) stays white */}
-      <div className="flex">
-        <div className="w-full lg:w-3/5 bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex justify-end">
+      {/* Video strip — below site banner, only on login page */}
+      {/* dir=ltr on wrapper so flex order is predictable: spacer(left/form) then strip(right/image) */}
+      <div className="flex" dir="ltr">
+        <div className="hidden lg:block lg:w-2/5 bg-white border-t border-gray-100" />
+        <div className="w-full lg:flex-1 bg-sky-700 border-t border-sky-600 px-4 py-1.5 flex items-center" dir="rtl">
           <a
             href="/VID-20260429-WA0055.mp4"
             target="_blank"
@@ -31,7 +32,6 @@ export default function LoginLayout({ children }: { children: React.ReactNode })
             סרטון הסבר על האתר
           </a>
         </div>
-        <div className="hidden lg:block lg:w-2/5 bg-white border-t border-gray-100" />
       </div>
       {children}
     </>
