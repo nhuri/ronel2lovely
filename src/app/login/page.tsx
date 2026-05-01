@@ -154,14 +154,28 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen flex" dir="rtl">
-      {/* ── Right side: Explainer Video ── */}
-      <div className="hidden lg:flex lg:w-3/5 relative bg-black items-center justify-center overflow-hidden">
-        <video
-          src="/VID-20260429-WA0055.mp4"
-          controls
-          playsInline
-          className="w-full h-full object-contain"
+      {/* ── Right side: Image + video thumbnail ── */}
+      <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-start justify-center overflow-hidden">
+        <Image
+          src="/ronel-web-new.png"
+          alt="סמ״ר רונאל בן משה ז״ל"
+          fill
+          className="object-contain object-top"
+          priority
         />
+        {/* Video play button — bottom-left corner */}
+        <a
+          href="/VID-20260429-WA0055.mp4"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/70 hover:bg-black/90 text-white rounded-xl px-3 py-2 text-xs font-medium transition-colors shadow-lg"
+          title="צפו בסרטון הסבר"
+        >
+          <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            ▶
+          </span>
+          סרטון הסבר על האתר
+        </a>
       </div>
 
       {/* ── Left side: Login Form ── */}
@@ -314,14 +328,19 @@ function LoginContent() {
             </button>
           </div>
 
-          {/* Mobile-only video */}
-          <div className="lg:hidden mt-5 w-full rounded-xl overflow-hidden bg-black">
-            <video
-              src="/VID-20260429-WA0055.mp4"
-              controls
-              playsInline
-              className="w-full"
-            />
+          {/* Mobile: small video button */}
+          <div className="lg:hidden mt-4 flex justify-center">
+            <a
+              href="/VID-20260429-WA0055.mp4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-colors shadow"
+            >
+              <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                ▶
+              </span>
+              סרטון הסבר על האתר
+            </a>
           </div>
 
           <div className="mt-6 flex justify-center gap-4 text-xs text-gray-400">
