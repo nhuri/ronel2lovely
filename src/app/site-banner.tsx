@@ -107,9 +107,9 @@ export async function SiteBanner() {
               )}
             </div>
           </div>
-          {/* Right column: logo link (top) + desktop links (below) — flex-col, no overlap */}
-          <div className="flex-shrink-0 flex flex-col items-end">
-            {/* Donation logo — clickable */}
+          {/* Right side: logo (rightmost in RTL) + links to its left — row layout */}
+          <div className="flex-shrink-0 flex items-start gap-3">
+            {/* Donation logo — first in DOM = rightmost in RTL */}
             <Link
               href="/donate"
               title="לתרומה למיזם לזכרו של רונאל"
@@ -126,8 +126,8 @@ export async function SiteBanner() {
                 בחסות עמותת חיים ברונאל
               </span>
             </Link>
-            {/* Desktop only: stacked links below logo, gap-2 = 8px, aligned to left edge */}
-            <div className="hidden lg:flex flex-col gap-2 items-end mt-1.5 w-full">
+            {/* Desktop only: stacked links to the LEFT of the logo */}
+            <div className="hidden lg:flex flex-col gap-2 items-end">
               <a href="/VID-20260429-WA0055.mp4" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white text-[11px] font-medium hover:text-sky-200 transition-colors">
                 <span className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center text-[8px] flex-shrink-0">▶</span>
                 סרטון הסבר
