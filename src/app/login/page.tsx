@@ -189,9 +189,9 @@ function LoginContent() {
       </div>
 
       {/* ── Left side: Login Form ── */}
-      <div className="w-full lg:w-2/5 flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 pt-3 pb-2 lg:py-4 overflow-hidden">
+      <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-4 overflow-hidden">
         {/* Mobile-only image — capped height accounting for site banner */}
-        <div className="lg:hidden w-full max-w-sm rounded-xl overflow-hidden shadow bg-sky-100" style={{ marginTop: "20px", marginBottom: "20px", maxHeight: "20vh" }}>
+        <div className="lg:hidden w-full max-w-sm my-5 rounded-xl overflow-hidden shadow bg-sky-100" style={{ maxHeight: "20vh" }}>
           <Image
             src="/ronel-web-new.png"
             alt="סמ״ר רונאל בן משה ז״ל"

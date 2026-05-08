@@ -44,7 +44,7 @@ export async function SiteBanner() {
   }
 
   return (
-    <div className="bg-gradient-to-l from-sky-600 to-sky-700 text-white py-2 px-4">
+    <div className="bg-gradient-to-l from-sky-600 to-sky-700 text-white py-2 px-4 lg:max-h-[20vh] overflow-hidden">
       <div className="max-w-3xl mx-auto">
 
         {/* Single row: photo + text/stats + right column (logo + links) */}
@@ -126,8 +126,8 @@ export async function SiteBanner() {
                 בחסות עמותת חיים ברונאל
               </span>
             </Link>
-            {/* Desktop only: stacked links below logo, gap-2 = 8px */}
-            <div className="hidden lg:flex flex-col gap-2 items-end mt-2">
+            {/* Desktop only: stacked links below logo, gap-2 = 8px, aligned to left edge */}
+            <div className="hidden lg:flex flex-col gap-2 items-end mt-1.5 w-full">
               <a href="/VID-20260429-WA0055.mp4" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white text-[11px] font-medium hover:text-sky-200 transition-colors">
                 <span className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center text-[8px] flex-shrink-0">▶</span>
                 סרטון הסבר
