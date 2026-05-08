@@ -62,7 +62,10 @@ export async function SiteBanner() {
               height={300}
               className="h-10 w-auto object-contain"
             />
-            <span className="text-[9px] text-sky-100 text-center leading-tight mt-0.5 max-w-[60px]">
+            <span className="text-[10px] font-semibold text-white text-center leading-tight mt-0.5">
+              לתרומה
+            </span>
+            <span className="text-[9px] text-sky-100 text-center leading-tight max-w-[60px]">
               בחסות עמותת חיים ברונאל
             </span>
           </Link>
