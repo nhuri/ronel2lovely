@@ -66,7 +66,8 @@ export async function SiteBanner() {
               בחסות עמותת חיים ברונאל
             </span>
           </Link>
-          {/* Ronel photo — second in DOM = to the left of logo in RTL */}
+          {/* Ronel photo + stats — centered in remaining space */}
+          <div className="flex-1 flex items-start gap-3 justify-center">
           <div
             className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-white/40 flex-shrink-0 bg-no-repeat mt-1"
             style={{
@@ -77,8 +78,8 @@ export async function SiteBanner() {
             role="img"
             aria-label="רונאל"
           />
-          {/* Stats text — flex-1 fills remaining space */}
-          <div className="flex-1 min-w-0">
+          {/* Stats text */}
+          <div className="min-w-0">
             <p className="text-sm font-bold tracking-wide leading-tight">
               בונים בתים לזכרו של רונאל
             </p>
@@ -125,6 +126,7 @@ export async function SiteBanner() {
                 </span>
               )}
             </div>
+          </div>
           </div>
           {/* Desktop links — last in DOM = leftmost in RTL (left edge) */}
           <div className="hidden lg:flex flex-col gap-2 items-end flex-shrink-0">
