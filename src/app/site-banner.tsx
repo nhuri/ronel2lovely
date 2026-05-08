@@ -45,7 +45,7 @@ export async function SiteBanner() {
 
   return (
     <div className="bg-gradient-to-l from-sky-600 to-sky-700 text-white py-2 px-4 lg:max-h-[20vh] overflow-hidden">
-      <div className="max-w-3xl mx-auto">
+      <div className="w-full">
 
         {/* Single row: photo + text/stats + right column (logo + links) */}
         <div className="flex items-start gap-3">
