@@ -120,7 +120,7 @@ export async function SiteBanner() {
                 alt="לתרומה למיזם לזכרו של רונאל"
                 width={300}
                 height={300}
-                className="h-10 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
               <span className="text-[9px] text-sky-100 text-center leading-tight mt-0.5 max-w-[60px]">
                 בחסות עמותת חיים ברונאל
