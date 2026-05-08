@@ -53,7 +53,7 @@ export async function SiteBanner() {
           <Link
             href="/donate"
             title="לתרומה למיזם לזכרו של רונאל"
-            className="flex-shrink-0 flex flex-col items-center cursor-pointer transition-transform hover:scale-105 hover:opacity-90 mt-0.5"
+            className="order-last lg:order-first flex-shrink-0 flex flex-col items-center cursor-pointer transition-transform hover:scale-105 hover:opacity-90 mt-0.5"
           >
             <Image
               src="/chaim%20beronel.jpg"
