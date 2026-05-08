@@ -44,13 +44,13 @@ export async function SiteBanner() {
   }
 
   return (
-    <div className="bg-gradient-to-l from-sky-600 to-sky-700 text-white py-3 px-4">
+    <div className="bg-gradient-to-l from-sky-600 to-sky-700 text-white py-2 px-4">
       <div className="max-w-3xl mx-auto">
 
-        {/* Single row: photo + text/stats + donation button */}
-        <div className="flex items-center gap-3">
+        {/* Single row: photo + text/stats + right column (logo + links) */}
+        <div className="flex items-start gap-3">
           <div
-            className="w-10 h-10 sm:w-14 sm:h-14 rounded-full border-2 border-white/40 flex-shrink-0 bg-no-repeat"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-white/40 flex-shrink-0 bg-no-repeat mt-1"
             style={{
               backgroundImage: "url(/ronel-web.jpg)",
               backgroundSize: "500%",
@@ -107,8 +107,9 @@ export async function SiteBanner() {
               )}
             </div>
           </div>
-          {/* Logo — clickable, links to donation page + desktop links below */}
-          <div className="flex-shrink-0 flex flex-col items-end gap-1">
+          {/* Right column: logo link (top) + desktop links (below) — flex-col, no overlap */}
+          <div className="flex-shrink-0 flex flex-col items-end">
+            {/* Donation logo — clickable */}
             <Link
               href="/donate"
               title="לתרומה למיזם לזכרו של רונאל"
@@ -119,14 +120,14 @@ export async function SiteBanner() {
                 alt="לתרומה למיזם לזכרו של רונאל"
                 width={300}
                 height={300}
-                className="mt-1 h-14 w-auto object-contain"
+                className="h-10 w-auto object-contain"
               />
               <span className="text-[9px] text-sky-100 text-center leading-tight mt-0.5 max-w-[60px]">
                 בחסות עמותת חיים ברונאל
               </span>
             </Link>
-            {/* Desktop only: stacked links below logo */}
-            <div className="hidden lg:flex flex-col gap-0.5 items-end">
+            {/* Desktop only: stacked links below logo, gap-2 = 8px */}
+            <div className="hidden lg:flex flex-col gap-2 items-end mt-2">
               <a href="/VID-20260429-WA0055.mp4" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white text-[11px] font-medium hover:text-sky-200 transition-colors">
                 <span className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center text-[8px] flex-shrink-0">▶</span>
                 סרטון הסבר
