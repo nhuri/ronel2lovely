@@ -47,8 +47,26 @@ export async function SiteBanner() {
     <div className="bg-gradient-to-l from-sky-600 to-sky-700 text-white py-2 px-4 lg:max-h-[20vh] overflow-hidden">
       <div className="w-full">
 
-        {/* Single row: photo + text/stats + right column (logo + links) */}
+        {/* RTL row: [Logo][Ronel photo][Stats text — flex-1][Links at left edge] */}
         <div className="flex items-start gap-3">
+          {/* Donation logo — first in DOM = rightmost in RTL */}
+          <Link
+            href="/donate"
+            title="לתרומה למיזם לזכרו של רונאל"
+            className="flex-shrink-0 flex flex-col items-center cursor-pointer transition-transform hover:scale-105 hover:opacity-90 mt-0.5"
+          >
+            <Image
+              src="/chaim%20beronel.jpg"
+              alt="לתרומה למיזם לזכרו של רונאל"
+              width={300}
+              height={300}
+              className="h-10 w-auto object-contain"
+            />
+            <span className="text-[9px] text-sky-100 text-center leading-tight mt-0.5 max-w-[60px]">
+              בחסות עמותת חיים ברונאל
+            </span>
+          </Link>
+          {/* Ronel photo — second in DOM = to the left of logo in RTL */}
           <div
             className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-white/40 flex-shrink-0 bg-no-repeat mt-1"
             style={{
@@ -59,6 +77,7 @@ export async function SiteBanner() {
             role="img"
             aria-label="רונאל"
           />
+          {/* Stats text — flex-1 fills remaining space */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold tracking-wide leading-tight">
               בונים בתים לזכרו של רונאל
@@ -107,27 +126,8 @@ export async function SiteBanner() {
               )}
             </div>
           </div>
-          {/* Right side: logo (rightmost in RTL) + links to its left — row layout */}
-          <div className="flex-shrink-0 flex items-start gap-3">
-            {/* Donation logo — first in DOM = rightmost in RTL */}
-            <Link
-              href="/donate"
-              title="לתרומה למיזם לזכרו של רונאל"
-              className="flex flex-col items-center cursor-pointer transition-transform hover:scale-105 hover:opacity-90"
-            >
-              <Image
-                src="/chaim%20beronel.jpg"
-                alt="לתרומה למיזם לזכרו של רונאל"
-                width={300}
-                height={300}
-                className="h-10 w-auto object-contain"
-              />
-              <span className="text-[9px] text-sky-100 text-center leading-tight mt-0.5 max-w-[60px]">
-                בחסות עמותת חיים ברונאל
-              </span>
-            </Link>
-            {/* Desktop only: stacked links to the LEFT of the logo */}
-            <div className="hidden lg:flex flex-col gap-2 items-end">
+          {/* Desktop links — last in DOM = leftmost in RTL (left edge) */}
+          <div className="hidden lg:flex flex-col gap-2 items-end flex-shrink-0">
               <a href="/VID-20260429-WA0055.mp4" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white text-[11px] font-medium hover:text-sky-200 transition-colors">
                 <span className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center text-[8px] flex-shrink-0">▶</span>
                 סרטון הסבר
@@ -152,7 +152,6 @@ export async function SiteBanner() {
                 טיקטוק
               </a>
             </div>
-          </div>
         </div>
 
       </div>
