@@ -189,7 +189,7 @@ function LoginContent() {
       </div>
 
       {/* ── Left side: Login Form ── */}
-      <div className="w-full lg:w-2/5 flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 pt-3 pb-2 lg:py-10">
+      <div className="w-full lg:w-2/5 flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 pt-3 pb-2 lg:py-6 lg:overflow-y-auto">
         {/* Mobile-only image — capped height accounting for site banner */}
         <div className="lg:hidden w-full max-w-sm mb-4 rounded-xl overflow-hidden shadow bg-sky-100" style={{ maxHeight: "20vh" }}>
           <Image
