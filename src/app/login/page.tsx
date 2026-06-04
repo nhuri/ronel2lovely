@@ -180,7 +180,7 @@ function LoginContent() {
       {/* ── Right side: Image + video thumbnail ── */}
       <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-start justify-center overflow-hidden">
         <Image
-          src="/ronel-web-new.png"
+          src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
           fill
           className="object-contain object-top"
@@ -193,7 +193,7 @@ function LoginContent() {
         {/* Mobile-only image — capped height accounting for site banner */}
         <div className="lg:hidden w-full max-w-sm my-5 rounded-xl overflow-hidden shadow bg-sky-100" style={{ maxHeight: "20vh" }}>
           <Image
-            src="/ronel-web-new.png"
+            src="/ronel-enter-page.jpg"
             alt="סמ״ר רונאל בן משה ז״ל"
             width={800}
             height={450}
