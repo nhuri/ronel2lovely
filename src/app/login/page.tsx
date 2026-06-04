@@ -178,7 +178,7 @@ function LoginContent() {
       <div className="flex flex-1 min-h-0">
 
       {/* ── Right side: Image + video thumbnail ── */}
-      <div className="hidden lg:flex lg:w-3/5 relative bg-sky-100 items-start justify-center overflow-hidden">
+      <div className="hidden lg:flex lg:w-3/5 h-full relative bg-sky-100 items-start justify-center overflow-hidden">
         <Image
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
