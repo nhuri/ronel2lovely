@@ -161,9 +161,7 @@ export function NewCandidateForm({
               <SelectField name="education" label="השכלה" required options={["תיכונית", "תעודה", "תואר ראשון", "תואר שני"]} error={fieldErrors.education} />
               <InputField name="occupation" label="תעסוקה" required placeholder="למשל: מהנדס תוכנה" error={fieldErrors.occupation} />
               <SelectField name="torah_education" label="השכלה תורנית" options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} error={fieldErrors.torah_education} />
-              <div className="sm:col-span-2">
-                <MultiSelectField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} />
-              </div>
+              <MultiSelectField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} />
             </div>
           </Section>
 
@@ -292,28 +290,17 @@ function MultiSelectField({ name, label, options }: {
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onOutsideClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onOutsideClick);
-    return () => document.removeEventListener("mousedown", onOutsideClick);
-  }, []);
 
   const toggle = (opt: string) =>
     setSelected((prev) => prev.includes(opt) ? prev.filter((o) => o !== opt) : [...prev, opt]);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div>
       <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white transition-all flex items-center justify-between gap-2 text-right"
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all flex items-center justify-between gap-2"
       >
         <span className={`truncate ${selected.length === 0 ? "text-gray-400" : "text-gray-800"}`}>
           {selected.length === 0 ? "בחר..." : selected.join(", ")}
@@ -323,9 +310,9 @@ function MultiSelectField({ name, label, options }: {
         </svg>
       </button>
       {open && (
-        <div className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+        <div className="mt-1 border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
           {options.map((opt) => (
-            <label key={opt} className="flex items-center gap-3 px-4 py-2.5 hover:bg-sky-50 cursor-pointer transition-colors">
+            <label key={opt} className="flex items-center gap-3 px-4 py-2 hover:bg-sky-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0">
               <input type="checkbox" checked={selected.includes(opt)} onChange={() => toggle(opt)} className="w-4 h-4 accent-sky-500 flex-shrink-0" />
               <span className="text-sm text-gray-700">{opt}</span>
             </label>
