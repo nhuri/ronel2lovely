@@ -36,9 +36,20 @@ export default async function AdminDashboard() {
   const genders = [
     ...new Set(candidates.map((c) => c.gender).filter(Boolean)),
   ];
+  const LEVEL_NORMALIZE: Record<string, string> = {
+    "דתייה לאומית": "דתי לאומי",
+    "דתייה לייט": "דתי לייט",
+    "דתייה": "דתי",
+    "חרדית": "חרדי",
+    "מסורתית": "מסורתי",
+    "חילונית": "חילוני",
+  };
   const religiousLevels = [
     ...new Set(
-      candidates.map((c) => c.religious_level).filter(Boolean)
+      candidates
+        .map((c) => c.religious_level)
+        .filter(Boolean)
+        .map((l) => LEVEL_NORMALIZE[l as string] ?? (l as string))
     ),
   ];
 

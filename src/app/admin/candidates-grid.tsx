@@ -32,6 +32,15 @@ interface Props {
   religiousLevels: string[];
 }
 
+const LEVEL_VARIANTS: Record<string, string[]> = {
+  "דתי לאומי": ["דתי לאומי", "דתייה לאומית"],
+  "דתי לייט": ["דתי לייט", "דתייה לייט"],
+  "דתי": ["דתי", "דתייה"],
+  "חרדי": ["חרדי", "חרדית"],
+  "מסורתי": ["מסורתי", "מסורתית"],
+  "חילוני": ["חילוני", "חילונית"],
+};
+
 export function CandidatesGrid({
   candidates,
   genders,
@@ -49,7 +58,10 @@ export function CandidatesGrid({
     const list = candidates.filter((c) => {
       if (search && !c.full_name?.includes(search)) return false;
       if (genderFilter && c.gender !== genderFilter) return false;
-      if (religiousFilter && c.religious_level !== religiousFilter) return false;
+      if (religiousFilter) {
+        const variants = LEVEL_VARIANTS[religiousFilter] ?? [religiousFilter];
+        if (!variants.includes(c.religious_level ?? "")) return false;
+      }
       if (ageMin && (c.age == null || c.age < Number(ageMin))) return false;
       if (ageMax && (c.age == null || c.age > Number(ageMax))) return false;
       return true;
