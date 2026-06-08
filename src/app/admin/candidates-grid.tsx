@@ -42,10 +42,11 @@ export function CandidatesGrid({
   const [religiousFilter, setReligiousFilter] = useState("");
   const [ageMin, setAgeMin] = useState("");
   const [ageMax, setAgeMax] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const filtered = useMemo(() => {
-    return candidates.filter((c) => {
+    const list = candidates.filter((c) => {
       if (search && !c.full_name?.includes(search)) return false;
       if (genderFilter && c.gender !== genderFilter) return false;
       if (religiousFilter && c.religious_level !== religiousFilter) return false;
@@ -53,7 +54,10 @@ export function CandidatesGrid({
       if (ageMax && (c.age == null || c.age > Number(ageMax))) return false;
       return true;
     });
-  }, [candidates, search, genderFilter, religiousFilter, ageMin, ageMax]);
+    return [...list].sort((a, b) =>
+      sortOrder === "newest" ? b.id - a.id : a.id - b.id
+    );
+  }, [candidates, search, genderFilter, religiousFilter, ageMin, ageMax, sortOrder]);
 
   const hasActiveFilters =
     search || genderFilter || religiousFilter || ageMin || ageMax;
@@ -99,6 +103,13 @@ export function CandidatesGrid({
               <input type="number" placeholder="מ-" value={ageMin} onChange={(e) => setAgeMin(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
               <input type="number" placeholder="עד" value={ageMax} onChange={(e) => setAgeMax(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
             </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">מיון</label>
+            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all">
+              <option value="newest">מהחדש לישן</option>
+              <option value="oldest">מהישן לחדש</option>
+            </select>
           </div>
         </div>
         {hasActiveFilters && (
