@@ -77,36 +77,36 @@ export function CandidatesGrid({
   return (
     <>
       {/* ── Filters Bar ── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">חיפוש לפי שם</label>
-            <input type="text" placeholder="הקלד שם..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 mb-6">
+        <div className="flex flex-wrap lg:flex-nowrap gap-2">
+          <div className="w-full lg:flex-[2]">
+            <label className="block text-[11px] font-medium text-gray-400 mb-1">חיפוש לפי שם</label>
+            <input type="text" placeholder="הקלד שם..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">מין</label>
-            <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all">
+          <div className="w-[calc(50%-4px)] lg:flex-1">
+            <label className="block text-[11px] font-medium text-gray-400 mb-1">מין</label>
+            <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)} className="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all">
               <option value="">הכל</option>
               {genders.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">רמה דתית</label>
-            <select value={religiousFilter} onChange={(e) => setReligiousFilter(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all">
+          <div className="w-[calc(50%-4px)] lg:flex-[1.5]">
+            <label className="block text-[11px] font-medium text-gray-400 mb-1">רמה דתית</label>
+            <select value={religiousFilter} onChange={(e) => setReligiousFilter(e.target.value)} className="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all">
               <option value="">הכל</option>
               {religiousLevels.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">טווח גיל</label>
-            <div className="flex gap-2">
-              <input type="number" placeholder="מ-" value={ageMin} onChange={(e) => setAgeMin(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
-              <input type="number" placeholder="עד" value={ageMax} onChange={(e) => setAgeMax(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
+          <div className="w-[calc(50%-4px)] lg:flex-1">
+            <label className="block text-[11px] font-medium text-gray-400 mb-1">טווח גיל</label>
+            <div className="flex gap-1">
+              <input type="number" placeholder="מ-" value={ageMin} onChange={(e) => setAgeMin(e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
+              <input type="number" placeholder="עד" value={ageMax} onChange={(e) => setAgeMax(e.target.value)} className="w-full px-2 py-1.5 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all" />
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">מיון</label>
-            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all">
+          <div className="w-[calc(50%-4px)] lg:flex-1">
+            <label className="block text-[11px] font-medium text-gray-400 mb-1">מיון</label>
+            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")} className="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-gray-50 text-xs focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all">
               <option value="newest">מהחדש לישן</option>
               <option value="oldest">מהישן לחדש</option>
             </select>
