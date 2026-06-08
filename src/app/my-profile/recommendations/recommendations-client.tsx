@@ -12,7 +12,24 @@ type PreferenceFilters = {
   maxAge?: number;
 };
 
-const ALL_RELIGIOUS_LEVELS = ["חרדי", "דתי-לאומי", "דתי", "מסורתי", "חילוני"] as const;
+// Gender variant pairs: [feminine, canonical-masculine]
+const LEVEL_ALIASES: [string, string][] = [
+  ["דתייה לאומית", "דתי לאומי"],
+  ["דתייה לייט", "דתי לייט"],
+  ["דתייה", "דתי"],
+  ["חרדית", "חרדי"],
+  ["מסורתית", "מסורתי"],
+  ["חילונית", "חילוני"],
+];
+
+function normalizeLevel(level: string): string {
+  return LEVEL_ALIASES.find(([a]) => a === level)?.[1] ?? level;
+}
+
+function expandLevel(canonical: string, allLevels: string[]): string[] {
+  const aliases = LEVEL_ALIASES.filter(([, c]) => c === canonical).map(([a]) => a);
+  return [canonical, ...aliases].filter((l) => allLevels.includes(l));
+}
 
 interface Props {
   matches: ScoredMatch[];           // available, non-rejected
@@ -22,6 +39,7 @@ interface Props {
   candidateId: number;
   preferenceFilters: PreferenceFilters;
   allReligiousLevels: string[];
+  myReligiousLevel: string;
 }
 
 type TabId = "available" | "unavailable" | "rejected";
@@ -34,6 +52,7 @@ export function RecommendationsClient({
   candidateId,
   preferenceFilters,
   allReligiousLevels,
+  myReligiousLevel,
 }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("available");
@@ -228,6 +247,7 @@ export function RecommendationsClient({
           matchId={rejectingId}
           matchName={rejectSource.candidate.full_name as string}
           matchReligiousLevel={rejectSource.candidate.religious_level as string | null}
+          myReligiousLevel={myReligiousLevel}
           currentPreferences={activePreferences}
           availableReligiousLevels={allReligiousLevels}
           onConfirm={handleReject}
@@ -399,6 +419,7 @@ function RejectModal({
   matchId,
   matchName,
   matchReligiousLevel,
+  myReligiousLevel,
   currentPreferences,
   availableReligiousLevels,
   onConfirm,
@@ -407,6 +428,7 @@ function RejectModal({
   matchId: number;
   matchName: string;
   matchReligiousLevel?: string | null;
+  myReligiousLevel: string;
   currentPreferences: PreferenceFilters;
   availableReligiousLevels: string[];
   onConfirm: (matchId: number, reason: string, prefUpdate?: PreferenceFilters) => void;
@@ -416,15 +438,13 @@ function RejectModal({
   const [religionFilter, setReligionFilter] = useState(false);
   const [ageFilter, setAgeFilter] = useState(false);
 
-  // Initial allowed levels: from current prefs, or all levels on the site
-  const initLevels = currentPreferences.allowedReligiousLevels
-    ? [...currentPreferences.allowedReligiousLevels]
-    : [...availableReligiousLevels];
-  // Pre-uncheck the rejected candidate's level as a suggestion
+  // Display levels: normalize gender variants into a single canonical label and deduplicate
+  const displayLevels = [...new Set(availableReligiousLevels.map(normalizeLevel))];
+
+  // Default: only own religious level pre-checked
+  const myCanonical = normalizeLevel(myReligiousLevel);
   const [allowedLevels, setAllowedLevels] = useState<string[]>(
-    matchReligiousLevel && initLevels.includes(matchReligiousLevel)
-      ? initLevels.filter((l) => l !== matchReligiousLevel)
-      : initLevels
+    expandLevel(myCanonical, availableReligiousLevels)
   );
   const [minAge, setMinAge] = useState(
     currentPreferences.minAge ? String(currentPreferences.minAge) : ""
@@ -433,11 +453,18 @@ function RejectModal({
     currentPreferences.maxAge ? String(currentPreferences.maxAge) : ""
   );
 
-  const toggleLevel = (level: string) => {
-    setAllowedLevels((prev) =>
-      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]
-    );
+  const toggleLevel = (canonical: string) => {
+    const variants = expandLevel(canonical, availableReligiousLevels);
+    setAllowedLevels((prev) => {
+      const isChecked = variants.some((v) => prev.includes(v));
+      return isChecked
+        ? prev.filter((v) => !variants.includes(v))
+        : [...prev, ...variants.filter((v) => !prev.includes(v))];
+    });
   };
+
+  const isLevelChecked = (canonical: string) =>
+    expandLevel(canonical, availableReligiousLevels).some((v) => allowedLevels.includes(v));
 
   const handleConfirm = () => {
     const prefUpdate: PreferenceFilters = {};
@@ -486,16 +513,16 @@ function RejectModal({
           {religionFilter && (
             <div className="mr-6 bg-gray-50 rounded-xl p-3 space-y-1.5">
               <p className="text-xs text-gray-500 mb-2">אילו רמות דתיות יוצגו לי?</p>
-              {availableReligiousLevels.map((level) => (
-                <label key={level} className="flex items-center gap-2 cursor-pointer">
+              {displayLevels.map((canonical) => (
+                <label key={canonical} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={allowedLevels.includes(level)}
-                    onChange={() => toggleLevel(level)}
+                    checked={isLevelChecked(canonical)}
+                    onChange={() => toggleLevel(canonical)}
                     className="w-4 h-4 accent-pink-500"
                   />
-                  <span className="text-sm text-gray-700">{level}</span>
-                  {level === matchReligiousLevel && (
+                  <span className="text-sm text-gray-700">{canonical}</span>
+                  {matchReligiousLevel && normalizeLevel(matchReligiousLevel) === canonical && (
                     <span className="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">
                       רמת המועמד/ת
                     </span>

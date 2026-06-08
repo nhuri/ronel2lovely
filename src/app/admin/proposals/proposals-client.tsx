@@ -64,11 +64,12 @@ export function ProposalsClient({ proposals, candidates }: Props) {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [showNewModal, setShowNewModal] = useState(false);
   const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
 
   const filtered = useMemo(() => {
-    return proposals.filter((p) => {
+    const list = proposals.filter((p) => {
       if (statusFilter && p.status !== statusFilter) return false;
       if (search) {
         const s = search.toLowerCase();
@@ -78,7 +79,11 @@ export function ProposalsClient({ proposals, candidates }: Props) {
       }
       return true;
     });
-  }, [proposals, statusFilter, search]);
+    return [...list].sort((a, b) => {
+      const diff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return sortOrder === "newest" ? diff : -diff;
+    });
+  }, [proposals, statusFilter, search, sortOrder]);
 
   return (
     <>
@@ -112,6 +117,19 @@ export function ProposalsClient({ proposals, candidates }: Props) {
                   {label}
                 </option>
               ))}
+            </select>
+          </div>
+          <div className="min-w-[160px]">
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              מיון
+            </label>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all"
+            >
+              <option value="newest">מהחדש לישן</option>
+              <option value="oldest">מהישן לחדש</option>
             </select>
           </div>
           <button

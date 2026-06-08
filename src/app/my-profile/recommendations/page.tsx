@@ -190,6 +190,7 @@ export default async function RecommendationsPage({
           candidateId={candidateId}
           preferenceFilters={preferenceFilters}
           allReligiousLevels={allReligiousLevels}
+          myReligiousLevel={candidate.religious_level as string ?? ""}
         />
       </main>
     </div>
