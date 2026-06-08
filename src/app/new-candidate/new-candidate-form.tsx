@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createCandidate, type FieldErrors } from "./actions";
 import { logout } from "@/app/login/actions";
 import Link from "next/link";
@@ -162,7 +162,7 @@ export function NewCandidateForm({
               <InputField name="occupation" label="תעסוקה" required placeholder="למשל: מהנדס תוכנה" error={fieldErrors.occupation} />
               <SelectField name="torah_education" label="השכלה תורנית" options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} error={fieldErrors.torah_education} />
               <div className="sm:col-span-2">
-                <CheckboxGroupField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} />
+                <MultiSelectField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} />
               </div>
             </div>
           </Section>
@@ -287,20 +287,52 @@ function SelectField({ name, label, options, required, error, onChange }: {
   );
 }
 
-function CheckboxGroupField({ name, label, options }: {
+function MultiSelectField({ name, label, options }: {
   name: string; label: string; options: string[];
 }) {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onOutsideClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onOutsideClick);
+    return () => document.removeEventListener("mousedown", onOutsideClick);
+  }, []);
+
+  const toggle = (opt: string) =>
+    setSelected((prev) => prev.includes(opt) ? prev.filter((o) => o !== opt) : [...prev, opt]);
+
   return (
-    <div>
-      <label className="block text-xs font-medium text-gray-500 mb-2">{label}</label>
-      <div className="flex flex-wrap gap-2">
-        {options.map((o) => (
-          <label key={o} className="flex items-center gap-1.5 cursor-pointer select-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-sky-50 hover:border-sky-300 transition-all has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400 has-[:checked]:text-sky-700">
-            <input type="checkbox" name={name} value={o} className="w-3.5 h-3.5 accent-sky-500" />
-            <span className="text-xs text-gray-700">{o}</span>
-          </label>
-        ))}
-      </div>
+    <div ref={containerRef} className="relative">
+      <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white transition-all flex items-center justify-between gap-2 text-right"
+      >
+        <span className={`truncate ${selected.length === 0 ? "text-gray-400" : "text-gray-800"}`}>
+          {selected.length === 0 ? "בחר..." : selected.join(", ")}
+        </span>
+        <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+          {options.map((opt) => (
+            <label key={opt} className="flex items-center gap-3 px-4 py-2.5 hover:bg-sky-50 cursor-pointer transition-colors">
+              <input type="checkbox" checked={selected.includes(opt)} onChange={() => toggle(opt)} className="w-4 h-4 accent-sky-500 flex-shrink-0" />
+              <span className="text-sm text-gray-700">{opt}</span>
+            </label>
+          ))}
+        </div>
+      )}
+      {selected.map((s) => <input key={s} type="hidden" name={name} value={s} />)}
     </div>
   );
 }
