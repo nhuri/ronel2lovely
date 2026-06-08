@@ -107,22 +107,24 @@ export default async function RecommendationsPage({
     (rejectedRows ?? []).map((r) => Number(r.rejected_candidate_id))
   );
 
-  // Exclude proposal partners from all pools, then apply preference filters
-  let pool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
+  // Exclude proposal partners from all pools
+  const basePool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
+
+  // Rejected pool is built before preference filters so previously-rejected
+  // candidates are always visible regardless of active filters
+  const rejectedPool = basePool.filter((m) => rejectedIds.has(Number(m.id)));
+
+  // Apply preference filters only to non-rejected candidates
+  let pool = basePool.filter((m) => !rejectedIds.has(Number(m.id)));
   if (pref.allowed_religious_levels?.length) {
     pool = pool.filter((m) => pref.allowed_religious_levels!.includes(m.religious_level as string));
   }
   if (pref.min_age) pool = pool.filter((m) => (m.age as number) >= pref.min_age!);
   if (pref.max_age) pool = pool.filter((m) => (m.age as number) <= pref.max_age!);
 
-  // Split into: available (not תפוס, not rejected), unavailable (תפוס, not rejected), rejected
-  const availablePool = pool.filter(
-    (m) => m.availability_status !== "תפוס" && !rejectedIds.has(Number(m.id))
-  );
-  const unavailablePool = pool.filter(
-    (m) => m.availability_status === "תפוס" && !rejectedIds.has(Number(m.id))
-  );
-  const rejectedPool = pool.filter((m) => rejectedIds.has(Number(m.id)));
+  // Split into: available (not תפוס), unavailable (תפוס)
+  const availablePool = pool.filter((m) => m.availability_status !== "תפוס");
+  const unavailablePool = pool.filter((m) => m.availability_status === "תפוס");
 
   const maxRec = await getMaxRecommendations();
   const limit = maxRec === "all" ? availablePool.length : maxRec;
