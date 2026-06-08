@@ -30,7 +30,7 @@ const REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "contact_person_phone", label: "טלפון איש קשר" },
 ];
 
-const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "children_count"];
+const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "children_count", "torah_education"];
 
 function calculateAge(birthDate: string): number {
   const today = new Date();
@@ -179,6 +179,8 @@ export async function updateMyProfile(
     return { fieldErrors };
   }
 
+  const militaryService = (formData.getAll("military_service") as string[]).filter(Boolean).join(",");
+
   // ── Handle images ──
   const keepImages: string[] = formData.getAll("keep_images") as string[];
   const newImageFiles: File[] = formData.getAll("new_images").filter(
@@ -230,6 +232,8 @@ export async function updateMyProfile(
       occupation: raw.occupation,
       about_me: raw.about_me,
       looking_for: raw.looking_for,
+      torah_education: raw.torah_education || null,
+      military_service: militaryService || null,
       contact_person: raw.contact_person,
       contact_person_phone: raw.contact_person_phone,
       age: calculateAge(raw.birth_date),

@@ -158,8 +158,12 @@ export function NewCandidateForm({
               <InputField name="children_count" label="מספר ילדים" type="number" placeholder="0" dir="ltr" error={fieldErrors.children_count} />
               <SelectField name="religious_level" label="רמה דתית" required options={selectedGender === "נקבה" ? ["חרדית", "דתייה", "דתייה לאומית", "דתי לאומי תורני", "דתייה לייט", "מסורתית", "חילונית"] : selectedGender === "זכר" ? ["חרדי", "דתי", "דתי לאומי", "דתי לאומי תורני", "דתי לייט", "מסורתי", "חילוני"] : ["חרדי/ת", "דתי/ה", "דתי/ה לאומי/ת", "דתי לאומי תורני", "דתי/ה לייט", "מסורתי/ת", "חילוני/ת"]} error={fieldErrors.religious_level} />
               <InputField name="height" label="גובה (ס״מ)" type="number" required placeholder="170" dir="ltr" error={fieldErrors.height} />
-              <InputField name="education" label="השכלה" required placeholder="למשל: תואר ראשון" error={fieldErrors.education} />
+              <SelectField name="education" label="השכלה" required options={["תיכונית", "תעודה", "תואר ראשון", "תואר שני"]} error={fieldErrors.education} />
               <InputField name="occupation" label="תעסוקה" required placeholder="למשל: מהנדס תוכנה" error={fieldErrors.occupation} />
+              <SelectField name="torah_education" label="השכלה תורנית" options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} error={fieldErrors.torah_education} />
+              <div className="sm:col-span-2">
+                <CheckboxGroupField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} />
+              </div>
             </div>
           </Section>
 
@@ -279,6 +283,24 @@ function SelectField({ name, label, options, required, error, onChange }: {
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function CheckboxGroupField({ name, label, options }: {
+  name: string; label: string; options: string[];
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-500 mb-2">{label}</label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => (
+          <label key={o} className="flex items-center gap-1.5 cursor-pointer select-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-sky-50 hover:border-sky-300 transition-all has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400 has-[:checked]:text-sky-700">
+            <input type="checkbox" name={name} value={o} className="w-3.5 h-3.5 accent-sky-500" />
+            <span className="text-xs text-gray-700">{o}</span>
+          </label>
+        ))}
+      </div>
     </div>
   );
 }

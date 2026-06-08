@@ -99,6 +99,7 @@ export function ProfileClient({
         updated.children_count = parseInt(updated.children_count, 10);
       if (updated.height) updated.height = parseInt(updated.height, 10);
       if (result.imageUrls) updated.image_urls = result.imageUrls;
+      updated.military_service = (formData.getAll("military_service") as string[]).filter(Boolean).join(",") || null;
       setC(updated);
       setEditImages([]);
       setKeepImages(result.imageUrls ?? keepImages);
@@ -284,6 +285,8 @@ export function ProfileClient({
               <Field label="גובה" value={c.height ? `${c.height} ס"מ` : null} />
               <Field label="השכלה" value={c.education} />
               <Field label="תעסוקה" value={c.occupation} />
+              {c.torah_education && <Field label="השכלה תורנית" value={c.torah_education} />}
+              {c.military_service && <Field label="שירות" value={c.military_service} />}
             </div>
           </ViewSection>
 
@@ -466,8 +469,12 @@ export function ProfileClient({
               <EditInput name="children_count" label="מספר ילדים" type="number" defaultValue={c.children_count ?? ""} dir="ltr" error={fieldErrors.children_count} />
               <EditSelect name="religious_level" label="רמה דתית" required options={c.gender === "נקבה" ? ["חרדית", "דתייה", "מסורתית", "חילונית", "דתייה לאומית", "דתי לאומי תורני"] : ["חרדי", "דתי", "מסורתי", "חילוני", "דתי לאומי", "דתי לאומי תורני"]} defaultValue={c.religious_level} error={fieldErrors.religious_level} />
               <EditInput name="height" label="גובה (ס״מ)" type="number" required defaultValue={c.height ?? ""} dir="ltr" error={fieldErrors.height} />
-              <EditInput name="education" label="השכלה" required defaultValue={c.education} error={fieldErrors.education} />
+              <EditSelect name="education" label="השכלה" required options={["תיכונית", "תעודה", "תואר ראשון", "תואר שני"]} defaultValue={c.education} error={fieldErrors.education} />
               <EditInput name="occupation" label="תעסוקה" required defaultValue={c.occupation} error={fieldErrors.occupation} />
+              <EditSelect name="torah_education" label="השכלה תורנית" options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} defaultValue={c.torah_education ?? ""} error={fieldErrors.torah_education} />
+              <div className="sm:col-span-2">
+                <EditCheckboxGroup name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} defaultValues={c.military_service ? c.military_service.split(",").map((s: string) => s.trim()) : []} />
+              </div>
             </div>
           </EditSection>
 
@@ -555,6 +562,24 @@ function EditSelect({ name, label, options, required, defaultValue, error }: {
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function EditCheckboxGroup({ name, label, options, defaultValues }: {
+  name: string; label: string; options: string[]; defaultValues?: string[];
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-500 mb-2">{label}</label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => (
+          <label key={o} className="flex items-center gap-1.5 cursor-pointer select-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-sky-50 hover:border-sky-300 transition-all has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+            <input type="checkbox" name={name} value={o} defaultChecked={defaultValues?.includes(o)} className="w-3.5 h-3.5 accent-sky-500" />
+            <span className="text-xs text-gray-700">{o}</span>
+          </label>
+        ))}
+      </div>
     </div>
   );
 }
