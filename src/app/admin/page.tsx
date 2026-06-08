@@ -78,7 +78,7 @@ export default async function AdminDashboard() {
             </Link>
             <Link
               href="/admin/proposals"
-              className="hidden sm:block px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
+              className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors whitespace-nowrap"
             >
               הצעות שידוך
             </Link>
