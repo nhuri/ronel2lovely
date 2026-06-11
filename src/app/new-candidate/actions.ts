@@ -61,7 +61,12 @@ export async function createCandidate(
     }
   }
 
-  // ── 2. Description minimum 15 words ──
+  // ── 2. Minimum age 17 ──
+  if (raw.birth_date && calculateAge(raw.birth_date) < 17) {
+    fieldErrors.birth_date = "הנרשם חייב להיות בן/בת לפחות 17 שנים";
+  }
+
+  // ── 3. Description minimum 15 words ──
   if (raw.about_me) {
     const wordCount = raw.about_me.split(/\s+/).filter((w) => w.length > 0).length;
     if (wordCount < 15) {
@@ -69,7 +74,7 @@ export async function createCandidate(
     }
   }
 
-  // ── 3. Image validation (1–3 images required) ──
+  // ── 4. Image validation (1–3 images required) ──
   const imageFiles = formData.getAll("images") as File[];
   const validImages = imageFiles.filter((f) => f.size > 0);
   if (validImages.length === 0) {
