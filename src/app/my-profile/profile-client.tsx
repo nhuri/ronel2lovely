@@ -237,13 +237,13 @@ export function ProfileClient({
                     {/* Desktop: all buttons */}
                     <div className="hidden sm:flex items-center gap-2">
                       {ambassadorUserId && (
-                        <Link href={`/new-candidate?ambassador_id=${ambassadorUserId}`} className="px-4 py-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors">+ הוספת מועמד</Link>
+                        <Link href={`/new-candidate?ambassador_id=${ambassadorUserId}`} className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors">+ הוספת מועמד</Link>
                       )}
-                      <Link href={`/my-profile/proposals${cidParam}`} className="px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">ההצעות שלי</Link>
-                      <Link href={`/my-profile/inquiries${cidParam}`} className="px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">פניות</Link>
-                      <Link href={`/my-profile/recommendations${cidParam}`} className="px-4 py-1.5 text-sm font-medium text-pink-600 hover:text-pink-700 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors">הצעות מומלצות</Link>
-                      <button onClick={() => setMode("edit")} className="px-4 py-1.5 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors">עריכת פרופיל</button>
-                      <form action={logout}><button type="submit" className="px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">התנתקות</button></form>
+                      <Link href={`/my-profile/proposals${cidParam}`} className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">ההצעות שלי</Link>
+                      <Link href={`/my-profile/inquiries${cidParam}`} className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">פניות</Link>
+                      <Link href={`/my-profile/recommendations${cidParam}`} className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm font-medium text-pink-600 hover:text-pink-700 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors">הצעות מומלצות</Link>
+                      <button onClick={() => setMode("edit")} className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors">עריכת פרופיל</button>
+                      <form action={logout}><button type="submit" className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">התנתקות</button></form>
                     </div>
                     {/* Mobile: only logout in top row */}
                     <form action={logout} className="sm:hidden">
@@ -256,12 +256,12 @@ export function ProfileClient({
               {!readOnly && (
                 <div className="flex items-center gap-1 mt-1.5 sm:hidden overflow-x-auto">
                   {ambassadorUserId && (
-                    <Link href={`/new-candidate?ambassador_id=${ambassadorUserId}`} className="px-2.5 py-1 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors whitespace-nowrap">+ הוספת מועמד</Link>
+                    <Link href={`/new-candidate?ambassador_id=${ambassadorUserId}`} className="inline-flex items-center justify-center min-w-[4.5rem] px-2.5 py-1 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">+ הוספת מועמד</Link>
                   )}
-                  <Link href={`/my-profile/proposals${cidParam}`} className="px-2.5 py-1 text-xs font-medium text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors whitespace-nowrap">ההצעות שלי</Link>
-                  <Link href={`/my-profile/inquiries${cidParam}`} className="px-2.5 py-1 text-xs font-medium text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors whitespace-nowrap">פניות</Link>
-                  <Link href={`/my-profile/recommendations${cidParam}`} className="px-2.5 py-1 text-xs font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors whitespace-nowrap">הצעות מומלצות</Link>
-                  <button onClick={() => setMode("edit")} className="px-2.5 py-1 text-xs font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors whitespace-nowrap">עריכת פרופיל</button>
+                  <Link href={`/my-profile/proposals${cidParam}`} className="inline-flex items-center justify-center min-w-[4.5rem] px-2.5 py-1 text-xs font-medium text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">ההצעות שלי</Link>
+                  <Link href={`/my-profile/inquiries${cidParam}`} className="inline-flex items-center justify-center min-w-[4.5rem] px-2.5 py-1 text-xs font-medium text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">פניות</Link>
+                  <Link href={`/my-profile/recommendations${cidParam}`} className="inline-flex items-center justify-center min-w-[4.5rem] px-2.5 py-1 text-xs font-medium text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">הצעות מומלצות</Link>
+                  <button onClick={() => setMode("edit")} className="inline-flex items-center justify-center min-w-[4.5rem] px-2.5 py-1 text-xs font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors whitespace-nowrap flex-shrink-0">עריכת פרופיל</button>
                 </div>
               )}
             </div>
