@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { sendOtp, verifyOtp, sendSmsOtp, verifySmsOtp, sendManagerOtp, verifyManagerOtp } from "./actions";
+import { sendOtp, verifyOtp, sendSmsOtp, verifySmsOtp } from "./actions";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -45,14 +45,6 @@ function LoginContent() {
   const [smsToken, setSmsToken] = useState("");
   const [smsError, setSmsError] = useState<string | null>(null);
   const [smsLoading, setSmsLoading] = useState(false);
-
-  // Manager registration modal state
-  const [showManagerModal, setShowManagerModal] = useState(false);
-  const [mgrStep, setMgrStep] = useState<"email" | "otp">("email");
-  const [mgrEmail, setMgrEmail] = useState("");
-  const [mgrToken, setMgrToken] = useState("");
-  const [mgrError, setMgrError] = useState<string | null>(null);
-  const [mgrLoading, setMgrLoading] = useState(false);
 
   async function handleSendOtp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -112,50 +104,6 @@ function LoginContent() {
       setSmsLoading(false);
     }
     // On success, verifySmsOtp redirects server-side
-  }
-
-  async function handleSendManagerOtp(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setMgrError(null);
-    setMgrLoading(true);
-
-    const result = await sendManagerOtp(mgrEmail);
-    if (result?.error) {
-      setMgrError(result.error);
-      setMgrLoading(false);
-    } else {
-      setMgrStep("otp");
-      setMgrLoading(false);
-    }
-  }
-
-  async function handleVerifyManagerOtp(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setMgrError(null);
-    setMgrLoading(true);
-
-    const result = await verifyManagerOtp(mgrEmail, mgrToken);
-    if (result?.error) {
-      setMgrError(result.error);
-      setMgrLoading(false);
-    }
-    // On success, verifyManagerOtp redirects server-side
-  }
-
-  function openManagerModal() {
-    setShowManagerModal(true);
-    setMgrStep("email");
-    setMgrEmail("");
-    setMgrToken("");
-    setMgrError(null);
-  }
-
-  function closeManagerModal() {
-    setShowManagerModal(false);
-    setMgrStep("email");
-    setMgrEmail("");
-    setMgrToken("");
-    setMgrError(null);
   }
 
   function openSmsModal() {
@@ -329,13 +277,12 @@ function LoginContent() {
             >
               מועמד חדש? הצטרף עכשיו!
             </Link>
-            <button
-              type="button"
-              onClick={openManagerModal}
+            <Link
+              href="/new-candidate?mode=ambassador"
               className="text-sm text-sky-500 hover:text-sky-600 font-medium transition-colors"
             >
               הצטרפו כשגרירים: רשמו חברים ובני משפחה למערכת
-            </button>
+            </Link>
           </div>
 
           <div className="mt-6 flex justify-center gap-4 text-xs text-gray-400">
@@ -462,132 +409,6 @@ function LoginContent() {
                   className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   שינוי מספר טלפון
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-      {/* ── Manager Registration Modal ── */}
-      {showManagerModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" dir="rtl">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 relative">
-            <button
-              type="button"
-              onClick={closeManagerModal}
-              className="absolute top-3 left-3 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors text-lg"
-            >
-              &times;
-            </button>
-
-            <h2 className="text-lg font-bold text-gray-800 mb-1">
-              הרשמה כשגריר
-            </h2>
-            <p className="text-sm text-gray-500 mb-5">
-              {mgrStep === "email"
-                ? "הרשמה עבור שגרירים שרוצים לנהל פרופילי מועמדים. הכנס את כתובת האימייל שלך."
-                : `קוד אימות נשלח אל ${mgrEmail}`}
-            </p>
-
-            {mgrStep === "email" ? (
-              <form onSubmit={handleSendManagerOtp} className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="mgrEmail"
-                    className="block text-sm font-medium text-gray-600 mb-1.5"
-                  >
-                    אימייל
-                  </label>
-                  <input
-                    id="mgrEmail"
-                    type="email"
-                    required
-                    dir="ltr"
-                    placeholder="example@email.com"
-                    value={mgrEmail}
-                    onChange={(e) => setMgrEmail(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all"
-                  />
-                </div>
-
-                <label className="flex items-start gap-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    required
-                    className="mt-0.5 w-4 h-4 rounded border-gray-300 text-sky-500 focus:ring-sky-400 flex-shrink-0"
-                  />
-                  <span className="text-xs text-gray-500 leading-relaxed">
-                    קראתי ואני מסכים/ה ל
-                    <a href="/terms" target="_blank" className="text-sky-500 hover:text-sky-600 underline font-medium">
-                      תנאי השימוש ומדיניות הפרטיות
-                    </a>
-                  </span>
-                </label>
-
-                {mgrError && (
-                  <div className="text-red-600 text-sm bg-red-50 border border-red-100 p-3 rounded-xl">
-                    {mgrError}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={mgrLoading}
-                  className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 active:bg-sky-700 disabled:opacity-50 transition-all shadow-sm text-base"
-                >
-                  {mgrLoading ? "שולח..." : "שלח קוד אימות"}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyManagerOtp} className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="mgrToken"
-                    className="block text-sm font-medium text-gray-600 mb-1.5"
-                  >
-                    קוד אימות (8 ספרות)
-                  </label>
-                  <input
-                    id="mgrToken"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    required
-                    dir="ltr"
-                    placeholder="00000000"
-                    maxLength={8}
-                    value={mgrToken}
-                    onChange={(e) =>
-                      setMgrToken(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all text-center text-2xl tracking-[0.5em] font-mono"
-                  />
-                </div>
-
-                {mgrError && (
-                  <div className="text-red-600 text-sm bg-red-50 border border-red-100 p-3 rounded-xl">
-                    {mgrError}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={mgrLoading}
-                  className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 active:bg-sky-700 disabled:opacity-50 transition-all shadow-sm text-base"
-                >
-                  {mgrLoading ? "מאמת..." : "אימות והרשמה"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMgrStep("email");
-                    setMgrToken("");
-                    setMgrError(null);
-                  }}
-                  className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  שינוי כתובת אימייל
                 </button>
               </form>
             )}

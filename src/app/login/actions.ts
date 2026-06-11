@@ -300,68 +300,6 @@ export async function verifySmsOtp(
   redirect(safeNext(next));
 }
 
-/** Send OTP for manager/matchmaker registration (no candidate record needed) */
-export async function sendManagerOtp(email: string): Promise<OtpResult> {
-  const supabase = await createSupabaseServerClient();
-
-  // Check if email is already registered as a candidate
-  const { data: existingCandidate } = await supabase
-    .from("candidates")
-    .select("id")
-    .eq("email", email)
-    .limit(1)
-    .maybeSingle();
-
-  if (existingCandidate) {
-    return {
-      error: "כתובת מייל זו כבר רשומה כמועמד/ת במערכת. יש להתחבר דרך המסך הרגיל.",
-    };
-  }
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: true,
-    },
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  return { success: true };
-}
-
-/** Verify OTP for manager registration and set role to candidate (manager) */
-export async function verifyManagerOtp(
-  email: string,
-  token: string
-): Promise<OtpResult> {
-  const supabase = await createSupabaseServerClient();
-
-  const { data, error } = await supabase.auth.verifyOtp({
-    email,
-    token,
-    type: "email",
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  const user = data.user;
-  if (!user) {
-    return { error: "אימות נכשל, נסה שוב" };
-  }
-
-  // Set role to "candidate" (which means ambassador in this system)
-  await supabase.auth.admin.updateUserById(user.id, {
-    user_metadata: { role: "candidate" },
-  });
-
-  redirect(`/new-candidate?ambassador_id=${user.id}`);
-}
-
 export async function logout() {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();

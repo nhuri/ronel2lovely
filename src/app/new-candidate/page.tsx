@@ -4,7 +4,7 @@ import { NewCandidateForm } from "./new-candidate-form";
 export default async function NewCandidatePage({
   searchParams,
 }: {
-  searchParams: Promise<{ invite?: string; ambassador_id?: string }>;
+  searchParams: Promise<{ invite?: string; ambassador_id?: string; mode?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createSupabaseServerClient();
@@ -15,12 +15,14 @@ export default async function NewCandidatePage({
   } = await supabase.auth.getUser();
 
   const isLoggedIn = !!user && user.user_metadata?.role === "candidate";
+  const isAmbassadorMode = params.mode === "ambassador" || !!params.ambassador_id;
 
   return (
     <NewCandidateForm
       isLoggedIn={isLoggedIn}
       inviteToken={params.invite}
       ambassadorId={params.ambassador_id}
+      isAmbassadorMode={isAmbassadorMode}
     />
   );
 }

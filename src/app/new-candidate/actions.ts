@@ -10,7 +10,7 @@ export type CreateCandidateResult = {
   fieldErrors?: FieldErrors;
 };
 
-const REQUIRED_FIELDS: { key: string; label: string }[] = [
+const BASE_REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "full_name", label: "שם מלא" },
   { key: "phone_number", label: "מספר טלפון" },
   { key: "gender", label: "מין" },
@@ -23,15 +23,23 @@ const REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "occupation", label: "תעסוקה" },
   { key: "about_me", label: "תיאור אישי" },
   { key: "looking_for", label: "מה חשוב לי בבן/בת הזוג" },
-  { key: "contact_person", label: "שם השגריר" },
-  { key: "contact_person_phone", label: "טלפון השגריר" },
-  { key: "contact_person_gender", label: "מין השגריר" },
   { key: "email", label: "אימייל" },
   { key: "military_service", label: "שירות" },
 ];
 
+const AMBASSADOR_REQUIRED_FIELDS: { key: string; label: string }[] = [
+  { key: "contact_person", label: "שם השגריר" },
+  { key: "contact_person_phone", label: "טלפון השגריר" },
+  { key: "contact_person_email", label: "אימייל השגריר" },
+  { key: "contact_person_gender", label: "מין השגריר" },
+];
+
 // All text fields we read from the form (required + optional)
-const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "children_count", "torah_education", "military_service"];
+const ALL_FIELDS = [
+  ...BASE_REQUIRED_FIELDS.map((f) => f.key),
+  ...AMBASSADOR_REQUIRED_FIELDS.map((f) => f.key),
+  "children_count", "torah_education", "mode",
+];
 
 function calculateAge(birthDate: string): number {
   const today = new Date();
@@ -54,6 +62,12 @@ export async function createCandidate(
   for (const key of ALL_FIELDS) {
     raw[key] = ((formData.get(key) as string) ?? "").trim();
   }
+
+  const isAmbassadorMode = raw.mode === "ambassador" || !!((formData.get("ambassador_id") as string) ?? "").trim();
+  const REQUIRED_FIELDS = [
+    ...BASE_REQUIRED_FIELDS,
+    ...(isAmbassadorMode ? AMBASSADOR_REQUIRED_FIELDS : []),
+  ];
 
   // ── 1. Required field validation ──
   const fieldErrors: FieldErrors = {};
@@ -147,7 +161,7 @@ export async function createCandidate(
 
   // ── 6. Determine manager_id and ambassador_id ──
   let managerId: string | null = null;
-  const ambassadorId = ((formData.get("ambassador_id") as string) ?? "").trim() || null;
+  let ambassadorId = ((formData.get("ambassador_id") as string) ?? "").trim() || null;
   const inviteToken = ((formData.get("invite_token") as string) ?? "").trim();
 
   // Check current auth user
@@ -171,7 +185,27 @@ export async function createCandidate(
     }
     managerId = invitation.manager_id;
   } else if (ambassadorId) {
+    // Pre-authenticated ambassador (old flow fallback)
     managerId = ambassadorId;
+  } else if (isAmbassadorMode && raw.contact_person_email) {
+    // Ambassador mode: create or find auth account for the ambassador
+    const ambassadorEmail = raw.contact_person_email.toLowerCase();
+
+    // generateLink creates user if not exists and returns their ID without sending email
+    const { data: linkData } = await adminSupabase.auth.admin.generateLink({
+      type: "magiclink",
+      email: ambassadorEmail,
+      options: { data: { role: "candidate" } },
+    });
+
+    if (linkData?.user) {
+      ambassadorId = linkData.user.id;
+      // Ensure role metadata is set
+      await adminSupabase.auth.admin.updateUserById(ambassadorId, {
+        user_metadata: { role: "candidate" },
+      });
+      managerId = ambassadorId;
+    }
   } else if (user && user.email?.toLowerCase() !== raw.email?.toLowerCase()) {
     managerId = user.id;
   }
@@ -180,8 +214,9 @@ export async function createCandidate(
   const record: Record<string, string | number | string[] | null> = {
     full_name: raw.full_name,
     email: raw.email,
-    contact_person: raw.contact_person,
-    contact_person_phone: raw.contact_person_phone,
+    contact_person: raw.contact_person || null,
+    contact_person_phone: raw.contact_person_phone || null,
+    contact_person_email: raw.contact_person_email || null,
     contact_person_gender: raw.contact_person_gender || null,
     phone_number: raw.phone_number,
     gender: raw.gender,
@@ -223,10 +258,13 @@ export async function createCandidate(
 
   // Redirect based on context
   if (managerId && user) {
-    // Manager created a profile → go back to their dashboard
+    // Logged-in manager/ambassador created a profile → back to their dashboard
     redirect(`/my-profile?candidate_id=${insertedCandidate.id}`);
+  } else if (isAmbassadorMode) {
+    // Ambassador submitted without being logged in → success page with login prompt
+    redirect("/new-candidate/success?ambassador=1");
   } else if (inviteToken) {
-    // Invitation flow (not logged in) → show success page
+    // Invitation flow → success page
     redirect("/new-candidate/success");
   } else {
     // Regular self-registration → go to login

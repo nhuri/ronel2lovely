@@ -10,10 +10,12 @@ export function NewCandidateForm({
   isLoggedIn = false,
   inviteToken,
   ambassadorId,
+  isAmbassadorMode = false,
 }: {
   isLoggedIn?: boolean;
   inviteToken?: string;
   ambassadorId?: string;
+  isAmbassadorMode?: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -60,6 +62,11 @@ export function NewCandidateForm({
     // Pass ambassador id if present
     if (ambassadorId) {
       formData.set("ambassador_id", ambassadorId);
+    }
+
+    // Signal ambassador mode so server can validate and create ambassador auth account
+    if (isAmbassadorMode) {
+      formData.set("mode", "ambassador");
     }
 
     const result = await createCandidate(formData);
@@ -204,14 +211,17 @@ export function NewCandidateForm({
             <TextareaField name="looking_for" label={selectedGender === "נקבה" ? "מה חשוב לי בבן הזוג" : selectedGender === "זכר" ? "מה חשוב לי בבת הזוג" : "מה חשוב לי בבן/בת הזוג"} required placeholder={selectedGender === "נקבה" ? "מה את מחפשת..." : selectedGender === "זכר" ? "מה אתה מחפש..." : "מה את/ה מחפש/ת..."} error={fieldErrors.looking_for} />
           </Section>
 
-          {/* Ambassador / Contact Person */}
-          <Section title="פרטי השגריר">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InputField name="contact_person" label="שם מלא" required placeholder="שם מלא" error={fieldErrors.contact_person} />
-              <InputField name="contact_person_phone" label="מספר פלאפון" type="tel" required placeholder="050-0000000" dir="ltr" error={fieldErrors.contact_person_phone} />
-              <SelectField name="contact_person_gender" label="מין" required options={["זכר", "נקבה"]} error={fieldErrors.contact_person_gender} />
-            </div>
-          </Section>
+          {/* Ambassador section — shown only in ambassador mode */}
+          {(isAmbassadorMode || !!ambassadorId) && (
+            <Section title="פרטי השגריר">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputField name="contact_person" label="שם מלא" required placeholder="שם מלא" error={fieldErrors.contact_person} />
+                <InputField name="contact_person_phone" label="מספר פלאפון" type="tel" required placeholder="050-0000000" dir="ltr" error={fieldErrors.contact_person_phone} />
+                <InputField name="contact_person_email" label="אימייל" type="email" required placeholder="example@email.com" dir="ltr" error={fieldErrors.contact_person_email} />
+                <SelectField name="contact_person_gender" label="מין" required options={["זכר", "נקבה"]} error={fieldErrors.contact_person_gender} />
+              </div>
+            </Section>
+          )}
 
           {/* Terms acceptance */}
           <Section title="אישור תנאים">

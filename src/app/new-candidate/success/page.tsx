@@ -1,6 +1,13 @@
 import Link from "next/link";
 
-export default function RegistrationSuccessPage() {
+export default async function RegistrationSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ambassador?: string }>;
+}) {
+  const params = await searchParams;
+  const isAmbassador = params.ambassador === "1";
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center" dir="rtl">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 max-w-md text-center">
@@ -10,14 +17,20 @@ export default function RegistrationSuccessPage() {
           </svg>
         </div>
         <h1 className="text-lg font-bold text-gray-800 mb-2">ההרשמה הושלמה בהצלחה!</h1>
-        <p className="text-sm text-gray-500 mb-6">
-          הפרטים שלך נשמרו במערכת. השגריר שלך יוכל לצפות בפרופיל ולנהל את ההצעות עבורך.
-        </p>
+        {isAmbassador ? (
+          <p className="text-sm text-gray-500 mb-6">
+            פרטי המועמד/ת נשמרו במערכת. כדי לנהל את הפרופיל ולראות הצעות שידוך, התחבר/י עם האימייל שהזנת בפרטי השגריר.
+          </p>
+        ) : (
+          <p className="text-sm text-gray-500 mb-6">
+            הפרטים שלך נשמרו במערכת. השגריר שלך יוכל לצפות בפרופיל ולנהל את ההצעות עבורך.
+          </p>
+        )}
         <Link
           href="/login"
           className="inline-block px-6 py-2.5 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors"
         >
-          לעמוד ההתחברות
+          {isAmbassador ? "התחבר/י לניהול המועמד/ת" : "לעמוד ההתחברות"}
         </Link>
       </div>
     </div>
