@@ -169,8 +169,8 @@ export async function createCandidate(
       return { error: "קישור ההזמנה כבר נוצל" };
     }
     managerId = invitation.manager_id;
-  } else if (forOther && user?.user_metadata?.role === "candidate") {
-    // Logged-in user creating for someone else
+  } else if (user && user.email?.toLowerCase() !== raw.email?.toLowerCase()) {
+    // Logged-in user is registering someone else (ambassador flow)
     managerId = user.id;
   }
 
