@@ -142,7 +142,7 @@ export function NewCandidateForm({
           {/* Email & Phone */}
           <Section title="פרטי התקשרות">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InputField name="email" label="אימייל" type="email" placeholder="example@email.com" dir="ltr" error={fieldErrors.email} />
+              <InputField name="email" label="אימייל" type="email" required placeholder="example@email.com" dir="ltr" error={fieldErrors.email} />
               <InputField name="phone_number" label="מספר טלפון" type="tel" required placeholder="050-0000000" dir="ltr" error={fieldErrors.phone_number} />
             </div>
           </Section>

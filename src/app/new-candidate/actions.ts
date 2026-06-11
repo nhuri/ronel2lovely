@@ -26,10 +26,11 @@ const REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "contact_person", label: "איש קשר" },
   { key: "contact_person_phone", label: "טלפון איש קשר" },
   { key: "torah_education", label: "השכלה תורנית" },
+  { key: "email", label: "אימייל" },
 ];
 
 // All text fields we read from the form (required + optional)
-const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "email", "children_count"];
+const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "children_count"];
 
 function calculateAge(birthDate: string): number {
   const today = new Date();
