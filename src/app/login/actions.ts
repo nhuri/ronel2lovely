@@ -354,12 +354,23 @@ export async function verifyManagerOtp(
     return { error: "אימות נכשל, נסה שוב" };
   }
 
-  // Set role to "candidate" (which means manager/matchmaker in this system)
+  // Set role to "candidate" (which means ambassador in this system)
   await supabase.auth.admin.updateUserById(user.id, {
     user_metadata: { role: "candidate" },
   });
 
-  // New manager must add at least one candidate first
+  return {};
+}
+
+export async function completeAmbassadorProfile(fullName: string, gender: string): Promise<OtpResult> {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "לא מחובר" };
+
+  await supabase.auth.admin.updateUserById(user.id, {
+    user_metadata: { role: "candidate", full_name: fullName, gender },
+  });
+
   redirect("/new-candidate");
 }
 

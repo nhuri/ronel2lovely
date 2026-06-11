@@ -288,7 +288,7 @@ function CandidateCard({ candidate: c, onView, ambassadorName }: { candidate: Ca
         <h3 className="font-bold text-gray-800 text-lg leading-tight">{c.full_name}</h3>
         {c.residence && <p className="text-sm text-gray-400 mt-0.5">{c.residence}</p>}
         {ambassadorName && (
-          <p className="text-xs text-indigo-600 mt-1">שגריר: {ambassadorName}</p>
+          <p className="text-xs text-indigo-600 mt-1">{ambassadorName}</p>
         )}
 
         <div className="flex flex-wrap gap-1.5 mt-3">
@@ -379,7 +379,7 @@ function ProfileModal({ candidate: c, onClose, ambassadorName }: { candidate: Ca
             <Field label="גיל" value={c.age != null ? String(c.age) : null} />
             <Field label="איש קשר" value={c.contact_person} />
             {c.email && <Field label="אימייל" value={c.email} dir="ltr" />}
-            {ambassadorName && <Field label="שגריר" value={ambassadorName} />}
+            {ambassadorName && <Field label="שגריר/ה" value={ambassadorName} />}
           </div>
 
           {c.about_me && (

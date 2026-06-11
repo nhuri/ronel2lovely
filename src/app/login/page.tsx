@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { sendOtp, verifyOtp, sendSmsOtp, verifySmsOtp, sendManagerOtp, verifyManagerOtp } from "./actions";
+import { sendOtp, verifyOtp, sendSmsOtp, verifySmsOtp, sendManagerOtp, verifyManagerOtp, completeAmbassadorProfile } from "./actions";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -48,9 +48,11 @@ function LoginContent() {
 
   // Manager registration modal state
   const [showManagerModal, setShowManagerModal] = useState(false);
-  const [mgrStep, setMgrStep] = useState<"email" | "otp">("email");
+  const [mgrStep, setMgrStep] = useState<"email" | "otp" | "profile">("email");
   const [mgrEmail, setMgrEmail] = useState("");
   const [mgrToken, setMgrToken] = useState("");
+  const [mgrFullName, setMgrFullName] = useState("");
+  const [mgrGender, setMgrGender] = useState("");
   const [mgrError, setMgrError] = useState<string | null>(null);
   const [mgrLoading, setMgrLoading] = useState(false);
 
@@ -138,8 +140,22 @@ function LoginContent() {
     if (result?.error) {
       setMgrError(result.error);
       setMgrLoading(false);
+    } else {
+      setMgrStep("profile");
+      setMgrLoading(false);
     }
-    // On success, verifyManagerOtp redirects server-side
+  }
+
+  async function handleCompleteProfile(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setMgrError(null);
+    setMgrLoading(true);
+    const result = await completeAmbassadorProfile(mgrFullName, mgrGender);
+    if (result?.error) {
+      setMgrError(result.error);
+      setMgrLoading(false);
+    }
+    // On success, completeAmbassadorProfile redirects server-side
   }
 
   function openManagerModal() {
@@ -147,6 +163,8 @@ function LoginContent() {
     setMgrStep("email");
     setMgrEmail("");
     setMgrToken("");
+    setMgrFullName("");
+    setMgrGender("");
     setMgrError(null);
   }
 
@@ -155,6 +173,8 @@ function LoginContent() {
     setMgrStep("email");
     setMgrEmail("");
     setMgrToken("");
+    setMgrFullName("");
+    setMgrGender("");
     setMgrError(null);
   }
 
@@ -486,7 +506,9 @@ function LoginContent() {
             <p className="text-sm text-gray-500 mb-5">
               {mgrStep === "email"
                 ? "הרשמה עבור שגרירים שרוצים לנהל פרופילי מועמדים. הכנס את כתובת האימייל שלך."
-                : `קוד אימות נשלח אל ${mgrEmail}`}
+                : mgrStep === "otp"
+                ? `קוד אימות נשלח אל ${mgrEmail}`
+                : "כמעט סיימנו! מלא את הפרטים האישיים שלך."}
             </p>
 
             {mgrStep === "email" ? (
@@ -538,7 +560,7 @@ function LoginContent() {
                   {mgrLoading ? "שולח..." : "שלח קוד אימות"}
                 </button>
               </form>
-            ) : (
+            ) : mgrStep === "otp" ? (
               <form onSubmit={handleVerifyManagerOtp} className="space-y-4">
                 <div>
                   <label
@@ -575,7 +597,7 @@ function LoginContent() {
                   disabled={mgrLoading}
                   className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 active:bg-sky-700 disabled:opacity-50 transition-all shadow-sm text-base"
                 >
-                  {mgrLoading ? "מאמת..." : "אימות והרשמה"}
+                  {mgrLoading ? "מאמת..." : "אימות"}
                 </button>
 
                 <button
@@ -588,6 +610,57 @@ function LoginContent() {
                   className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   שינוי כתובת אימייל
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleCompleteProfile} className="space-y-4">
+                <div>
+                  <label htmlFor="mgrFullName" className="block text-sm font-medium text-gray-600 mb-1.5">
+                    שם פרטי ומשפחה
+                  </label>
+                  <input
+                    id="mgrFullName"
+                    type="text"
+                    required
+                    placeholder="ישראל ישראלי"
+                    value={mgrFullName}
+                    onChange={(e) => setMgrFullName(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1.5">מין</label>
+                  <div className="flex gap-3">
+                    {["זכר", "נקבה"].map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setMgrGender(g)}
+                        className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                          mgrGender === g
+                            ? "border-sky-500 bg-sky-50 text-sky-700"
+                            : "border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100"
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {mgrError && (
+                  <div className="text-red-600 text-sm bg-red-50 border border-red-100 p-3 rounded-xl">
+                    {mgrError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={mgrLoading || !mgrGender}
+                  className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 active:bg-sky-700 disabled:opacity-50 transition-all shadow-sm text-base"
+                >
+                  {mgrLoading ? "שומר..." : "המשך לרישום מועמד"}
                 </button>
               </form>
             )}

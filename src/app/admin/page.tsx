@@ -30,15 +30,22 @@ export default async function AdminDashboard() {
     const { data: { users } } = await adminSupabase.auth.admin.listUsers({ perPage: 1000 });
     const authEmailMap: Record<string, string> = {};
     users.forEach((u) => { authEmailMap[u.id] = u.email ?? ""; });
-    const emailToName: Record<string, string> = {};
-    allCandidates.forEach((c: any) => { if (c.email && c.full_name) emailToName[c.email.toLowerCase()] = c.full_name; });
+    const authMetaMap: Record<string, { full_name?: string; gender?: string; email: string }> = {};
+    users.forEach((u) => {
+      authMetaMap[u.id] = {
+        full_name: u.user_metadata?.full_name,
+        gender: u.user_metadata?.gender,
+        email: u.email ?? "",
+      };
+    });
     for (const c of allCandidates) {
       if (!c.manager_id) continue;
-      const managerEmail = authEmailMap[c.manager_id];
-      if (!managerEmail) continue;
+      const meta = authMetaMap[c.manager_id];
+      if (!meta) continue;
       // Skip self-registered candidates (their own auth email matches their candidate email)
-      if (managerEmail.toLowerCase() === (c.email ?? "").toLowerCase()) continue;
-      ambassadorNames[c.id] = emailToName[managerEmail.toLowerCase()] || managerEmail;
+      if (meta.email.toLowerCase() === (c.email ?? "").toLowerCase()) continue;
+      const title = meta.gender === "נקבה" ? "שגרירה" : "שגריר";
+      ambassadorNames[c.id] = `${title}: ${meta.full_name || meta.email}`;
     }
   }
 
