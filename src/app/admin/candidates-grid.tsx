@@ -24,6 +24,8 @@ interface Candidate {
   email: string | null;
   system_notes: string | null;
   availability_status: string | null;
+  torah_education: string | null;
+  military_service: string | null;
 }
 
 interface Props {
@@ -364,6 +366,8 @@ function ProfileModal({ candidate: c, onClose }: { candidate: Candidate; onClose
             <Field label="גובה" value={c.height ? `${c.height} ס"מ` : null} />
             <Field label="השכלה" value={c.education} />
             <Field label="עיסוק" value={c.occupation} />
+            <Field label="השכלה תורנית" value={c.torah_education} />
+            <Field label="שירות" value={c.military_service} />
             <Field label="תאריך לידה" value={c.birth_date} />
             <Field label="טלפון" value={c.phone_number} dir="ltr" />
             <Field label="גיל" value={c.age != null ? String(c.age) : null} />

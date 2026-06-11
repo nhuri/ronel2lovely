@@ -25,10 +25,11 @@ const REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "looking_for", label: "מה חשוב לי בבן/בת הזוג" },
   { key: "contact_person", label: "איש קשר" },
   { key: "contact_person_phone", label: "טלפון איש קשר" },
+  { key: "torah_education", label: "השכלה תורנית" },
 ];
 
 // All text fields we read from the form (required + optional)
-const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "email", "children_count", "torah_education"];
+const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "email", "children_count"];
 
 function calculateAge(birthDate: string): number {
   const today = new Date();
@@ -136,6 +137,10 @@ export async function createCandidate(
 
   // ── 5b. Read multi-value fields ──
   const militaryService = (formData.getAll("military_service") as string[]).filter(Boolean).join(",");
+
+  if (!militaryService) {
+    return { fieldErrors: { military_service: "שירות הוא שדה חובה" } };
+  }
 
   // ── 6. Determine manager_id ──
   let managerId: string | null = null;

@@ -160,8 +160,8 @@ export function NewCandidateForm({
               <InputField name="height" label="גובה (ס״מ)" type="number" required placeholder="170" dir="ltr" error={fieldErrors.height} />
               <SelectField name="education" label="השכלה" required options={["תיכונית", "תעודה", "תואר ראשון", "תואר שני"]} error={fieldErrors.education} />
               <InputField name="occupation" label="תעסוקה" required placeholder="למשל: מהנדס תוכנה" error={fieldErrors.occupation} />
-              <SelectField name="torah_education" label="השכלה תורנית" options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} error={fieldErrors.torah_education} />
-              <MultiSelectField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} />
+              <SelectField name="torah_education" label="השכלה תורנית" required options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} error={fieldErrors.torah_education} />
+              <MultiSelectField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} error={fieldErrors.military_service} />
             </div>
           </Section>
 
@@ -285,8 +285,8 @@ function SelectField({ name, label, options, required, error, onChange }: {
   );
 }
 
-function MultiSelectField({ name, label, options }: {
-  name: string; label: string; options: string[];
+function MultiSelectField({ name, label, options, error }: {
+  name: string; label: string; options: string[]; error?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
@@ -296,7 +296,7 @@ function MultiSelectField({ name, label, options }: {
 
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-gray-500 mb-1">{label} <span className="text-red-500">*</span></label>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -320,6 +320,7 @@ function MultiSelectField({ name, label, options }: {
         </div>
       )}
       {selected.map((s) => <input key={s} type="hidden" name={name} value={s} />)}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }
