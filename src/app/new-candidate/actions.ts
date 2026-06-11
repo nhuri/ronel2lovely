@@ -127,7 +127,7 @@ export async function createCandidate(
     const ext = file.name.split(".").pop() ?? "jpg";
     const path = `${crypto.randomUUID()}.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await adminSupabase.storage
       .from("candidate-images")
       .upload(path, file);
 
@@ -137,7 +137,7 @@ export async function createCandidate(
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from("candidate-images").getPublicUrl(path);
+    } = adminSupabase.storage.from("candidate-images").getPublicUrl(path);
 
     imageUrls.push(publicUrl);
   }
