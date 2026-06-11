@@ -133,7 +133,7 @@ export function NewCandidateForm({
                   }`}
                 >
                   <div className="font-bold mb-0.5">הרשמה עבור מישהו אחר</div>
-                  <div className="text-[11px] opacity-70">אני מנהל/שליח</div>
+                  <div className="text-[11px] opacity-70">אני שגריר</div>
                 </button>
               </div>
             </Section>

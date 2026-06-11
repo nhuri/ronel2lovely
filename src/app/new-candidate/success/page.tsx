@@ -11,7 +11,7 @@ export default function RegistrationSuccessPage() {
         </div>
         <h1 className="text-lg font-bold text-gray-800 mb-2">ההרשמה הושלמה בהצלחה!</h1>
         <p className="text-sm text-gray-500 mb-6">
-          הפרטים שלך נשמרו במערכת. המנהל שלך יוכל לצפות בפרופיל ולנהל את ההצעות עבורך.
+          הפרטים שלך נשמרו במערכת. השגריר שלך יוכל לצפות בפרופיל ולנהל את ההצעות עבורך.
         </p>
         <Link
           href="/login"
