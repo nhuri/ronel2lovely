@@ -26,12 +26,14 @@ interface Candidate {
   availability_status: string | null;
   torah_education: string | null;
   military_service: string | null;
+  manager_id: string | null;
 }
 
 interface Props {
   candidates: Candidate[];
   genders: string[];
   religiousLevels: string[];
+  managerNames: Record<string, string>;
 }
 
 const LEVEL_VARIANTS: Record<string, string[]> = {
@@ -47,6 +49,7 @@ export function CandidatesGrid({
   candidates,
   genders,
   religiousLevels,
+  managerNames,
 }: Props) {
   const [search, setSearch] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
@@ -143,13 +146,13 @@ export function CandidatesGrid({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filtered.map((c) => (
-            <CandidateCard key={c.id} candidate={c} onView={() => setSelectedId(c.id)} />
+            <CandidateCard key={c.id} candidate={c} onView={() => setSelectedId(c.id)} ambassadorName={c.manager_id ? (managerNames[c.manager_id] ?? null) : null} />
           ))}
         </div>
       )}
 
       {/* ── Profile Modal ── */}
-      {selected && <ProfileModal candidate={selected} onClose={() => setSelectedId(null)} />}
+      {selected && <ProfileModal candidate={selected} onClose={() => setSelectedId(null)} ambassadorName={selected.manager_id ? (managerNames[selected.manager_id] ?? null) : null} />}
     </>
   );
 }
@@ -247,7 +250,7 @@ function NoImage({ className, rounded }: { className?: string; rounded?: string 
 
 /* ──────────────── Card ──────────────── */
 
-function CandidateCard({ candidate: c, onView }: { candidate: Candidate; onView: () => void }) {
+function CandidateCard({ candidate: c, onView, ambassadorName }: { candidate: Candidate; onView: () => void; ambassadorName: string | null }) {
   const imgs = c.image_urls ?? [];
 
   return (
@@ -284,6 +287,9 @@ function CandidateCard({ candidate: c, onView }: { candidate: Candidate; onView:
 
         <h3 className="font-bold text-gray-800 text-lg leading-tight">{c.full_name}</h3>
         {c.residence && <p className="text-sm text-gray-400 mt-0.5">{c.residence}</p>}
+        {ambassadorName && (
+          <p className="text-xs text-indigo-600 mt-1">שגריר: {ambassadorName}</p>
+        )}
 
         <div className="flex flex-wrap gap-1.5 mt-3">
           {c.gender && <Tag text={c.gender} color="purple" />}
@@ -310,7 +316,7 @@ function Tag({ text, color }: { text: string; color: keyof typeof tagColors }) {
 
 /* ──────────────── Profile Modal ──────────────── */
 
-function ProfileModal({ candidate: c, onClose }: { candidate: Candidate; onClose: () => void }) {
+function ProfileModal({ candidate: c, onClose, ambassadorName }: { candidate: Candidate; onClose: () => void; ambassadorName: string | null }) {
   const imgs = c.image_urls ?? [];
 
   return (
@@ -373,6 +379,7 @@ function ProfileModal({ candidate: c, onClose }: { candidate: Candidate; onClose
             <Field label="גיל" value={c.age != null ? String(c.age) : null} />
             <Field label="איש קשר" value={c.contact_person} />
             {c.email && <Field label="אימייל" value={c.email} dir="ltr" />}
+            {ambassadorName && <Field label="שגריר" value={ambassadorName} />}
           </div>
 
           {c.about_me && (

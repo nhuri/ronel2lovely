@@ -29,9 +29,10 @@ type AdminTabsProps = {
   followupFirst: FollowupDelay;
   followupSecond: FollowupDelay;
   analyticsStats: AnalyticsStats;
+  managerNames: Record<string, string>;
 };
 
-export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond, analyticsStats }: AdminTabsProps) {
+export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond, analyticsStats, managerNames }: AdminTabsProps) {
   const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings" | "emails" | "analytics">("candidates");
 
   return (
@@ -99,6 +100,7 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
           candidates={candidates}
           genders={genders}
           religiousLevels={religiousLevels}
+          managerNames={managerNames}
         />
       )}
       {activeTab === "message" && (
