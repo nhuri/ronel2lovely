@@ -36,17 +36,27 @@ export async function sendOtp(email: string): Promise<OtpResult> {
       .maybeSingle();
 
     if (!candidate) {
-      // Check if this email belongs to an existing manager/matchmaker (auth user with role=candidate)
-      const { data: existingUsers } = await supabase.auth.admin.listUsers();
-      const existingManager = existingUsers?.users?.find(
-        (u) => u.email === email && u.user_metadata?.role === "candidate"
-      );
+      // Check if this email is registered as an ambassador for any candidate
+      const { data: ambassadorRecord } = await supabase
+        .from("candidates")
+        .select("id")
+        .eq("contact_person_email", email)
+        .limit(1)
+        .maybeSingle();
 
-      if (!existingManager) {
-        return {
-          error: "כתובת מייל זו לא קיימת במערכת. ניתן להירשם כמועמד חדש או כשגריר. במידה ונרשמתם לאתר בגרסה הישנה לחצו על הכפתור האדום למטה.",
-          showPhoneFlow: true,
-        };
+      if (!ambassadorRecord) {
+        // Legacy check: auth user with role=candidate
+        const { data: existingUsers } = await supabase.auth.admin.listUsers();
+        const existingManager = existingUsers?.users?.find(
+          (u) => u.email === email && u.user_metadata?.role === "candidate"
+        );
+
+        if (!existingManager) {
+          return {
+            error: "כתובת מייל זו לא קיימת במערכת. ניתן להירשם כמועמד חדש או כשגריר. במידה ונרשמתם לאתר בגרסה הישנה לחצו על הכפתור האדום למטה.",
+            showPhoneFlow: true,
+          };
+        }
       }
     }
   }
@@ -107,7 +117,7 @@ export async function verifyOtp(
       user_metadata: { role },
     });
 
-    // Backfill manager_id for existing candidates
+    // Backfill manager_id for self-registered candidate
     if (candidate) {
       await supabase
         .from("candidates")
@@ -116,11 +126,19 @@ export async function verifyOtp(
         .is("manager_id", null);
     }
 
+    // Backfill manager_id + ambassador_id for candidates this ambassador registered
+    await supabase
+      .from("candidates")
+      .update({ manager_id: user.id, ambassador_id: user.id })
+      .eq("contact_person_email", email)
+      .is("manager_id", null);
+
     redirect(role === "candidate" ? safeNext(next) : "/admin");
   }
 
-  // Backfill manager_id on every login (for candidates migrated after initial login)
+  // Backfill manager_id on every login
   if (currentRole === "candidate") {
+    // Self-registered candidate
     const { data: candidate } = await supabase
       .from("candidates")
       .select("id")
@@ -136,6 +154,13 @@ export async function verifyOtp(
         .eq("id", candidate.id)
         .is("manager_id", null);
     }
+
+    // Ambassador: backfill candidates registered by this ambassador
+    await supabase
+      .from("candidates")
+      .update({ manager_id: user.id, ambassador_id: user.id })
+      .eq("contact_person_email", email)
+      .is("manager_id", null);
   }
 
   redirect(currentRole === "candidate" ? safeNext(next) : "/admin");
