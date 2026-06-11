@@ -161,7 +161,7 @@ export function NewCandidateForm({
               <SelectField name="education" label="השכלה" required options={["תיכונית", "תעודה", "תואר ראשון", "תואר שני"]} error={fieldErrors.education} />
               <InputField name="occupation" label="תעסוקה" required placeholder="למשל: מהנדס תוכנה" error={fieldErrors.occupation} />
               <SelectField name="torah_education" label="השכלה תורנית" required options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} error={fieldErrors.torah_education} />
-              <MultiSelectField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} error={fieldErrors.military_service} />
+              <SelectField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} error={fieldErrors.military_service} />
             </div>
           </Section>
 
