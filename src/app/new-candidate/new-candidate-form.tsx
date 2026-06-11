@@ -121,8 +121,8 @@ export function NewCandidateForm({
       {/* Form */}
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Ambassador section — shown only in ambassador mode, at the top */}
-          {(isAmbassadorMode || !!ambassadorId) && (
+          {/* Ambassador section — shown only when collecting ambassador details (not when already identified) */}
+          {isAmbassadorMode && !ambassadorId && (
             <Section title="פרטי השגריר">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InputField name="contact_person" label="שם מלא" required placeholder="שם מלא" error={fieldErrors.contact_person} />

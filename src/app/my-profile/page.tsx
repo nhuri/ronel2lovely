@@ -36,7 +36,7 @@ export default async function MyProfilePage({
   }
 
   if (!candidate) {
-    // Manager with no candidates yet — force them to add one
+    // No linked candidates — add one
     redirect("/new-candidate");
   }
 
@@ -113,6 +113,13 @@ export default async function MyProfilePage({
 
   const signedCandidate = await signCandidateImages(candidate);
 
+  // Detect ambassador: any managed candidate was registered by this user as ambassador
+  const isAmbassador = allCandidates.some(
+    (c) =>
+      c.ambassador_id === user.id ||
+      (c.contact_person_email as string | null)?.toLowerCase() === user.email?.toLowerCase()
+  );
+
   return (
     <ProfileClient
       candidate={signedCandidate}
@@ -124,6 +131,7 @@ export default async function MyProfilePage({
       }))}
       startInEditMode={isIncomplete || wasRestored}
       needsEmail={needsEmail}
+      ambassadorUserId={isAmbassador ? user.id : undefined}
     />
   );
 }

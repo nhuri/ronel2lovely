@@ -63,10 +63,13 @@ export async function createCandidate(
     raw[key] = ((formData.get(key) as string) ?? "").trim();
   }
 
-  const isAmbassadorMode = raw.mode === "ambassador" || !!((formData.get("ambassador_id") as string) ?? "").trim();
+  const ambassadorIdFromParam = ((formData.get("ambassador_id") as string) ?? "").trim();
+  const isAmbassadorMode = raw.mode === "ambassador" || !!ambassadorIdFromParam;
+  // Ambassador contact fields are only required when collecting them (mode=ambassador, not pre-identified)
+  const needsAmbassadorFields = isAmbassadorMode && !ambassadorIdFromParam;
   const REQUIRED_FIELDS = [
     ...BASE_REQUIRED_FIELDS,
-    ...(isAmbassadorMode ? AMBASSADOR_REQUIRED_FIELDS : []),
+    ...(needsAmbassadorFields ? AMBASSADOR_REQUIRED_FIELDS : []),
   ];
 
   // ── 1. Required field validation ──
@@ -161,7 +164,7 @@ export async function createCandidate(
 
   // ── 6. Determine manager_id and ambassador_id ──
   let managerId: string | null = null;
-  let ambassadorId = ((formData.get("ambassador_id") as string) ?? "").trim() || null;
+  let ambassadorId = ambassadorIdFromParam || null;
   const inviteToken = ((formData.get("invite_token") as string) ?? "").trim();
 
   // Check current auth user
