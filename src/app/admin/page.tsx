@@ -22,19 +22,23 @@ export default async function AdminDashboard() {
 
   const allCandidates = await signAllCandidateImages(rawCandidates ?? []);
 
-  // Build manager_id → name map
+  // Build candidate_id → ambassador name (only for candidates registered by someone else)
   const adminSupabase = createSupabaseAdminClient();
   const managerIds = [...new Set(allCandidates.map((c: any) => c.manager_id).filter(Boolean))] as string[];
-  const managerNames: Record<string, string> = {};
+  const ambassadorNames: Record<number, string> = {};
   if (managerIds.length > 0) {
     const { data: { users } } = await adminSupabase.auth.admin.listUsers({ perPage: 1000 });
     const authEmailMap: Record<string, string> = {};
     users.forEach((u) => { authEmailMap[u.id] = u.email ?? ""; });
     const emailToName: Record<string, string> = {};
     allCandidates.forEach((c: any) => { if (c.email && c.full_name) emailToName[c.email.toLowerCase()] = c.full_name; });
-    for (const id of managerIds) {
-      const email = authEmailMap[id];
-      managerNames[id] = (email && emailToName[email.toLowerCase()]) || email || id;
+    for (const c of allCandidates) {
+      if (!c.manager_id) continue;
+      const managerEmail = authEmailMap[c.manager_id];
+      if (!managerEmail) continue;
+      // Skip self-registered candidates (their own auth email matches their candidate email)
+      if (managerEmail.toLowerCase() === (c.email ?? "").toLowerCase()) continue;
+      ambassadorNames[c.id] = emailToName[managerEmail.toLowerCase()] || managerEmail;
     }
   }
 
@@ -138,7 +142,7 @@ export default async function AdminDashboard() {
           followupFirst={followupDelays.first}
           followupSecond={followupDelays.second}
           analyticsStats={analyticsStats}
-          managerNames={managerNames}
+          managerNames={ambassadorNames}
         />
       </main>
     </div>

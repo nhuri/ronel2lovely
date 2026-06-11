@@ -33,7 +33,7 @@ interface Props {
   candidates: Candidate[];
   genders: string[];
   religiousLevels: string[];
-  managerNames: Record<string, string>;
+  managerNames: Record<number, string>;
 }
 
 const LEVEL_VARIANTS: Record<string, string[]> = {
@@ -146,13 +146,13 @@ export function CandidatesGrid({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filtered.map((c) => (
-            <CandidateCard key={c.id} candidate={c} onView={() => setSelectedId(c.id)} ambassadorName={c.manager_id ? (managerNames[c.manager_id] ?? null) : null} />
+            <CandidateCard key={c.id} candidate={c} onView={() => setSelectedId(c.id)} ambassadorName={managerNames[c.id] ?? null} />
           ))}
         </div>
       )}
 
       {/* ── Profile Modal ── */}
-      {selected && <ProfileModal candidate={selected} onClose={() => setSelectedId(null)} ambassadorName={selected.manager_id ? (managerNames[selected.manager_id] ?? null) : null} />}
+      {selected && <ProfileModal candidate={selected} onClose={() => setSelectedId(null)} ambassadorName={managerNames[selected.id] ?? null} />}
     </>
   );
 }

@@ -29,7 +29,7 @@ type AdminTabsProps = {
   followupFirst: FollowupDelay;
   followupSecond: FollowupDelay;
   analyticsStats: AnalyticsStats;
-  managerNames: Record<string, string>;
+  managerNames: Record<number, string>;
 };
 
 export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond, analyticsStats, managerNames }: AdminTabsProps) {
