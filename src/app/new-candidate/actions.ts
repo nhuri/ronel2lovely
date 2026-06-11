@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { toE164 } from "@/lib/phone";
 
@@ -47,6 +47,7 @@ export async function createCandidate(
   formData: FormData
 ): Promise<CreateCandidateResult | undefined> {
   const supabase = await createSupabaseServerClient();
+  const adminSupabase = createSupabaseAdminClient();
 
   const raw: Record<string, string> = {};
   for (const key of ALL_FIELDS) {
@@ -198,7 +199,7 @@ export async function createCandidate(
     manager_id: managerId,
   };
 
-  const { data: insertedCandidate, error } = await supabase
+  const { data: insertedCandidate, error } = await adminSupabase
     .from("candidates")
     .insert(record)
     .select("id")
@@ -210,7 +211,7 @@ export async function createCandidate(
 
   // Mark invitation as used
   if (inviteToken && insertedCandidate) {
-    await supabase
+    await adminSupabase
       .from("invitations")
       .update({ used_at: new Date().toISOString(), candidate_id: insertedCandidate.id })
       .eq("token", inviteToken);
