@@ -204,11 +204,12 @@ export function NewCandidateForm({
             <TextareaField name="looking_for" label={selectedGender === "נקבה" ? "מה חשוב לי בבן הזוג" : selectedGender === "זכר" ? "מה חשוב לי בבת הזוג" : "מה חשוב לי בבן/בת הזוג"} required placeholder={selectedGender === "נקבה" ? "מה את מחפשת..." : selectedGender === "זכר" ? "מה אתה מחפש..." : "מה את/ה מחפש/ת..."} error={fieldErrors.looking_for} />
           </Section>
 
-          {/* Contact Person */}
-          <Section title="פרטי איש קשר">
+          {/* Ambassador / Contact Person */}
+          <Section title="פרטי השגריר">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InputField name="contact_person" label="שם איש קשר" required placeholder="שם מלא" error={fieldErrors.contact_person} />
-              <InputField name="contact_person_phone" label="טלפון איש קשר" type="tel" required placeholder="050-0000000" dir="ltr" error={fieldErrors.contact_person_phone} />
+              <InputField name="contact_person" label="שם מלא" required placeholder="שם מלא" error={fieldErrors.contact_person} />
+              <InputField name="contact_person_phone" label="מספר פלאפון" type="tel" required placeholder="050-0000000" dir="ltr" error={fieldErrors.contact_person_phone} />
+              <SelectField name="contact_person_gender" label="מין" required options={["זכר", "נקבה"]} error={fieldErrors.contact_person_gender} />
             </div>
           </Section>
 

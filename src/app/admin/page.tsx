@@ -1,4 +1,4 @@
-import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AdminTabs } from "./admin-tabs";
 import { logout } from "@/app/login/actions";
 import Link from "next/link";
@@ -22,23 +22,12 @@ export default async function AdminDashboard() {
 
   const allCandidates = await signAllCandidateImages(rawCandidates ?? []);
 
-  // Build candidate_id → ambassador label using the explicit ambassador_id column
-  const adminSupabase = createSupabaseAdminClient();
-  const ambassadorIds = [...new Set(allCandidates.map((c: any) => c.ambassador_id).filter(Boolean))] as string[];
+  // Build candidate_id → ambassador label from contact_person fields on the candidate itself
   const ambassadorNames: Record<number, string> = {};
-  if (ambassadorIds.length > 0) {
-    const { data: { users } } = await adminSupabase.auth.admin.listUsers({ perPage: 1000 });
-    const metaMap: Record<string, { full_name?: string; gender?: string; email: string }> = {};
-    users.forEach((u) => {
-      metaMap[u.id] = { full_name: u.user_metadata?.full_name, gender: u.user_metadata?.gender, email: u.email ?? "" };
-    });
-    for (const c of allCandidates) {
-      if (!c.ambassador_id) continue;
-      const meta = metaMap[c.ambassador_id];
-      if (!meta) continue;
-      const title = meta.gender === "נקבה" ? "שגרירה" : "שגריר";
-      ambassadorNames[c.id] = `${title}: ${meta.full_name || meta.email}`;
-    }
+  for (const c of allCandidates) {
+    if (!c.ambassador_id || !c.contact_person) continue;
+    const title = c.contact_person_gender === "נקבה" ? "שגרירה" : "שגריר";
+    ambassadorNames[c.id] = `${title}: ${c.contact_person}`;
   }
 
   // Filter out frozen and married candidates from the main grid

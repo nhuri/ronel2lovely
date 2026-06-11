@@ -359,18 +359,6 @@ export async function verifyManagerOtp(
     user_metadata: { role: "candidate" },
   });
 
-  return {};
-}
-
-export async function completeAmbassadorProfile(fullName: string, gender: string): Promise<OtpResult> {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "לא מחובר" };
-
-  await supabase.auth.admin.updateUserById(user.id, {
-    user_metadata: { role: "candidate", full_name: fullName, gender },
-  });
-
   redirect(`/new-candidate?ambassador_id=${user.id}`);
 }
 
