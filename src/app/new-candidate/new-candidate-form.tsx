@@ -160,8 +160,8 @@ export function NewCandidateForm({
               <InputField name="height" label="גובה (ס״מ)" type="number" required placeholder="170" dir="ltr" error={fieldErrors.height} />
               <SelectField name="education" label="השכלה" required options={["תיכונית", "תעודה", "תואר ראשון", "תואר שני"]} error={fieldErrors.education} />
               <InputField name="occupation" label="תעסוקה" required placeholder="למשל: מהנדס תוכנה" error={fieldErrors.occupation} />
-              <SelectField name="torah_education" label="השכלה תורנית" required options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} error={fieldErrors.torah_education} />
-              <SelectField name="military_service" label="שירות" options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} error={fieldErrors.military_service} />
+              <SelectField name="torah_education" label="השכלה תורנית" options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} error={fieldErrors.torah_education} />
+              <SelectField name="military_service" label="שירות" required options={["שירות לאומי", "קרבי", "קבע", "צבא", "הסדר", "עתודה", "ללא"]} error={fieldErrors.military_service} />
             </div>
           </Section>
 
