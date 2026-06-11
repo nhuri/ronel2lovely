@@ -243,7 +243,7 @@ export function ProfileClient({
                       <Link href={`/my-profile/inquiries${cidParam}`} className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">פניות</Link>
                       <Link href={`/my-profile/recommendations${cidParam}`} className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm font-medium text-pink-600 hover:text-pink-700 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors">הצעות מומלצות</Link>
                       <button onClick={() => setMode("edit")} className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors">עריכת פרופיל</button>
-                      <form action={logout}><button type="submit" className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">התנתקות</button></form>
+                      <form action={logout} className="flex"><button type="submit" className="inline-flex items-center justify-center min-w-[5.5rem] px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">התנתקות</button></form>
                     </div>
                     {/* Mobile: only logout in top row */}
                     <form action={logout} className="sm:hidden">
