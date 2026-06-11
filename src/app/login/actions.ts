@@ -371,7 +371,7 @@ export async function completeAmbassadorProfile(fullName: string, gender: string
     user_metadata: { role: "candidate", full_name: fullName, gender },
   });
 
-  redirect("/new-candidate");
+  redirect(`/new-candidate?ambassador_id=${user.id}`);
 }
 
 export async function logout() {

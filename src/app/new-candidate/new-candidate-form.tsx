@@ -9,9 +9,11 @@ import Image from "next/image";
 export function NewCandidateForm({
   isLoggedIn = false,
   inviteToken,
+  ambassadorId,
 }: {
   isLoggedIn?: boolean;
   inviteToken?: string;
+  ambassadorId?: string;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -53,6 +55,11 @@ export function NewCandidateForm({
     // Pass invite token if present
     if (inviteToken) {
       formData.set("invite_token", inviteToken);
+    }
+
+    // Pass ambassador id if present
+    if (ambassadorId) {
+      formData.set("ambassador_id", ambassadorId);
     }
 
     const result = await createCandidate(formData);

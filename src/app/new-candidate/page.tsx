@@ -4,7 +4,7 @@ import { NewCandidateForm } from "./new-candidate-form";
 export default async function NewCandidatePage({
   searchParams,
 }: {
-  searchParams: Promise<{ invite?: string }>;
+  searchParams: Promise<{ invite?: string; ambassador_id?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createSupabaseServerClient();
@@ -20,6 +20,7 @@ export default async function NewCandidatePage({
     <NewCandidateForm
       isLoggedIn={isLoggedIn}
       inviteToken={params.invite}
+      ambassadorId={params.ambassador_id}
     />
   );
 }

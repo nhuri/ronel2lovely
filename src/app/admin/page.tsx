@@ -22,28 +22,20 @@ export default async function AdminDashboard() {
 
   const allCandidates = await signAllCandidateImages(rawCandidates ?? []);
 
-  // Build candidate_id → ambassador name (only for candidates registered by someone else)
+  // Build candidate_id → ambassador label using the explicit ambassador_id column
   const adminSupabase = createSupabaseAdminClient();
-  const managerIds = [...new Set(allCandidates.map((c: any) => c.manager_id).filter(Boolean))] as string[];
+  const ambassadorIds = [...new Set(allCandidates.map((c: any) => c.ambassador_id).filter(Boolean))] as string[];
   const ambassadorNames: Record<number, string> = {};
-  if (managerIds.length > 0) {
+  if (ambassadorIds.length > 0) {
     const { data: { users } } = await adminSupabase.auth.admin.listUsers({ perPage: 1000 });
-    const authEmailMap: Record<string, string> = {};
-    users.forEach((u) => { authEmailMap[u.id] = u.email ?? ""; });
-    const authMetaMap: Record<string, { full_name?: string; gender?: string; email: string }> = {};
+    const metaMap: Record<string, { full_name?: string; gender?: string; email: string }> = {};
     users.forEach((u) => {
-      authMetaMap[u.id] = {
-        full_name: u.user_metadata?.full_name,
-        gender: u.user_metadata?.gender,
-        email: u.email ?? "",
-      };
+      metaMap[u.id] = { full_name: u.user_metadata?.full_name, gender: u.user_metadata?.gender, email: u.email ?? "" };
     });
     for (const c of allCandidates) {
-      if (!c.manager_id) continue;
-      const meta = authMetaMap[c.manager_id];
+      if (!c.ambassador_id) continue;
+      const meta = metaMap[c.ambassador_id];
       if (!meta) continue;
-      // Skip self-registered candidates (their own auth email matches their candidate email)
-      if (meta.email.toLowerCase() === (c.email ?? "").toLowerCase()) continue;
       const title = meta.gender === "נקבה" ? "שגרירה" : "שגריר";
       ambassadorNames[c.id] = `${title}: ${meta.full_name || meta.email}`;
     }

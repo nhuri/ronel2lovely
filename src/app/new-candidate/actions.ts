@@ -30,7 +30,7 @@ const REQUIRED_FIELDS: { key: string; label: string }[] = [
 ];
 
 // All text fields we read from the form (required + optional)
-const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "children_count", "torah_education"];
+const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "children_count", "torah_education", "military_service"];
 
 function calculateAge(birthDate: string): number {
   const today = new Date();
@@ -144,9 +144,9 @@ export async function createCandidate(
 
   // ── 5b. (no multi-value fields) ──
 
-  // ── 6. Determine manager_id ──
+  // ── 6. Determine manager_id and ambassador_id ──
   let managerId: string | null = null;
-  const forOther = formData.get("for_other") === "1";
+  const ambassadorId = ((formData.get("ambassador_id") as string) ?? "").trim() || null;
   const inviteToken = ((formData.get("invite_token") as string) ?? "").trim();
 
   // Check current auth user
@@ -169,8 +169,9 @@ export async function createCandidate(
       return { error: "קישור ההזמנה כבר נוצל" };
     }
     managerId = invitation.manager_id;
+  } else if (ambassadorId) {
+    managerId = ambassadorId;
   } else if (user && user.email?.toLowerCase() !== raw.email?.toLowerCase()) {
-    // Logged-in user is registering someone else (ambassador flow)
     managerId = user.id;
   }
 
@@ -197,6 +198,7 @@ export async function createCandidate(
     image_urls: imageUrls,
     age: calculateAge(raw.birth_date),
     manager_id: managerId,
+    ambassador_id: ambassadorId,
   };
 
   const { data: insertedCandidate, error } = await adminSupabase
