@@ -689,7 +689,13 @@ function MatchDetailModal({
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget && !showConfirm) onClose(); }}
     >
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] flex flex-col">
+        <button onClick={onClose} className="absolute top-3 left-3 w-8 h-8 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition-colors z-20">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div className="overflow-y-auto rounded-2xl">
         <div className="relative w-full bg-gray-900 rounded-t-2xl overflow-hidden">
           {imgs.length > 0 ? (
             /* eslint-disable-next-line @next/next/no-img-element */
@@ -701,11 +707,6 @@ function MatchDetailModal({
               </svg>
             </div>
           )}
-          <button onClick={onClose} className="absolute top-3 left-3 w-8 h-8 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition-colors z-10">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
 
         <div className="p-5 space-y-4" dir="rtl">
@@ -773,6 +774,7 @@ function MatchDetailModal({
           <button onClick={onReject} className="w-full py-2 text-xs text-gray-400 hover:text-red-500 transition-colors">
             לא מתאים/ה — סמן כלא מתאים
           </button>
+        </div>
         </div>
       </div>
     </div>

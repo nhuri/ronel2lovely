@@ -73,10 +73,11 @@ export async function sendInterestEmail(
     const alreadySent = recipient.no_email_sms_sent as boolean | null;
     const recipientPhone = recipient.phone_number as string | null;
     if (!alreadySent && recipientPhone) {
+      const updateVerb = (recipient.gender as string) === "זכר" ? "תעדכן" : "תעדכני";
       tasks.push(
         sendTwilioSms(
           recipientPhone,
-          'נשמח שתעדכן את כתובת המייל שלך באתר לקבלת הצעות ע"י לחיצה על הכפתור הבורדו באתר https://ronel-lovely.com'
+          `נשמח ש${updateVerb} את כתובת המייל שלך באתר לקבלת הצעות ע"י לחיצה על הכפתור הבורדו באתר https://ronel-lovely.com`
         ).then(() =>
           adminClient
             .from("candidates")
