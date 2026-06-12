@@ -76,7 +76,7 @@ export async function sendInterestEmail(
       tasks.push(
         sendTwilioSms(
           recipientPhone,
-          'נשמח שתעדכן את כתובת המייל שלך באתר לקבלת הצעות ע"י לחיצה על הכפתור הבורדו באתר ronel-lovely.com'
+          'נשמח שתעדכן את כתובת המייל שלך באתר לקבלת הצעות ע"י לחיצה על הכפתור הבורדו באתר https://ronel-lovely.com'
         ).then(() =>
           adminClient
             .from("candidates")
