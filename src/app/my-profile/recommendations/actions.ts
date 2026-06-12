@@ -58,31 +58,35 @@ export async function sendInterestEmail(
         <p style="font-size: 14px; color: #6b7280;">מזהה מועמד/ת ללא מייל: ${recipient.id}</p>
       </div>
     `;
-    sendEmailWithLog({
-      to: "ronel2lovely@gmail.com",
-      subject: `פניה ללא מייל — ${recipientNameForAlert}`,
-      html: adminAlertHtml,
-      context: "no_email_alert",
-      fromCandidateId: candidateId,
-      toCandidateId: matchCandidateId,
-    }).catch(() => {});
+    const tasks: Promise<unknown>[] = [
+      sendEmailWithLog({
+        to: "ronel2lovely@gmail.com",
+        subject: `פניה ללא מייל — ${recipientNameForAlert}`,
+        html: adminAlertHtml,
+        context: "no_email_alert",
+        fromCandidateId: candidateId,
+        toCandidateId: matchCandidateId,
+      }),
+    ];
 
     // 2. One-time SMS to the candidate without email
     const alreadySent = recipient.no_email_sms_sent as boolean | null;
     const recipientPhone = recipient.phone_number as string | null;
     if (!alreadySent && recipientPhone) {
-      sendTwilioSms(
-        recipientPhone,
-        'נשמח שתעדכן את כתובת המייל שלך באתר לקבלת הצעות ע"י לחיצה על הכפתור הבורדו באתר ronel-lovely.com'
-      )
-        .then(() =>
+      tasks.push(
+        sendTwilioSms(
+          recipientPhone,
+          'נשמח שתעדכן את כתובת המייל שלך באתר לקבלת הצעות ע"י לחיצה על הכפתור הבורדו באתר ronel-lovely.com'
+        ).then(() =>
           adminClient
             .from("candidates")
             .update({ no_email_sms_sent: true })
             .eq("id", matchCandidateId)
         )
-        .catch(() => {});
+      );
     }
+
+    await Promise.allSettled(tasks);
 
     return {
       success: false,
