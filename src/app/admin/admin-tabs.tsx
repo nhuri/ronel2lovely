@@ -16,6 +16,7 @@ type MessageCandidate = {
   phone_number?: string | null;
   email?: string | null;
   image_urls?: string[] | null;
+  availability_status?: string | null;
 };
 
 type AdminTabsProps = {

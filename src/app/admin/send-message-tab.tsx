@@ -11,11 +11,13 @@ type Candidate = {
   phone_number?: string | null;
   email?: string | null;
   image_urls?: string[] | null;
+  availability_status?: string | null;
 };
 
 export function SendMessageTab({ candidates }: { candidates: Candidate[] }) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [genderFilter, setGenderFilter] = useState<string>("");
+  const [excludeFrozen, setExcludeFrozen] = useState(false);
   const [search, setSearch] = useState<string>("");
   const [channel, setChannel] = useState<"sms" | "email">("sms");
   const [message, setMessage] = useState("");
@@ -31,9 +33,10 @@ export function SendMessageTab({ candidates }: { candidates: Candidate[] }) {
     () => candidates.filter((c) => {
       if (genderFilter && c.gender !== genderFilter) return false;
       if (search && !c.full_name?.includes(search)) return false;
+      if (excludeFrozen && c.availability_status === "הקפאה") return false;
       return true;
     }),
-    [candidates, genderFilter, search]
+    [candidates, genderFilter, search, excludeFrozen]
   );
 
   const allSelected = filtered.length > 0 && filtered.every((c) => selected.has(c.id));
@@ -112,6 +115,25 @@ export function SendMessageTab({ candidates }: { candidates: Candidate[] }) {
             </select>
           </div>
         )}
+
+        {/* Frozen filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-600">מוקפאים:</span>
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+            <button
+              onClick={() => { setExcludeFrozen(false); setSelected(new Set()); }}
+              className={`px-3 py-1.5 text-sm font-medium transition-colors ${!excludeFrozen ? "bg-sky-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+            >
+              כולם
+            </button>
+            <button
+              onClick={() => { setExcludeFrozen(true); setSelected(new Set()); }}
+              className={`px-3 py-1.5 text-sm font-medium transition-colors ${excludeFrozen ? "bg-sky-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+            >
+              פעילים בלבד
+            </button>
+          </div>
+        </div>
 
         <div className="mr-auto text-sm text-gray-500">
           {selectedCount > 0 ? (
