@@ -88,10 +88,10 @@ export async function sendInterestEmail(
 
     await Promise.allSettled(tasks);
 
+    const recipientTitle = (recipient.gender as string) === "זכר" ? "מועמד זה" : "מועמדת זו";
     return {
       success: false,
-      message:
-        "למועמד/ת זו אין כתובת מייל מעודכנת באתר. צוות האתר מטפל בפניה. תוכל ליצור קשר עם צוות האתר לעדכון לגבי מצב הפניה במייל ronel2lovely@gmail.com",
+      message: `ל${recipientTitle} אין כתובת מייל מעודכנת באתר. צוות האתר מטפל בפניה. תוכל ליצור קשר עם צוות האתר לקבלת עדכון לגבי מצב הפניה במייל ronel2lovely@gmail.com.`,
     };
   }
 

@@ -83,8 +83,8 @@ export function RecommendationsClient({
     if (selectedUnavail && (selectedUnavail.candidate.id as number) === matchId) setSelectedUnavail(null);
     if (prefUpdate) {
       setActivePreferences((prev) => ({ ...prev, ...prefUpdate }));
-      router.refresh();
     }
+    router.refresh();
   };
 
   const handleRemoveFilter = async (filterType: "religion" | "age") => {
