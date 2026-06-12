@@ -3,6 +3,7 @@
 import { randomUUID } from "crypto";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendEmailWithLog } from "@/lib/email";
+import { sendTwilioSms } from "@/lib/twilio";
 
 export async function sendInterestEmail(
   candidateId: number,
@@ -27,7 +28,7 @@ export async function sendInterestEmail(
       .single(),
     supabase
       .from("candidates")
-      .select("id, full_name, gender, email, availability_status")
+      .select("id, full_name, gender, email, availability_status, phone_number, no_email_sms_sent")
       .eq("id", matchCandidateId)
       .single(),
   ]);
@@ -42,9 +43,51 @@ export async function sendInterestEmail(
 
   const recipientEmail = recipient.email as string | null;
   if (!recipientEmail || recipientEmail.trim() === "" || recipientEmail.endsWith("@sms.ronellovely.co.il")) {
+    const senderNameForAlert = sender.full_name as string;
+    const recipientNameForAlert = recipient.full_name as string;
+    const adminClient = createSupabaseAdminClient();
+
+    // 1. Email alert to site team
+    const adminAlertHtml = `
+      <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
+        <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely — התראה פנימית</p>
+        <p style="font-size: 15px; line-height: 1.8; margin: 16px 0;">
+          המועמד/ת <strong>${senderNameForAlert}</strong> ניסה/ה לפתוח הצעה עם <strong>${recipientNameForAlert}</strong>,
+          אך למועמד/ת ${recipientNameForAlert} אין כתובת מייל מעודכנת במערכת.
+        </p>
+        <p style="font-size: 14px; color: #6b7280;">מזהה מועמד/ת ללא מייל: ${recipient.id}</p>
+      </div>
+    `;
+    sendEmailWithLog({
+      to: "ronel2lovely@gmail.com",
+      subject: `פניה ללא מייל — ${recipientNameForAlert}`,
+      html: adminAlertHtml,
+      context: "no_email_alert",
+      fromCandidateId: candidateId,
+      toCandidateId: matchCandidateId,
+    }).catch(() => {});
+
+    // 2. One-time SMS to the candidate without email
+    const alreadySent = recipient.no_email_sms_sent as boolean | null;
+    const recipientPhone = recipient.phone_number as string | null;
+    if (!alreadySent && recipientPhone) {
+      sendTwilioSms(
+        recipientPhone,
+        'נשמח שתעדכן את כתובת המייל שלך באתר לקבלת הצעות ע"י לחיצה על הכפתור הבורדו באתר ronel-lovely.com'
+      )
+        .then(() =>
+          adminClient
+            .from("candidates")
+            .update({ no_email_sms_sent: true })
+            .eq("id", matchCandidateId)
+        )
+        .catch(() => {});
+    }
+
     return {
       success: false,
-      message: "למועמד/ת זו אין כתובת מייל. ניתן לפנות לצוות האתר.",
+      message:
+        "למועמד/ת זו אין כתובת מייל מעודכנת באתר. צוות האתר מטפל בפניה. תוכל ליצור קשר עם צוות האתר לעדכון לגבי מצב הפניה במייל ronel2lovely@gmail.com",
     };
   }
 
