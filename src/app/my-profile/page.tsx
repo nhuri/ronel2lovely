@@ -120,6 +120,12 @@ export default async function MyProfilePage({
       (c.contact_person_email as string | null)?.toLowerCase() === user.email?.toLowerCase()
   );
 
+  // Redirect complete profiles to recommendations on first landing
+  if (!isIncomplete && !wasRestored && !needsEmail) {
+    const cidParam = allCandidates.length > 1 && candidate.id ? `?candidate_id=${candidate.id}` : "";
+    redirect(`/my-profile/recommendations${cidParam}`);
+  }
+
   return (
     <ProfileClient
       candidate={signedCandidate}
