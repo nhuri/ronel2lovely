@@ -159,7 +159,7 @@ export default async function RecommendationsPage({
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
             <Link
-              href={`/my-profile${cidParam}`}
+              href={`/my-profile${cidParam ? cidParam + "&tab=profile" : "?tab=profile"}`}
               className="px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors"
             >
               הפרופיל שלי

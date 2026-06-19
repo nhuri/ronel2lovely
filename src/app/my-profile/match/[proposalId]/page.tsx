@@ -218,7 +218,7 @@ export default async function MatchDetailsPage({
           )}
 
           <Link
-            href="/my-profile"
+            href="/my-profile?tab=profile"
             className="block text-center text-sm text-gray-500 hover:text-gray-700 py-2 transition-colors"
           >
             חזרה לפרופיל שלי
@@ -254,7 +254,7 @@ function ErrorShell({ message }: { message: string }) {
         <h2 className="text-base font-bold text-gray-800">שגיאה</h2>
         <p className="text-sm text-gray-500">{message}</p>
         <Link
-          href="/my-profile"
+          href="/my-profile?tab=profile"
           className="inline-block mt-2 px-4 py-2 bg-sky-500 text-white rounded-xl text-sm font-medium hover:bg-sky-600 transition-colors"
         >
           חזרה לפרופיל

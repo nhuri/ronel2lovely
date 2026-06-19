@@ -9,7 +9,7 @@ import { signCandidateImages } from "@/lib/storage";
 export default async function MyProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ restored?: string; candidate_id?: string }>;
+  searchParams: Promise<{ restored?: string; candidate_id?: string; tab?: string }>;
 }) {
   const params = await searchParams;
   const requestedId = params.candidate_id ? parseInt(params.candidate_id, 10) : undefined;
@@ -121,7 +121,9 @@ export default async function MyProfilePage({
   );
 
   // Redirect complete profiles to recommendations on first landing
-  if (!isIncomplete && !wasRestored && !needsEmail) {
+  // Skip redirect if the user explicitly navigated to their profile via tab=profile
+  const wantsProfile = params.tab === "profile";
+  if (!isIncomplete && !wasRestored && !needsEmail && !wantsProfile) {
     const cidParam = allCandidates.length > 1 && candidate.id ? `?candidate_id=${candidate.id}` : "";
     redirect(`/my-profile/recommendations${cidParam}`);
   }
