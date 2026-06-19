@@ -25,6 +25,8 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
 
   function chooseOption(opt: Option) {
     setOption(opt);
@@ -39,7 +41,19 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
     const res = await sendNoEmailOtp(phone, candidateId);
     setLoading(false);
     if (res.error) return setError(res.error);
+    setOtp("");
+    setResendMsg(null);
     setStep("otp");
+  }
+
+  async function handleResend() {
+    setResending(true);
+    setResendMsg(null);
+    setError(null);
+    const res = await sendNoEmailOtp(phone, candidateId);
+    setResending(false);
+    if (res.error) setError(res.error);
+    else { setOtp(""); setResendMsg("קוד חדש נשלח אליך ב-SMS"); }
   }
 
   async function handleVerifyOtp(e: React.FormEvent) {
@@ -53,10 +67,7 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
       if (res.error) return setError(res.error);
       setStep("done");
     } else {
-      // For "view" — OTP is just validated locally; move to email step
-      // We'll pass OTP along to verifyAndAddEmail which re-validates it from the DB
-      // But since OTP is single-use and consumed in verifyAndFreeze only, we
-      // skip pre-validation here and proceed to email step with the code in state.
+      // For "view" — OTP validated in verifyAndAddEmail when email is submitted
       setLoading(false);
       setStep("email");
     }
@@ -204,11 +215,16 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
                     placeholder="000000"
                     maxLength={6}
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => { setOtp(e.target.value.replace(/\D/g, "")); setError(null); }}
                     className={`${inputClass} text-center text-2xl tracking-[0.5em] font-mono`}
                   />
                 </div>
                 {errorBox}
+                {resendMsg && (
+                  <div className="text-green-700 text-sm bg-green-50 border border-green-100 p-3 rounded-xl text-center">
+                    {resendMsg}
+                  </div>
+                )}
                 <button
                   type="submit"
                   disabled={loading || otp.length < 6}
@@ -226,7 +242,15 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setStep("phone"); setOtp(""); setError(null); }}
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="w-full py-2 text-sm text-sky-500 hover:text-sky-700 transition-colors disabled:opacity-50"
+                >
+                  {resending ? "שולח..." : "שלח קוד חדש"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStep("phone"); setOtp(""); setError(null); setResendMsg(null); }}
                   className="w-full py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   שינוי מספר טלפון

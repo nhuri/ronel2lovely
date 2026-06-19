@@ -11,15 +11,30 @@ import { redirect } from "next/navigation";
 
 type ActionResult = { success?: boolean; error?: string };
 
+async function lookupOtp(e164Phone: string, token: string) {
+  const admin = createSupabaseAdminClient();
+  const { data: otp } = await admin
+    .from("sms_otps")
+    .select("id")
+    .eq("phone", e164Phone)
+    .eq("code", token)
+    .gte("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return { admin, otp };
+}
+
 /** Send OTP to the phone number, verifying it belongs to the given candidateId */
 export async function sendNoEmailOtp(
   phone: string,
   candidateId: number
 ): Promise<ActionResult> {
-  const supabase = await createSupabaseServerClient();
+  // Use admin client — user is unauthenticated, RLS would block the regular client
+  const admin = createSupabaseAdminClient();
   const e164Phone = toE164(phone);
 
-  const { data: candidate } = await supabase
+  const { data: candidate } = await admin
     .from("candidates")
     .select("id")
     .eq("id", candidateId)
@@ -33,9 +48,13 @@ export async function sendNoEmailOtp(
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-  await supabase
+  const { error: insertError } = await admin
     .from("sms_otps")
     .insert({ phone: e164Phone, code, expires_at: expiresAt });
+
+  if (insertError) {
+    return { error: "שגיאה בשמירת קוד האימות. נסה שוב מאוחר יותר." };
+  }
 
   try {
     await sendTwilioSms(
@@ -55,23 +74,13 @@ export async function verifyAndFreeze(
   token: string,
   candidateId: number
 ): Promise<ActionResult> {
-  const supabase = await createSupabaseServerClient();
   const e164Phone = toE164(phone);
-
-  const { data: otp } = await supabase
-    .from("sms_otps")
-    .select("id")
-    .eq("phone", e164Phone)
-    .eq("code", token)
-    .gte("expires_at", new Date().toISOString())
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { admin, otp } = await lookupOtp(e164Phone, token);
 
   if (!otp) return { error: "קוד אימות שגוי או שפג תוקפו" };
-  await supabase.from("sms_otps").delete().eq("id", otp.id);
+  await admin.from("sms_otps").delete().eq("id", otp.id);
 
-  const { data: candidate } = await supabase
+  const { data: candidate } = await admin
     .from("candidates")
     .select("id")
     .eq("id", candidateId)
@@ -80,7 +89,6 @@ export async function verifyAndFreeze(
 
   if (!candidate) return { error: "מספר הטלפון אינו תואם לפרופיל זה" };
 
-  const admin = createSupabaseAdminClient();
   const { error } = await admin
     .from("candidates")
     .update({ availability_status: "הקפאה" })
@@ -91,30 +99,20 @@ export async function verifyAndFreeze(
   return { success: true };
 }
 
-/** Verify OTP, save email to candidate, create auth session, redirect to recommendations */
+/** Verify OTP, save email to candidate, create auth session, redirect to proposals */
 export async function verifyAndAddEmail(
   phone: string,
   token: string,
   email: string,
   candidateId: number
 ): Promise<ActionResult> {
-  const supabase = await createSupabaseServerClient();
   const e164Phone = toE164(phone);
-
-  const { data: otp } = await supabase
-    .from("sms_otps")
-    .select("id")
-    .eq("phone", e164Phone)
-    .eq("code", token)
-    .gte("expires_at", new Date().toISOString())
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { admin, otp } = await lookupOtp(e164Phone, token);
 
   if (!otp) return { error: "קוד אימות שגוי או שפג תוקפו" };
-  await supabase.from("sms_otps").delete().eq("id", otp.id);
+  await admin.from("sms_otps").delete().eq("id", otp.id);
 
-  const { data: candidate } = await supabase
+  const { data: candidate } = await admin
     .from("candidates")
     .select("id, manager_id")
     .eq("id", candidateId)
@@ -126,7 +124,7 @@ export async function verifyAndAddEmail(
   const normalizedEmail = email.trim().toLowerCase();
 
   // Check email not taken by another candidate
-  const { data: takenBy } = await supabase
+  const { data: takenBy } = await admin
     .from("candidates")
     .select("id")
     .eq("email", normalizedEmail)
@@ -134,8 +132,6 @@ export async function verifyAndAddEmail(
     .maybeSingle();
 
   if (takenBy) return { error: "כתובת המייל כבר קיימת במערכת" };
-
-  const admin = createSupabaseAdminClient();
 
   await admin
     .from("candidates")
@@ -185,6 +181,7 @@ export async function verifyAndAddEmail(
 
   if (linkError || !linkData) return { error: "שגיאה בהתחברות. נסה שוב." };
 
+  const supabase = await createSupabaseServerClient();
   const { error: verifyError } = await supabase.auth.verifyOtp({
     email: normalizedEmail,
     token: linkData.properties.email_otp,
