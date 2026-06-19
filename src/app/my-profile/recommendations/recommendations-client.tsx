@@ -662,6 +662,7 @@ function MatchDetailModal({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [sentMessage, setSentMessage] = useState<string | null>(null);
   const confirmRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -673,11 +674,11 @@ function MatchDetailModal({
   const matchId = c.id as number;
   const recipientGender = c.gender as string;
   const interestedText = gender === "זכר" ? "אני מעוניין להכיר" : "אני מעוניינת להכיר";
-  const sentLabel = recipientGender === "זכר" ? "נשלח מייל למועמד ✓" : "נשלח מייל למועמדת ✓";
+  const fallbackSentLabel = recipientGender === "זכר" ? "הפנייה נשלחה ✓" : "הפנייה נשלחה ✓";
   const confirmText =
     recipientGender === "זכר"
-      ? `לחיצה על אישור תשלח מייל ל${c.full_name}. הוא יקבל את הפרטים שלך ויוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.`
-      : `לחיצה על אישור תשלח מייל ל${c.full_name}. היא תקבל את הפרטים שלך ותוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.`;
+      ? `לחיצה על אישור תשלח הודעה ל${c.full_name}. הוא יקבל את הפרטים שלך ויוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.`
+      : `לחיצה על אישור תשלח הודעה ל${c.full_name}. היא תקבל את הפרטים שלך ותוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.`;
 
   const handleConfirm = async () => {
     setSending(true);
@@ -685,8 +686,12 @@ function MatchDetailModal({
     setShowConfirm(false);
     const res = await sendInterestEmail(candidateId, matchId);
     setSending(false);
-    if (res.success) onSent(matchId);
-    else setError(res.message);
+    if (res.success) {
+      setSentMessage(res.message);
+      onSent(matchId);
+    } else {
+      setError(res.message);
+    }
   };
 
   return (
@@ -740,7 +745,7 @@ function MatchDetailModal({
             </div>
           ) : alreadySent ? (
             <div className="w-full py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-semibold text-sm text-center">
-              {sentLabel}
+              {sentMessage ?? fallbackSentLabel}
             </div>
           ) : sending ? (
             <div className="flex flex-col items-center justify-center py-6 gap-3">
@@ -748,7 +753,7 @@ function MatchDetailModal({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
               </svg>
-              <p className="text-sm text-gray-500">שולח מייל...</p>
+              <p className="text-sm text-gray-500">שולח...</p>
             </div>
           ) : showConfirm ? (
             <div ref={confirmRef} className="bg-pink-50 border border-pink-200 rounded-xl p-4 space-y-3">
