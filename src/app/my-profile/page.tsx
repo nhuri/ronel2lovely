@@ -102,12 +102,14 @@ export default async function MyProfilePage({
     (key) => !candidate[key] || String(candidate[key]).trim() === ""
   );
 
-  // Phone-auth users without email must add one before using the profile
-  // SMS login creates a temp email like phone_972...@sms.ronellovely.co.il
-  const hasRealEmail = user.email && !user.email.endsWith("@sms.ronellovely.co.il");
-  const needsEmail = !hasRealEmail
-    && candidate != null
-    && (!candidate.email || (candidate.email as string).trim() === "");
+  // Show email modal whenever the candidate row has no real email in our DB.
+  // We intentionally do NOT rely on the auth user's email because the two can
+  // drift out of sync (e.g. auth updated but candidates table not, or vice-versa).
+  const candidateEmail = (candidate.email as string | null) ?? "";
+  const needsEmail =
+    candidate != null &&
+    (candidateEmail.trim() === "" ||
+      candidateEmail.endsWith("@sms.ronellovely.co.il"));
 
   const wasRestored = params.restored === "1";
 
