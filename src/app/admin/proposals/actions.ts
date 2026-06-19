@@ -167,8 +167,14 @@ export async function deleteProposal(
   const verified = await verifyAdmin();
   if (!verified) return { error: "אין הרשאה לבצע פעולה זו" };
 
-  // Use admin client (service role) so RLS doesn't block the DELETE
   const adminClient = createSupabaseAdminClient();
+
+  // Fetch proposal before deleting so we know which candidates to unblock
+  const { data: proposal } = await adminClient
+    .from("proposals")
+    .select("candidate_id_1, candidate_id_2")
+    .eq("id", proposalId)
+    .maybeSingle();
 
   // Delete child records first to avoid FK constraint violations
   await adminClient.from("proposal_notes").delete().eq("proposal_id", proposalId);
@@ -179,5 +185,28 @@ export async function deleteProposal(
     .eq("id", proposalId);
 
   if (error) return { error: error.message };
+
+  // After deletion: reset availability_status for candidates with no remaining active proposals
+  if (proposal) {
+    for (const candidateId of [proposal.candidate_id_1, proposal.candidate_id_2]) {
+      const { data: otherActive } = await adminClient
+        .from("proposals")
+        .select("id")
+        .or(`candidate_id_1.eq.${candidateId},candidate_id_2.eq.${candidateId}`)
+        .not("status", "in", '("8","9")')
+        .limit(1)
+        .maybeSingle();
+
+      if (!otherActive) {
+        // No other active proposals — clear "תפוס" so candidate reappears in recommendations
+        await adminClient
+          .from("candidates")
+          .update({ availability_status: null })
+          .eq("id", candidateId)
+          .eq("availability_status", "תפוס");
+      }
+    }
+  }
+
   return { success: true };
 }
