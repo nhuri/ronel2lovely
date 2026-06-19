@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   sendNoEmailOtp,
+  validateNoEmailOtp,
   verifyAndFreeze,
   verifyAndAddEmail,
 } from "./actions";
@@ -67,8 +68,9 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
       if (res.error) return setError(res.error);
       setStep("done");
     } else {
-      // For "view" — OTP validated in verifyAndAddEmail when email is submitted
+      const res = await validateNoEmailOtp(phone, otp);
       setLoading(false);
+      if (res.error) return setError(res.error);
       setStep("email");
     }
   }

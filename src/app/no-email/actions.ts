@@ -68,6 +68,17 @@ export async function sendNoEmailOtp(
   return { success: true };
 }
 
+/** Validate OTP without consuming it (used for the "view" flow pre-check) */
+export async function validateNoEmailOtp(
+  phone: string,
+  token: string
+): Promise<ActionResult> {
+  const e164Phone = toE164(phone);
+  const { otp } = await lookupOtp(e164Phone, token);
+  if (!otp) return { error: "קוד אימות שגוי או שפג תוקפו" };
+  return { success: true };
+}
+
 /** Verify OTP then freeze (soft-delete) the candidate's profile */
 export async function verifyAndFreeze(
   phone: string,
