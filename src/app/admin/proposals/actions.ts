@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isTerminalStatus } from "@/lib/proposals";
 
 export type ProposalActionResult = {
@@ -164,13 +164,16 @@ export async function addProposalNote(
 export async function deleteProposal(
   proposalId: number
 ): Promise<ProposalActionResult> {
-  const supabase = await verifyAdmin();
-  if (!supabase) return { error: "אין הרשאה לבצע פעולה זו" };
+  const verified = await verifyAdmin();
+  if (!verified) return { error: "אין הרשאה לבצע פעולה זו" };
+
+  // Use admin client (service role) so RLS doesn't block the DELETE
+  const adminClient = createSupabaseAdminClient();
 
   // Delete child records first to avoid FK constraint violations
-  await supabase.from("proposal_notes").delete().eq("proposal_id", proposalId);
+  await adminClient.from("proposal_notes").delete().eq("proposal_id", proposalId);
 
-  const { error } = await supabase
+  const { error } = await adminClient
     .from("proposals")
     .delete()
     .eq("id", proposalId);
