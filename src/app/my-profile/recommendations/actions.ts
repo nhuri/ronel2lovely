@@ -37,10 +37,6 @@ export async function sendInterestEmail(
     return { success: false, message: "לא נמצאו פרטי המועמדים" };
   }
 
-  if (recipient.availability_status === "תפוס") {
-    return { success: false, message: "מועמד/ת זו אינה זמינה כרגע." };
-  }
-
   const recipientEmail = recipient.email as string | null;
   if (!recipientEmail || recipientEmail.trim() === "" || recipientEmail.endsWith("@sms.ronellovely.co.il")) {
     const senderNameForAlert = sender.full_name as string;

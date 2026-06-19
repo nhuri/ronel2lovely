@@ -284,7 +284,7 @@ export function RecommendationsClient({
           gender={gender}
           candidateId={candidateId}
           alreadySent={sentToIds.has(selectedUnavail.candidate.id as number)}
-          unavailable={true}
+          unavailable={false}
           onSent={handleSent}
           onReject={() => {
             setRejectingId(selectedUnavail.candidate.id as number);
