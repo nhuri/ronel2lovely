@@ -110,9 +110,11 @@ export async function sendInterestEmail(
 
     await Promise.allSettled(tasks);
 
+    const recipientTitle = (recipient.gender as string) === "זכר" ? "למועמד זה" : "למועמדת זו";
+    const canContact = (sender.gender as string) === "זכר" ? "תוכל" : "תוכלי";
     return {
       success: true,
-      message: "צוות האתר מטפל בפניה. לעדכון לגבי מצב הפניה תוכל לפנות לצוות האתר במייל ronel2lovely@gmail.com",
+      message: `${recipientTitle} אין כתובת מייל מעודכנת באתר, צוות האתר מטפל בפניה שלך. לקבלת עדכון לגבי מצב הפניה ${canContact} לפנות לצוות האתר במייל ronel2lovely@gmail.com`,
     };
   }
 
