@@ -47,7 +47,29 @@ export async function sendInterestEmail(
     const recipientNameForAlert = recipient.full_name as string;
     const adminClient = createSupabaseAdminClient();
 
-    // 1. Email alert to site team
+    // 1. Create proposal so it appears in both candidates' proposals tab
+    try {
+      const { data: existing } = await adminClient
+        .from("proposals")
+        .select("id")
+        .or(
+          `and(candidate_id_1.eq.${candidateId},candidate_id_2.eq.${matchCandidateId}),and(candidate_id_1.eq.${matchCandidateId},candidate_id_2.eq.${candidateId})`
+        )
+        .limit(1)
+        .maybeSingle();
+
+      if (!existing) {
+        await adminClient.from("proposals").insert({
+          candidate_id_1: candidateId,
+          candidate_id_2: matchCandidateId,
+          status: "1",
+        });
+      }
+    } catch (e) {
+      console.error("Proposal creation error (no-email flow):", e);
+    }
+
+    // 2. Email alert to site team
     const adminAlertHtml = `
       <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
         <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely — התראה פנימית</p>
@@ -69,7 +91,7 @@ export async function sendInterestEmail(
       }),
     ];
 
-    // 2. One-time SMS to the candidate without email
+    // 3. One-time SMS to the candidate without email
     const alreadySent = recipient.no_email_sms_sent as boolean | null;
     const recipientPhone = recipient.phone_number as string | null;
     if (!alreadySent && recipientPhone) {
@@ -90,8 +112,8 @@ export async function sendInterestEmail(
 
     const recipientTitle = (recipient.gender as string) === "זכר" ? "מועמד זה" : "מועמדת זו";
     return {
-      success: false,
-      message: `ל${recipientTitle} אין כתובת מייל מעודכנת באתר. צוות האתר מטפל בפניה. תוכל ליצור קשר עם צוות האתר לקבלת עדכון לגבי מצב הפניה במייל ronel2lovely@gmail.com.`,
+      success: true,
+      message: `הפניה נשמרה! ל${recipientTitle} אין כתובת מייל מעודכנת — נשלחה אליו/ה הודעת SMS. ברגע שיעדכנ/ת את המייל, ההצעה תופיע אצלו/ה באזור האישי.`,
     };
   }
 
