@@ -158,7 +158,10 @@ export function ProfileClient({
                 setEmailSaving(false);
               } else {
                 setShowEmailModal(false);
-                router.refresh();
+                const base = candidateId && allCandidates && allCandidates.length > 1
+                  ? `/my-profile/proposals?candidate_id=${candidateId}`
+                  : "/my-profile/proposals";
+                router.push(base);
               }
             }}
             className="space-y-4"

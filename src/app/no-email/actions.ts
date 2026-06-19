@@ -209,5 +209,5 @@ export async function verifyAndAddEmail(
     toCandidateId: candidateId,
   });
 
-  redirect("/my-profile/recommendations");
+  redirect("/my-profile/proposals");
 }
