@@ -167,6 +167,9 @@ export async function deleteProposal(
   const supabase = await verifyAdmin();
   if (!supabase) return { error: "אין הרשאה לבצע פעולה זו" };
 
+  // Delete child records first to avoid FK constraint violations
+  await supabase.from("proposal_notes").delete().eq("proposal_id", proposalId);
+
   const { error } = await supabase
     .from("proposals")
     .delete()
