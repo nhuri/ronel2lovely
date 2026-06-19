@@ -322,7 +322,10 @@ export async function verifySmsOtp(
       .is("manager_id", null);
   }
 
-  redirect(safeNext(next));
+  // SMS users must always land on /my-profile so the mandatory email modal is shown.
+  // Ignoring `next` here intentionally — if we followed next=/my-profile/recommendations
+  // the user would bypass the email update step entirely.
+  redirect("/my-profile");
 }
 
 export async function logout() {
