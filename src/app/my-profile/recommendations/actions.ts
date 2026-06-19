@@ -110,10 +110,9 @@ export async function sendInterestEmail(
 
     await Promise.allSettled(tasks);
 
-    const recipientTitle = (recipient.gender as string) === "זכר" ? "מועמד זה" : "מועמדת זו";
     return {
       success: true,
-      message: `הפניה נשמרה! ל${recipientTitle} אין כתובת מייל מעודכנת — נשלחה אליו/ה הודעת SMS. ברגע שיעדכנ/ת את המייל, ההצעה תופיע אצלו/ה באזור האישי.`,
+      message: "צוות האתר מטפל בפניה. לעדכון לגבי מצב הפניה תוכל לפנות לצוות האתר במייל ronel2lovely@gmail.com",
     };
   }
 
