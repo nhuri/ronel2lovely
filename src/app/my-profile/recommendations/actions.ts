@@ -98,7 +98,7 @@ export async function sendInterestEmail(
       tasks.push(
         sendTwilioSms(
           recipientPhone,
-          `מועמד התעניין בפרופיל שלך, לחץ לצפיה או להסרה https://ronel-lovely.com/no-email?id=${matchCandidateId}`
+          `מועמד התעניין בך. לצפייה או הסרה: https://ronel-lovely.com/no-email?id=${matchCandidateId}`
         ).then(() =>
           adminClient
             .from("candidates")
