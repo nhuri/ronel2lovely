@@ -55,6 +55,7 @@ interface Props {
   isAdmin?: boolean;
   candidateInfo?: CandidateBasic;
   activeCandidates?: CandidateBasic[];
+  showInterestEmailModal?: boolean;
 }
 
 function getNoteAuthorLabel(note: ProposalNote): string {
@@ -73,11 +74,37 @@ function NoImage() {
   );
 }
 
-export function MyProposalsClient({ proposals, candidateId, isAdmin = false, candidateInfo, activeCandidates }: Props) {
+export function MyProposalsClient({ proposals, candidateId, isAdmin = false, candidateInfo, activeCandidates, showInterestEmailModal = false }: Props) {
   const [showNewProposal, setShowNewProposal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(showInterestEmailModal);
 
   return (
     <div className="space-y-5">
+      {/* Interest email sent modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" dir="rtl">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+            <div className="w-14 h-14 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">שלחנו לך מייל!</h2>
+            <p className="text-sm text-gray-600 leading-relaxed mb-5">
+              שלחנו לך מייל לגבי ההצעה הפתוחה.
+              <br />
+              בדוק את המייל שלך על מנת לקדם את ההצעה.
+            </p>
+            <button
+              onClick={() => setShowEmailModal(false)}
+              className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 transition-colors text-sm"
+            >
+              הבנתי, תודה
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Create new proposal button - for candidates */}
       {!isAdmin && activeCandidates && candidateInfo && (
         <button

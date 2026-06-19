@@ -9,10 +9,11 @@ import { signProposalImages, signAllCandidateImages } from "@/lib/storage";
 export default async function MyProposalsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ candidate_id?: string }>;
+  searchParams: Promise<{ candidate_id?: string; interest_email_sent?: string }>;
 }) {
   const params = await searchParams;
   const requestedId = params.candidate_id ? parseInt(params.candidate_id, 10) : undefined;
+  const interestEmailSent = params.interest_email_sent === "1";
 
   const { candidate, allCandidates, needsSelection, supabase } =
     await resolveCandidate(requestedId);
@@ -115,6 +116,7 @@ export default async function MyProposalsPage({
         <MyProposalsClient
           proposals={proposals}
           candidateId={candidateId}
+          showInterestEmailModal={interestEmailSent}
           candidateInfo={{
             id: candidateId,
             full_name: candidate.full_name as string,

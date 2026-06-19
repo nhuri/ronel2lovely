@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import {
   createSupabaseServerClient,
   createSupabaseAdminClient,
@@ -125,7 +126,7 @@ export async function verifyAndAddEmail(
 
   const { data: candidate } = await admin
     .from("candidates")
-    .select("id, manager_id")
+    .select("id, manager_id, full_name, gender")
     .eq("id", candidateId)
     .eq("phone_number", e164Phone)
     .maybeSingle();
@@ -217,5 +218,72 @@ export async function verifyAndAddEmail(
     toCandidateId: candidateId,
   });
 
-  redirect("/my-profile/proposals");
+  // Send interest emails for all open proposals where this candidate is the recipient
+  const recipientName = candidate.full_name as string;
+  const recipientGender = candidate.gender as string;
+  const dear = recipientGender === "זכר" ? "היקר" : "היקרה";
+
+  const { data: openProposals } = await admin
+    .from("proposals")
+    .select("id, candidate_id_1")
+    .eq("candidate_id_2", candidateId)
+    .eq("status", "1");
+
+  if (openProposals && openProposals.length > 0) {
+    for (const proposal of openProposals) {
+      const { data: sender } = await admin
+        .from("candidates")
+        .select("id, full_name, gender")
+        .eq("id", proposal.candidate_id_1)
+        .maybeSingle();
+
+      if (!sender) continue;
+
+      const senderName = sender.full_name as string;
+      const senderGender = sender.gender as string;
+      const senderTitle = senderGender === "זכר" ? "המועמד" : "המועמדת";
+      const senderWants = senderGender === "זכר" ? "מעוניין" : "מעוניינת";
+
+      const token = randomUUID();
+      await admin.from("interest_tokens").insert({
+        token,
+        proposal_id: proposal.id,
+        from_candidate_id: proposal.candidate_id_1,
+        to_candidate_id: candidateId,
+      });
+
+      const confirmUrl = `https://ronel-lovely.com/confirm-interest?token=${token}`;
+
+      await sendEmailWithLog({
+        to: normalizedEmail,
+        subject: `${senderName} ${senderWants} לבדוק התאמה איתך — Ronel Lovely`,
+        html: `
+          <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
+            <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely</p>
+            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 24px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
+              בונים בתים לזכרו של רונאל
+            </p>
+            <p style="font-size: 16px; margin: 0 0 16px;">שלום ${recipientName} ${dear},</p>
+            <p style="font-size: 15px; line-height: 1.8; margin: 0 0 20px;">
+              ${senderTitle} <strong>${senderName}</strong> ${senderWants} לבדוק התאמה לפתיחת הצעה איתך.
+            </p>
+            <div style="text-align: center; margin: 0 0 8px;">
+              <a href="${confirmUrl}"
+                 style="display: inline-block; padding: 13px 28px; background: #059669; color: white; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: bold;">
+                צפייה בפרופיל
+              </a>
+            </div>
+            <p style="font-size: 11px; color: #9ca3af; margin-top: 28px; padding-top: 16px; border-top: 1px solid #f3f4f6; text-align: center;">
+              Ronel Lovely — ronel-lovely.com
+            </p>
+          </div>
+        `,
+        context: "interest_email",
+        fromCandidateId: proposal.candidate_id_1,
+        toCandidateId: candidateId,
+      });
+    }
+  }
+
+  redirect("/my-profile/proposals?interest_email_sent=1");
 }
