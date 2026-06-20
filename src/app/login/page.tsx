@@ -120,37 +120,22 @@ function LoginContent() {
   }
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col" dir="rtl">
+    <div className="flex-1 min-h-0 flex flex-col md:flex-row" dir="rtl">
 
-      {/* ── Two-column content ── */}
-      <div className="flex flex-1 min-h-0">
-
-      {/* ── Right side: Image + video thumbnail ── */}
-      <div className="hidden lg:flex lg:w-3/5 h-full relative bg-sky-100 items-start justify-center overflow-hidden">
+      {/* ── Image panel: top strip on mobile, right column on md+ ── */}
+      <div className="w-full h-44 sm:h-56 flex-shrink-0 md:h-full md:w-2/5 lg:w-3/5 relative bg-sky-100 overflow-hidden">
         <Image
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
           fill
-          className="object-contain object-top"
+          className="object-cover object-top"
           priority
         />
       </div>
 
-      {/* ── Left side: Login Form ── */}
-      <div className="w-full lg:w-2/5 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-4 overflow-hidden">
-        {/* Mobile-only image — capped height accounting for site banner */}
-        <div className="lg:hidden w-full max-w-sm my-2 rounded-xl overflow-hidden shadow bg-sky-100 h-48">
-          <Image
-            src="/ronel-enter-page.jpg"
-            alt="סמ״ר רונאל בן משה ז״ל"
-            width={800}
-            height={450}
-            className="w-full h-full object-contain"
-            priority
-          />
-        </div>
-
-<div className="w-full max-w-sm">
+      {/* ── Form panel ── */}
+      <div className="flex-1 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-4 overflow-y-auto">
+        <div className="w-full max-w-sm">
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -300,8 +285,6 @@ function LoginContent() {
           </p>
         </div>
       </div>
-
-      </div>{/* end flex-1 two-column */}
 
       {/* ── SMS Login Modal ── */}
       {showSmsModal && (
