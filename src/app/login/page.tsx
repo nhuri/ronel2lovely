@@ -16,12 +16,16 @@ function LoginContent() {
   // Lock viewport to exactly 100dvh: no scroll, body becomes a flex column so
   // the login page fills the remaining height after banner + video strip.
   useEffect(() => {
-    document.documentElement.style.overflow = "hidden";
-    document.documentElement.style.height = "100dvh";
-    document.body.style.overflow = "hidden";
-    document.body.style.height = "100%";
-    document.body.style.display = "flex";
-    document.body.style.flexDirection = "column";
+    // Lock viewport only on desktop — on mobile/tablet the page must scroll freely
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    if (isDesktop) {
+      document.documentElement.style.overflow = "hidden";
+      document.documentElement.style.height = "100dvh";
+      document.body.style.overflow = "hidden";
+      document.body.style.height = "100%";
+      document.body.style.display = "flex";
+      document.body.style.flexDirection = "column";
+    }
     return () => {
       document.documentElement.style.overflow = "";
       document.documentElement.style.height = "";
@@ -120,10 +124,10 @@ function LoginContent() {
   }
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col md:flex-row" dir="rtl">
+    <div className="flex-1 min-h-0 flex flex-col lg:flex-row" dir="rtl">
 
-      {/* ── Image panel: top strip on mobile, right column on md+ ── */}
-      <div className="w-full h-44 sm:h-56 flex-shrink-0 md:h-full md:w-2/5 lg:w-3/5 relative bg-sky-100 overflow-hidden">
+      {/* ── Image panel: top on mobile/tablet, right column on lg+ ── */}
+      <div className="w-full h-64 md:h-80 flex-shrink-0 lg:h-full lg:w-3/5 max-w-full relative bg-sky-100 overflow-hidden">
         <Image
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
@@ -134,7 +138,7 @@ function LoginContent() {
       </div>
 
       {/* ── Form panel ── */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-4 overflow-y-auto">
+      <div className="w-full lg:w-2/5 max-w-full flex flex-col items-center justify-center bg-white px-5 sm:px-8 py-6 overflow-y-auto">
         <div className="w-full max-w-sm">
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-2">
