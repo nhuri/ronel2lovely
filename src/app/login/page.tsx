@@ -145,7 +145,7 @@ function LoginContent() {
             alt="סמ״ר רונאל בן משה ז״ל"
             width={800}
             height={450}
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-top"
             priority
           />
         </div>
