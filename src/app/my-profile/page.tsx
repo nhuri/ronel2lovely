@@ -96,7 +96,7 @@ export default async function MyProfilePage({
   const requiredKeys = [
     "full_name", "gender", "birth_date", "residence", "marital_status",
     "religious_level", "height", "education", "occupation",
-    "about_me", "looking_for", "contact_person", "contact_person_phone",
+    "about_me", "looking_for",
   ];
   const isIncomplete = requiredKeys.some(
     (key) => !candidate[key] || String(candidate[key]).trim() === ""

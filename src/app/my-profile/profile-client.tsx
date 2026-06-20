@@ -491,8 +491,8 @@ export function ProfileClient({
 
           <EditSection title="פרטי איש קשר">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <EditInput name="contact_person" label="שם איש קשר" required defaultValue={c.contact_person ?? ""} error={fieldErrors.contact_person} />
-              <EditInput name="contact_person_phone" label="טלפון איש קשר" type="tel" required defaultValue={c.contact_person_phone ?? ""} dir="ltr" error={fieldErrors.contact_person_phone} />
+              <EditInput name="contact_person" label="שם איש קשר" defaultValue={c.contact_person ?? ""} error={fieldErrors.contact_person} />
+              <EditInput name="contact_person_phone" label="טלפון איש קשר" type="tel" defaultValue={c.contact_person_phone ?? ""} dir="ltr" error={fieldErrors.contact_person_phone} />
             </div>
           </EditSection>
 

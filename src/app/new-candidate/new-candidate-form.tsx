@@ -205,7 +205,7 @@ export function NewCandidateForm({
                   </button>
                 )}
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
               {!fieldErrors.images && <p className="mt-1.5 text-xs text-gray-400">יש להעלות לפחות תמונה אחת (עד 3)</p>}
               {fieldErrors.images && <p className="mt-1.5 text-xs text-red-600">{fieldErrors.images}</p>}
             </div>

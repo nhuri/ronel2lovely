@@ -77,6 +77,12 @@ export default function RootLayout({
           </a>
         </div>
         {children}
+        <footer className="text-center py-2 text-xs text-gray-400 bg-white border-t border-gray-100" dir="rtl">
+          לפניות ויצירת קשר:{" "}
+          <a href="mailto:ronel2lovely@gmail.com" className="text-sky-600 hover:underline font-medium">
+            ronel2lovely@gmail.com
+          </a>
+        </footer>
       </body>
     </html>
   );

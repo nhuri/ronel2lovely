@@ -3,6 +3,7 @@
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { toE164 } from "@/lib/phone";
+import { sendEmailWithLog } from "@/lib/email";
 
 export type FieldErrors = Record<string, string>;
 export type CreateCandidateResult = {
@@ -228,7 +229,7 @@ export async function createCandidate(
     marital_status: raw.marital_status,
     children_count: raw.children_count ? parseInt(raw.children_count, 10) : null,
     religious_level: raw.religious_level,
-    height: parseInt(raw.height, 10),
+    height: (() => { const h = parseFloat(raw.height); return Math.round(h >= 1 && h < 10 ? h * 100 : h); })(),
     education: raw.education,
     occupation: raw.occupation,
     about_me: raw.about_me,
@@ -257,6 +258,33 @@ export async function createCandidate(
       .from("invitations")
       .update({ used_at: new Date().toISOString(), candidate_id: insertedCandidate.id })
       .eq("token", inviteToken);
+  }
+
+  // Send welcome email to the candidate
+  const candidateEmail = raw.email?.trim();
+  if (candidateEmail && insertedCandidate) {
+    await sendEmailWithLog({
+      to: candidateEmail,
+      subject: "ברוכים הבאים ל-Ronel Lovely!",
+      html: `
+        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
+          <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely</p>
+          <p style="font-size: 11px; color: #94a3b8; margin: 0 0 24px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">בונים בתים לזכרו של רונאל</p>
+          <p style="font-size: 16px; margin: 0 0 16px;">שלום וברוכים הבאים!</p>
+          <p style="font-size: 15px; line-height: 1.8; margin: 0 0 16px;">הפרופיל שלך נרשם בהצלחה באתר השידוכים Ronel Lovely.</p>
+          <p style="font-size: 14px; font-weight: bold; color: #374151; margin: 0 0 8px;">כמה טיפים לתחילת הדרך:</p>
+          <ul style="font-size: 14px; line-height: 2; margin: 0 0 16px; padding-right: 20px; color: #4b5563;">
+            <li>לצפייה בהצעות מומלצות — היכנסו לאזור האישי ובחרו &quot;הצעות מומלצות&quot;</li>
+            <li>לפתיחת הצעה — לחצו על מועמד/ת שמעניינת אתכם ולחצו &quot;אני מעוניין/ת להכיר&quot;</li>
+            <li>לרענון ההצעות המומלצות — לחצו על כפתור הרענון בחלק העליון של העמוד</li>
+          </ul>
+          <p style="font-size: 14px; line-height: 1.8; margin: 0 0 16px;">לכל שאלה או עזרה — צוות האתר זמין בכתובת: <a href="mailto:ronel2lovely@gmail.com" style="color: #0284c7;">ronel2lovely@gmail.com</a></p>
+          <p style="font-size: 11px; color: #9ca3af; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f3f4f6; text-align: center;">Ronel Lovely — ronel-lovely.com</p>
+        </div>
+      `,
+      context: "welcome_email",
+      toCandidateId: insertedCandidate.id,
+    }).catch(() => {}); // Non-critical
   }
 
   // Redirect based on context

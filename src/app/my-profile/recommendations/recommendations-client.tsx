@@ -782,7 +782,7 @@ function MatchDetailModal({
           )}
 
           <button onClick={onReject} className="w-full py-2 text-xs text-gray-400 hover:text-red-500 transition-colors">
-            לא מתאים/ה — סמן כלא מתאים
+            ההצעה לא מתאימה? סמן הצעה זו כלא מתאימה ותוצג לך הצעה אחרת במקומה
           </button>
         </div>
         </div>

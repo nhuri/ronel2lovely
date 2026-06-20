@@ -127,7 +127,7 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
                 >
                   <div className="text-base">צפיה בפרטי המועמד</div>
                   <div className="text-xs font-normal text-sky-500 mt-0.5">
-                    {isMale ? "עדכן" : "עדכני"} את כתובת המייל שלך וצפה בהצעה
+                    {isMale ? "עדכן" : "עדכני"} את כתובת המייל שלך {isMale ? "וצפה" : "וצפי"} בהצעה
                   </div>
                 </button>
 
@@ -289,7 +289,7 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
                 </div>
                 {errorBox}
                 <button type="submit" disabled={loading} className={primaryBtn}>
-                  {loading ? "שומר ומתחבר..." : "שמור מייל וצפה בהצעה"}
+                  {loading ? "שומר ומתחבר..." : isMale ? "שמור מייל וצפה בהצעה" : "שמורי מייל וצפי בהצעה"}
                 </button>
               </form>
             </>
