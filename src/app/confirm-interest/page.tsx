@@ -46,11 +46,18 @@ export default async function ConfirmInterestPage({
   }
 
   // Fetch from_candidate details to display
-  const { data: fromCand } = await admin
-    .from("candidates")
-    .select("id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, image_urls, contact_person, contact_person_phone, phone_number")
-    .eq("id", tokenData.from_candidate_id)
-    .single();
+  const [{ data: fromCand }, { data: toCand }] = await Promise.all([
+    admin
+      .from("candidates")
+      .select("id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, image_urls, contact_person, contact_person_phone, phone_number")
+      .eq("id", tokenData.from_candidate_id)
+      .single(),
+    admin
+      .from("candidates")
+      .select("gender")
+      .eq("id", tokenData.to_candidate_id)
+      .single(),
+  ]);
 
   if (!fromCand) {
     return <ErrorPage message="שגיאה בטעינת פרטי המועמד." />;
@@ -58,6 +65,7 @@ export default async function ConfirmInterestPage({
 
   const fromName = fromCand.full_name as string;
   const fromGender = fromCand.gender as string;
+  const toGender = (toCand?.gender as string) ?? "זכר";
   const fromTitle = fromGender === "זכר" ? "המועמד" : "המועמדת";
   const fromPhoto = (fromCand.image_urls as string[] | null)?.[0] ?? null;
   const contactPerson = (fromCand.contact_person as string) || null;
@@ -157,7 +165,7 @@ export default async function ConfirmInterestPage({
         )}
 
         {/* Confirm button */}
-        <ConfirmButton token={token} fromName={fromName} fromGender={fromGender} />
+        <ConfirmButton token={token} fromName={fromName} fromGender={fromGender} toGender={toGender} />
       </div>
     </PageShell>
   );

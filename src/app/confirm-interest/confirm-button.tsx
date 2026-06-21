@@ -7,6 +7,7 @@ type Props = {
   token: string;
   fromName: string;
   fromGender: string;
+  toGender: string;
 };
 
 type SuccessData = {
@@ -16,7 +17,7 @@ type SuccessData = {
   notificationErrors: string[];
 };
 
-export function ConfirmButton({ token, fromName, fromGender }: Props) {
+export function ConfirmButton({ token, fromName, fromGender, toGender }: Props) {
   const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [successData, setSuccessData] = useState<SuccessData | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -127,7 +128,7 @@ export function ConfirmButton({ token, fromName, fromGender }: Props) {
           שולח...
         </span>
       ) : (
-        `✓ כן, גם אני ${fromGender === "זכר" ? "מעוניין" : "מעוניינת"} להכיר ${fromGender === "זכר" ? "אותו" : "אותה"}!`
+        `✓ כן, גם אני ${toGender === "זכר" ? "מעוניין" : "מעוניינת"} להכיר ${fromGender === "זכר" ? "אותו" : "אותה"}!`
       )}
     </button>
   );
