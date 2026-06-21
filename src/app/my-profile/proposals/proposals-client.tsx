@@ -93,7 +93,7 @@ export function MyProposalsClient({ proposals, candidateId, isAdmin = false, can
             <p className="text-sm text-gray-600 leading-relaxed mb-5">
               שלחנו לך מייל לגבי ההצעה הפתוחה.
               <br />
-              בדוק את המייל שלך על מנת לקדם את ההצעה.
+              {candidateInfo?.gender === "נקבה" ? "בדקי" : "בדוק"} את המייל שלך על מנת לקדם את ההצעה.
             </p>
             <button
               onClick={() => setShowEmailModal(false)}
