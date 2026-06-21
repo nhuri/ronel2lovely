@@ -146,9 +146,9 @@ function LoginContent() {
       </div>
 
       {/* ── Form panel ── */}
-      <div className="login-form flex-1 min-h-0 flex flex-col items-center bg-white px-5 sm:px-8 py-4 sm:py-6 overflow-y-auto">
+      <div className="login-form flex-1 min-h-0 flex flex-col items-center bg-white px-5 sm:px-8 py-3 sm:py-6 overflow-y-auto">
         <div className="w-full max-w-sm">
-          <div className="mb-4">
+          <div className="mb-2 sm:mb-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-base font-bold">RL</span>
@@ -257,17 +257,17 @@ function LoginContent() {
           )}
 
           {/* SMS migration block */}
-          <div className="mt-6">
+          <div className="mt-3 sm:mt-6">
             <button
               type="button"
               onClick={openSmsModal}
-              className="w-full py-3 bg-gradient-to-l from-rose-500 to-pink-500 text-white rounded-xl font-semibold hover:from-rose-600 hover:to-pink-600 active:from-rose-700 active:to-pink-700 transition-all shadow-sm text-xs leading-snug"
+              className="w-full py-3 bg-gradient-to-l from-rose-500 to-pink-500 text-white rounded-xl font-semibold hover:from-rose-600 hover:to-pink-600 active:from-rose-700 active:to-pink-700 transition-all shadow-sm text-[8px] sm:text-xs sm:leading-snug"
             >
               התחברות עבור מועמדים שנרשמו לאתר בגרסה הישנה (ללא מייל)
             </button>
           </div>
 
-          <div className="mt-4 text-center space-y-2">
+          <div className="mt-2 sm:mt-4 text-center space-y-2">
             <Link
               href="/new-candidate"
               className="block text-sm text-sky-500 hover:text-sky-600 font-medium transition-colors"
@@ -282,7 +282,7 @@ function LoginContent() {
             </Link>
           </div>
 
-          <div className="mt-6 flex justify-center gap-4 text-xs text-gray-400">
+          <div className="mt-3 sm:mt-6 flex justify-center gap-4 text-xs text-gray-400">
             <Link href="/about" className="hover:text-gray-600 transition-colors">
               איך האתר עובד?
             </Link>
@@ -292,7 +292,7 @@ function LoginContent() {
             </Link>
           </div>
 
-          <p className="text-center text-xs text-gray-300 mt-4">
+          <p className="text-center text-xs text-gray-300 mt-2 sm:mt-4">
             Ronel Lovely &copy; {new Date().getFullYear()}
           </p>
         </div>
