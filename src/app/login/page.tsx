@@ -16,16 +16,12 @@ function LoginContent() {
   // Lock viewport to exactly 100dvh: no scroll, body becomes a flex column so
   // the login page fills the remaining height after banner + video strip.
   useEffect(() => {
-    // Lock viewport only on desktop — on mobile/tablet the page must scroll freely
-    const isDesktop = window.matchMedia("(min-width: 1024px) and (min-aspect-ratio: 4/3)").matches;
-    if (isDesktop) {
-      document.documentElement.style.overflow = "hidden";
-      document.documentElement.style.height = "100dvh";
-      document.body.style.overflow = "hidden";
-      document.body.style.height = "100%";
-      document.body.style.display = "flex";
-      document.body.style.flexDirection = "column";
-    }
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.height = "100dvh";
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100%";
+    document.body.style.display = "flex";
+    document.body.style.flexDirection = "column";
     return () => {
       document.documentElement.style.overflow = "";
       document.documentElement.style.height = "";
@@ -127,7 +123,7 @@ function LoginContent() {
     <div className="login-wide flex-1 min-h-0 flex flex-col" dir="rtl">
 
       {/* ── Image panel (mobile / portrait tablet): fixed-height strip ── */}
-      <div className="login-mobile-img w-full h-48 sm:h-64 md:h-72 flex-shrink-0 relative bg-sky-100 overflow-hidden">
+      <div className="login-mobile-img w-full h-36 sm:h-64 md:h-72 flex-shrink-0 relative bg-sky-100 overflow-hidden">
         <Image
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
@@ -150,7 +146,7 @@ function LoginContent() {
       </div>
 
       {/* ── Form panel ── */}
-      <div className="login-form flex flex-col items-center bg-white px-5 sm:px-8 py-6 overflow-y-auto">
+      <div className="login-form flex-1 min-h-0 flex flex-col items-center bg-white px-5 sm:px-8 py-4 sm:py-6 overflow-y-auto">
         <div className="w-full max-w-sm">
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-2">

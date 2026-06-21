@@ -10,7 +10,7 @@ body {
 /* Login page: side-by-side layout on wide/landscape screens */
 .login-wide .login-mobile-img  { display: block; }
 .login-wide .login-desktop-img { display: none; }
-.login-wide .login-form        { justify-content: flex-start; }
+.login-wide .login-form        { justify-content: flex-start; flex: 1 1 0%; min-height: 0; }
 
 @media (min-width: 1024px) and (min-aspect-ratio: 4/3) {
   .login-wide {
