@@ -18,6 +18,6 @@ body {
     grid-template-columns: 3fr 2fr;
   }
   .login-wide .login-mobile-img  { display: none; }
-  .login-wide .login-desktop-img { display: flex; }
+  .login-wide .login-desktop-img { display: block; }
   .login-wide .login-form        { justify-content: center; }
 }

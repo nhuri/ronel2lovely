@@ -134,13 +134,12 @@ function LoginContent() {
       </div>
 
       {/* ── Image panel (landscape desktop ≥1024px): fills grid cell height ── */}
-      <div className="login-desktop-img h-full items-center justify-center bg-sky-100 overflow-hidden">
+      <div className="login-desktop-img h-full relative bg-sky-100">
         <Image
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
-          width={800}
-          height={450}
-          className="h-full w-auto max-w-none"
+          fill
+          className="object-contain"
           priority
         />
       </div>
