@@ -23,6 +23,8 @@ export function NewCandidateForm({
   const [images, setImages] = useState<File[]>([]);
   const [selectedGender, setSelectedGender] = useState("");
   const [forOther, setForOther] = useState(!!inviteToken);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -76,6 +78,10 @@ export function NewCandidateForm({
     } else if (result?.error) {
       setError(result.error);
       setSubmitting(false);
+    } else if (result?.success) {
+      setRegisteredEmail(result.email ?? "");
+      setShowEmailModal(true);
+      setSubmitting(false);
     }
   }
 
@@ -117,6 +123,33 @@ export function NewCandidateForm({
           </div>
         </div>
       </header>
+
+      {/* Email confirmation modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" dir="rtl">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-7 text-center">
+            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">ההרשמה הושלמה!</h2>
+            <p className="text-sm text-gray-600 leading-relaxed mb-1">
+              שלחנו מייל אישור לכתובת:
+            </p>
+            <p className="text-sm font-semibold text-sky-600 mb-4" dir="ltr">{registeredEmail}</p>
+            <p className="text-xs text-gray-400 leading-relaxed mb-6">
+              אם לא קיבלתם את המייל — בדקו את תיקיית הספאם.
+            </p>
+            <a
+              href="/login"
+              className="block w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 transition-colors text-sm"
+            >
+              מעבר להתחברות
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Form */}
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
@@ -177,7 +210,7 @@ export function NewCandidateForm({
               <SelectField name="marital_status" label="מצב משפחתי" required options={selectedGender === "נקבה" ? ["רווקה", "גרושה", "אלמנה"] : selectedGender === "זכר" ? ["רווק", "גרוש", "אלמן"] : ["רווק/ה", "גרוש/ה", "אלמן/ה"]} error={fieldErrors.marital_status} />
               <InputField name="children_count" label="מספר ילדים" type="number" placeholder="0" dir="ltr" error={fieldErrors.children_count} />
               <SelectField name="religious_level" label="רמה דתית" required options={selectedGender === "נקבה" ? ["חרדית", "דתייה", "דתייה לאומית", "דתי לאומי תורני", "דתייה לייט", "מסורתית", "חילונית"] : selectedGender === "זכר" ? ["חרדי", "דתי", "דתי לאומי", "דתי לאומי תורני", "דתי לייט", "מסורתי", "חילוני"] : ["חרדי/ת", "דתי/ה", "דתי/ה לאומי/ת", "דתי לאומי תורני", "דתי/ה לייט", "מסורתי/ת", "חילוני/ת"]} error={fieldErrors.religious_level} />
-              <InputField name="height" label="גובה (ס״מ)" type="number" required placeholder="170" dir="ltr" error={fieldErrors.height} />
+              <InputField name="height" label="גובה (ס״מ)" type="number" step="any" required placeholder="170" dir="ltr" error={fieldErrors.height} />
               <SelectField name="education" label="השכלה" required options={["תיכונית", "תעודה", "תואר ראשון", "תואר שני"]} error={fieldErrors.education} />
               <InputField name="occupation" label="תעסוקה" required placeholder="למשל: מהנדס תוכנה" error={fieldErrors.occupation} />
               <SelectField name="torah_education" label="השכלה תורנית" options={["ללא", "ישיבה תיכונית", "מכינה", "ישיבת הסדר", "ישיבה גבוהה", "מדרשה"]} error={fieldErrors.torah_education} />
@@ -263,15 +296,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function InputField({ name, label, type = "text", required, placeholder, dir, error }: {
-  name: string; label: string; type?: string; required?: boolean; placeholder?: string; dir?: string; error?: string;
+function InputField({ name, label, type = "text", required, placeholder, dir, step, error }: {
+  name: string; label: string; type?: string; required?: boolean; placeholder?: string; dir?: string; step?: string; error?: string;
 }) {
   return (
     <div>
       <label htmlFor={name} className="block text-xs font-medium text-gray-500 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
-      <input id={name} name={name} type={type} required={required} placeholder={placeholder} dir={dir}
+      <input id={name} name={name} type={type} required={required} placeholder={placeholder} dir={dir} step={step}
         className={`w-full px-4 py-2.5 border rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all ${error ? "border-red-400 bg-red-50 focus:ring-red-400" : "border-gray-200"}`} />
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>

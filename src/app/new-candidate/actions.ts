@@ -9,6 +9,8 @@ export type FieldErrors = Record<string, string>;
 export type CreateCandidateResult = {
   error?: string;
   fieldErrors?: FieldErrors;
+  success?: boolean;
+  email?: string;
 };
 
 const BASE_REQUIRED_FIELDS: { key: string; label: string }[] = [
@@ -276,7 +278,7 @@ export async function createCandidate(
           <ul style="font-size: 14px; line-height: 2; margin: 0 0 16px; padding-right: 20px; color: #4b5563;">
             <li>לצפייה בהצעות מומלצות — היכנסו לאזור האישי ובחרו &quot;הצעות מומלצות&quot;</li>
             <li>לפתיחת הצעה — לחצו על מועמד/ת שמעניינת אתכם ולחצו &quot;אני מעוניין/ת להכיר&quot;</li>
-            <li>לרענון ההצעות המומלצות — לחצו על כפתור הרענון בחלק העליון של העמוד</li>
+            <li>לרענון ההצעות המומלצות - לחצו על הצעה מסוימת כלא מתאימה ותקבלו הצעה אחרת במקומה</li>
           </ul>
           <p style="font-size: 14px; line-height: 1.8; margin: 0 0 16px;">לכל שאלה או עזרה — צוות האתר זמין בכתובת: <a href="mailto:ronel2lovely@gmail.com" style="color: #0284c7;">ronel2lovely@gmail.com</a></p>
           <p style="font-size: 11px; color: #9ca3af; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f3f4f6; text-align: center;">Ronel Lovely — ronel-lovely.com</p>
@@ -298,7 +300,7 @@ export async function createCandidate(
     // Invitation flow → success page
     redirect("/new-candidate/success");
   } else {
-    // Regular self-registration → go to login
-    redirect("/login");
+    // Regular self-registration → return success so client can show email confirmation modal
+    return { success: true, email: candidateEmail };
   }
 }
