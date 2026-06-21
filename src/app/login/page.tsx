@@ -145,7 +145,7 @@ function LoginContent() {
       </div>
 
       {/* ── Form panel ── */}
-      <div className="login-form flex-1 min-h-0 flex flex-col items-center bg-white px-5 sm:px-8 py-3 sm:py-6 overflow-y-auto">
+      <div className="login-form flex-1 min-h-0 flex flex-col items-center bg-white px-5 sm:px-8 py-2 sm:py-6 overflow-y-auto">
         <div className="w-full max-w-sm">
           <div className="mb-2 sm:mb-4">
             <div className="flex items-center gap-3 mb-2">
@@ -291,7 +291,7 @@ function LoginContent() {
             </Link>
           </div>
 
-          <p className="text-center text-xs text-gray-300 mt-2 sm:mt-4">
+          <p className="hidden sm:block text-center text-xs text-gray-300 mt-4">
             Ronel Lovely &copy; {new Date().getFullYear()}
           </p>
         </div>

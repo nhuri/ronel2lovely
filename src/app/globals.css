@@ -7,6 +7,11 @@ body {
   overscroll-behavior-x: none;
 }
 
+/* Compact image strip for very small phones (iPhone SE, S8+) */
+@media (max-width: 380px) {
+  .login-mobile-img { height: 7rem; }
+}
+
 /* Login page: side-by-side layout on wide/landscape screens */
 .login-wide .login-mobile-img  { display: block; }
 .login-wide .login-desktop-img { display: none; }
