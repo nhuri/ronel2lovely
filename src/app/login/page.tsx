@@ -17,7 +17,7 @@ function LoginContent() {
   // the login page fills the remaining height after banner + video strip.
   useEffect(() => {
     // Lock viewport only on desktop — on mobile/tablet the page must scroll freely
-    const isDesktop = window.matchMedia("(min-width: 1024px) and (orientation: landscape)").matches;
+    const isDesktop = window.matchMedia("(min-width: 1024px) and (min-aspect-ratio: 4/3)").matches;
     if (isDesktop) {
       document.documentElement.style.overflow = "hidden";
       document.documentElement.style.height = "100dvh";
@@ -124,10 +124,10 @@ function LoginContent() {
   }
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col [@media(min-width:1024px)and(orientation:landscape)]:grid [@media(min-width:1024px)and(orientation:landscape)]:grid-cols-[3fr_2fr]" dir="rtl">
+    <div className="flex-1 min-h-0 flex flex-col [@media(min-width:1024px)and(min-aspect-ratio:4/3)]:grid [@media(min-width:1024px)and(min-aspect-ratio:4/3)]:grid-cols-[3fr_2fr]" dir="rtl">
 
       {/* ── Image panel (mobile / portrait tablet): fixed-height strip ── */}
-      <div className="[@media(min-width:1024px)and(orientation:landscape)]:hidden w-full h-48 sm:h-64 md:h-72 flex-shrink-0 relative bg-sky-100 overflow-hidden">
+      <div className="[@media(min-width:1024px)and(min-aspect-ratio:4/3)]:hidden w-full h-48 sm:h-64 md:h-72 flex-shrink-0 relative bg-sky-100 overflow-hidden">
         <Image
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
@@ -138,7 +138,7 @@ function LoginContent() {
       </div>
 
       {/* ── Image panel (landscape desktop ≥1024px): fills grid cell height ── */}
-      <div className="hidden [@media(min-width:1024px)and(orientation:landscape)]:flex h-full items-center justify-center bg-sky-100 overflow-hidden">
+      <div className="hidden [@media(min-width:1024px)and(min-aspect-ratio:4/3)]:flex h-full items-center justify-center bg-sky-100 overflow-hidden">
         <Image
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
@@ -150,7 +150,7 @@ function LoginContent() {
       </div>
 
       {/* ── Form panel ── */}
-      <div className="flex flex-col items-center justify-start [@media(min-width:1024px)and(orientation:landscape)]:justify-center bg-white px-5 sm:px-8 py-6 overflow-y-auto">
+      <div className="flex flex-col items-center justify-start [@media(min-width:1024px)and(min-aspect-ratio:4/3)]:justify-center bg-white px-5 sm:px-8 py-6 overflow-y-auto">
         <div className="w-full max-w-sm">
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-2">
