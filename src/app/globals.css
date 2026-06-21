@@ -6,3 +6,18 @@ body {
   overflow-x: hidden;
   overscroll-behavior-x: none;
 }
+
+/* Login page: side-by-side layout on wide/landscape screens */
+.login-wide .login-mobile-img  { display: block; }
+.login-wide .login-desktop-img { display: none; }
+.login-wide .login-form        { justify-content: flex-start; }
+
+@media (min-width: 1024px) and (min-aspect-ratio: 4/3) {
+  .login-wide {
+    display: grid !important;
+    grid-template-columns: 3fr 2fr;
+  }
+  .login-wide .login-mobile-img  { display: none; }
+  .login-wide .login-desktop-img { display: flex; }
+  .login-wide .login-form        { justify-content: center; }
+}
