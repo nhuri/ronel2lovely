@@ -19,5 +19,5 @@ body {
   }
   .login-wide .login-mobile-img  { display: none; }
   .login-wide .login-desktop-img { display: block; }
-  .login-wide .login-form        { justify-content: center; }
+  .login-wide .login-form        { justify-content: center; overflow-y: hidden; }
 }
