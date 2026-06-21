@@ -12,12 +12,12 @@ type Option = "remove" | "view" | null;
 type Step = "options" | "phone" | "otp" | "email" | "done";
 
 interface Props {
-  candidateId: number;
-  gender: string;
+  candidateId: number | null;
+  gender: string | null;
 }
 
 export default function NoEmailClient({ candidateId, gender }: Props) {
-  const isMale = gender === "זכר";
+  const isMale = gender !== "נקבה"; // default to male forms when gender unknown
 
   const [option, setOption] = useState<Option>(null);
   const [step, setStep] = useState<Step>("options");

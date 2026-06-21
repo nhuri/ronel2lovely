@@ -7,14 +7,16 @@ interface Props {
 
 export default async function NoEmailPage({ searchParams }: Props) {
   const { id } = await searchParams;
-  const candidateId = id ? parseInt(id, 10) : NaN;
 
-  if (!id || isNaN(candidateId)) {
+  // No id → allow flow without pre-fetching a specific candidate
+  if (!id) {
+    return <NoEmailClient candidateId={null} gender={null} />;
+  }
+
+  const candidateId = parseInt(id, 10);
+  if (isNaN(candidateId)) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center bg-gray-50 p-6"
-        dir="rtl"
-      >
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6" dir="rtl">
         <p className="text-gray-500 text-center">קישור לא תקין</p>
       </div>
     );
@@ -29,10 +31,7 @@ export default async function NoEmailPage({ searchParams }: Props) {
 
   if (!candidate) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center bg-gray-50 p-6"
-        dir="rtl"
-      >
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6" dir="rtl">
         <p className="text-gray-500 text-center">הפרופיל לא נמצא</p>
       </div>
     );
@@ -40,10 +39,7 @@ export default async function NoEmailPage({ searchParams }: Props) {
 
   if (candidate.availability_status === "הקפאה") {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center bg-gray-50 p-6"
-        dir="rtl"
-      >
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6" dir="rtl">
         <div className="bg-white rounded-2xl shadow p-8 max-w-sm w-full text-center">
           <p className="text-gray-700 font-medium mb-2">הפרופיל כבר הוסר מהאתר</p>
           <p className="text-gray-400 text-sm">לפרטים נוספים ניתן לפנות לצוות האתר</p>

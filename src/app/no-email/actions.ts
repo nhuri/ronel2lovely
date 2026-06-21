@@ -26,24 +26,21 @@ async function lookupOtp(e164Phone: string, token: string) {
   return { admin, otp };
 }
 
-/** Send OTP to the phone number, verifying it belongs to the given candidateId */
+/** Send OTP to the phone number, optionally verifying it belongs to candidateId */
 export async function sendNoEmailOtp(
   phone: string,
-  candidateId: number
+  candidateId: number | null
 ): Promise<ActionResult> {
   // Use admin client — user is unauthenticated, RLS would block the regular client
   const admin = createSupabaseAdminClient();
   const e164Phone = toE164(phone);
 
-  const { data: candidate } = await admin
-    .from("candidates")
-    .select("id")
-    .eq("id", candidateId)
-    .eq("phone_number", e164Phone)
-    .maybeSingle();
+  let query = admin.from("candidates").select("id").eq("phone_number", e164Phone);
+  if (candidateId !== null) query = query.eq("id", candidateId);
+  const { data: candidate } = await query.maybeSingle();
 
   if (!candidate) {
-    return { error: "מספר הטלפון אינו תואם לפרופיל זה" };
+    return { error: candidateId !== null ? "מספר הטלפון אינו תואם לפרופיל זה" : "מספר הטלפון לא נמצא במערכת" };
   }
 
   const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -84,7 +81,7 @@ export async function validateNoEmailOtp(
 export async function verifyAndFreeze(
   phone: string,
   token: string,
-  candidateId: number
+  candidateId: number | null
 ): Promise<ActionResult> {
   const e164Phone = toE164(phone);
   const { admin, otp } = await lookupOtp(e164Phone, token);
@@ -92,19 +89,16 @@ export async function verifyAndFreeze(
   if (!otp) return { error: "קוד אימות שגוי או שפג תוקפו" };
   await admin.from("sms_otps").delete().eq("id", otp.id);
 
-  const { data: candidate } = await admin
-    .from("candidates")
-    .select("id")
-    .eq("id", candidateId)
-    .eq("phone_number", e164Phone)
-    .maybeSingle();
+  let query = admin.from("candidates").select("id").eq("phone_number", e164Phone);
+  if (candidateId !== null) query = query.eq("id", candidateId);
+  const { data: candidate } = await query.maybeSingle();
 
   if (!candidate) return { error: "מספר הטלפון אינו תואם לפרופיל זה" };
 
   const { error } = await admin
     .from("candidates")
     .update({ availability_status: "הקפאה" })
-    .eq("id", candidateId);
+    .eq("id", candidate.id);
 
   if (error) return { error: "שגיאה בהסרת הפרופיל. נסה שוב." };
 
@@ -116,7 +110,7 @@ export async function verifyAndAddEmail(
   phone: string,
   token: string,
   email: string,
-  candidateId: number
+  candidateId: number | null
 ): Promise<ActionResult> {
   const e164Phone = toE164(phone);
   const { admin, otp } = await lookupOtp(e164Phone, token);
@@ -124,12 +118,9 @@ export async function verifyAndAddEmail(
   if (!otp) return { error: "קוד אימות שגוי או שפג תוקפו" };
   await admin.from("sms_otps").delete().eq("id", otp.id);
 
-  const { data: candidate } = await admin
-    .from("candidates")
-    .select("id, manager_id, full_name, gender")
-    .eq("id", candidateId)
-    .eq("phone_number", e164Phone)
-    .maybeSingle();
+  let query = admin.from("candidates").select("id, manager_id, full_name, gender").eq("phone_number", e164Phone);
+  if (candidateId !== null) query = query.eq("id", candidateId);
+  const { data: candidate } = await query.maybeSingle();
 
   if (!candidate) return { error: "מספר הטלפון אינו תואם לפרופיל זה" };
 
