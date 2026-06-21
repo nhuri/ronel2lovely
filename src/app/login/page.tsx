@@ -132,7 +132,7 @@ function LoginContent() {
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
           fill
-          className="object-contain"
+          className="object-contain lg:object-cover"
           priority
         />
       </div>
