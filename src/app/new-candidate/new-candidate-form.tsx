@@ -218,6 +218,17 @@ export function NewCandidateForm({
             </div>
           </Section>
 
+          {/* Contact for inquiries — optional, hidden in ambassador mode (ambassador section covers it) */}
+          {!isAmbassadorMode && (
+            <Section title="איש קשר לבירורים">
+              <p className="text-xs text-gray-400 -mt-2">אופציונלי — אדם שניתן לפנות אליו לבירורים על המועמד/ת</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputField name="contact_person" label="שם איש הקשר" placeholder="שם מלא" error={fieldErrors.contact_person} />
+                <InputField name="contact_person_phone" label="מספר פלאפון של איש הקשר" type="tel" placeholder="050-0000000" dir="ltr" error={fieldErrors.contact_person_phone} />
+              </div>
+            </Section>
+          )}
+
           {/* Images */}
           <Section title="תמונות פרופיל">
             <div>
