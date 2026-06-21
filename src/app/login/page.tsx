@@ -126,13 +126,25 @@ function LoginContent() {
   return (
     <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-[3fr_2fr]" dir="rtl">
 
-      {/* ── Image panel: top strip on mobile/tablet, right cell on lg+ ── */}
-      <div className="w-full h-48 sm:h-64 md:h-72 flex-shrink-0 relative bg-sky-100 overflow-hidden">
+      {/* ── Image panel (mobile/tablet): fixed-height strip, full image visible ── */}
+      <div className="lg:hidden w-full h-48 sm:h-64 md:h-72 flex-shrink-0 relative bg-sky-100 overflow-hidden">
         <Image
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
           fill
-          className="object-contain lg:object-cover"
+          className="object-contain"
+          priority
+        />
+      </div>
+
+      {/* ── Image panel (desktop lg+): fills grid cell height, no vertical crop ── */}
+      <div className="hidden lg:flex h-full items-center justify-center bg-sky-100 overflow-hidden">
+        <Image
+          src="/ronel-enter-page.jpg"
+          alt="סמ״ר רונאל בן משה ז״ל"
+          width={800}
+          height={450}
+          className="h-full w-auto max-w-none"
           priority
         />
       </div>
