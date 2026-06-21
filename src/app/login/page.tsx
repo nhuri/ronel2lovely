@@ -124,10 +124,10 @@ function LoginContent() {
   }
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col lg:flex-row" dir="rtl">
+    <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-[3fr_2fr]" dir="rtl">
 
-      {/* ── Image panel: top on mobile/tablet, right column on lg+ ── */}
-      <div className="w-full h-48 sm:h-64 md:h-72 flex-shrink-0 lg:h-full lg:w-3/5 max-w-full relative bg-sky-100 overflow-hidden">
+      {/* ── Image panel: top strip on mobile/tablet, right cell on lg+ ── */}
+      <div className="w-full h-48 sm:h-64 md:h-72 flex-shrink-0 relative bg-sky-100 overflow-hidden">
         <Image
           src="/ronel-enter-page.jpg"
           alt="סמ״ר רונאל בן משה ז״ל"
@@ -138,7 +138,7 @@ function LoginContent() {
       </div>
 
       {/* ── Form panel ── */}
-      <div className="w-full lg:w-2/5 max-w-full flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 py-6 overflow-y-auto">
+      <div className="flex flex-col items-center justify-start lg:justify-center bg-white px-5 sm:px-8 py-6 overflow-y-auto">
         <div className="w-full max-w-sm">
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-2">
