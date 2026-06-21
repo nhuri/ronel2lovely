@@ -156,6 +156,13 @@ export async function SiteBanner() {
                 </svg>
                 טיקטוק
               </a>
+              <a href="/contact" className="flex items-center gap-1 text-white font-semibold text-[11px] hover:text-sky-200 transition-colors">
+                <svg viewBox="0 0 24 24" className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"/>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+                צור קשר
+              </a>
             </div>
         </div>
 
