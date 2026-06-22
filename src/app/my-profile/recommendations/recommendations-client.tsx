@@ -335,7 +335,7 @@ function MatchCard({
         {/* Photo */}
         <div className="relative w-32 sm:w-40 flex-shrink-0 bg-gray-100">
           {img ? (
-            <Image src={img} alt={c.full_name as string} fill className="object-cover object-top" />
+            <Image src={img} alt={c.full_name as string} fill className="object-cover object-top" unoptimized />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200">
               <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

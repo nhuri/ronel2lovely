@@ -210,7 +210,7 @@ export function SendMessageTab({ candidates }: { candidates: Candidate[] }) {
                   />
                   <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                     {img ? (
-                      <Image src={img} alt={c.full_name} fill className="object-cover" />
+                      <Image src={img} alt={c.full_name} fill className="object-cover" unoptimized />
                     ) : (
                       <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-500">
                         {c.full_name?.[0]}

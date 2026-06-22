@@ -70,7 +70,7 @@ export function CandidateSelectorDropdown({
                 className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-right hover:bg-gray-50 transition-colors ${isActive ? "bg-sky-50 text-sky-700 font-medium" : "text-gray-700"}`}
               >
                 {img ? (
-                  <Image src={img} alt="" width={28} height={28} className="rounded-full object-cover w-7 h-7" />
+                  <Image src={img} alt="" width={28} height={28} className="rounded-full object-cover w-7 h-7" unoptimized />
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 font-bold">
                     {c.full_name?.[0]}
@@ -177,7 +177,7 @@ export function CandidateSelectionPage({
                 className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 flex items-center gap-4 hover:border-sky-300 hover:shadow-md transition-all text-right"
               >
                 {img ? (
-                  <Image src={img} alt="" width={48} height={48} className="rounded-xl object-cover w-12 h-12 flex-shrink-0" />
+                  <Image src={img} alt="" width={48} height={48} className="rounded-xl object-cover w-12 h-12 flex-shrink-0" unoptimized />
                 ) : (
                   <div className="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-lg flex-shrink-0">
                     {c.full_name?.[0]}

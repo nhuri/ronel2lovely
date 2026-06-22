@@ -274,7 +274,7 @@ export function ProfileClient({
               <div className={`flex gap-1 overflow-x-auto overscroll-x-contain p-1 ${imgs.length === 1 ? "justify-center" : ""}`}>
                 {imgs.map((url, i) => (
                   <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="relative flex-shrink-0 w-60 h-72 rounded-xl overflow-hidden block cursor-pointer">
-                    <Image src={url} alt={`${c.full_name} ${i + 1}`} fill className="object-cover" />
+                    <Image src={url} alt={`${c.full_name} ${i + 1}`} fill className="object-cover" unoptimized />
                   </a>
                 ))}
               </div>
@@ -417,7 +417,7 @@ export function ProfileClient({
             <div className="flex flex-wrap gap-3">
               {keepImages.map((url, i) => (
                 <div key={url} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 group flex-shrink-0">
-                  <Image src={url} alt={`תמונה ${i + 1}`} fill className="object-cover" />
+                  <Image src={url} alt={`תמונה ${i + 1}`} fill className="object-cover" unoptimized />
                   <button
                     type="button"
                     onClick={() => setKeepImages(keepImages.filter((_, j) => j !== i))}
@@ -427,7 +427,7 @@ export function ProfileClient({
               ))}
               {editImages.map((file, i) => (
                 <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-sky-300 group flex-shrink-0">
-                  <Image src={URL.createObjectURL(file)} alt={`תמונה חדשה ${i + 1}`} fill className="object-cover" />
+                  <Image src={URL.createObjectURL(file)} alt={`תמונה חדשה ${i + 1}`} fill className="object-cover" unoptimized />
                   <button
                     type="button"
                     onClick={() => setEditImages(editImages.filter((_, j) => j !== i))}

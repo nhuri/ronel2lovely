@@ -97,7 +97,7 @@ export default function NewCandidatePage() {
               <div className="flex flex-wrap gap-3 mt-2">
                 {images.map((file, i) => (
                   <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 group">
-                    <Image src={URL.createObjectURL(file)} alt={`תמונה ${i + 1}`} fill className="object-cover" />
+                    <Image src={URL.createObjectURL(file)} alt={`תמונה ${i + 1}`} fill className="object-cover" unoptimized />
                     <button type="button" onClick={() => removeImage(i)} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">X</button>
                   </div>
                 ))}
