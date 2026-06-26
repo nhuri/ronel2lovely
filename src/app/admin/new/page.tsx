@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { createCandidate, type FieldErrors } from "./actions";
 import Link from "next/link";
 import Image from "next/image";
+import { compressImage } from "@/lib/compress-image";
 
 export default function NewCandidatePage() {
   const [error, setError] = useState<string | null>(null);
@@ -13,9 +14,10 @@ export default function NewCandidatePage() {
   const [selectedGender, setSelectedGender] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
-    setImages((prev) => [...prev, ...files].slice(0, 3));
+    const compressed = await Promise.all(files.map(compressImage));
+    setImages((prev) => [...prev, ...compressed].slice(0, 3));
     e.target.value = "";
   }
 

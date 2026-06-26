@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { logout } from "@/app/login/actions";
+import { compressImage } from "@/lib/compress-image";
 import {
   updateMyProfile,
   deleteMyProfile,
@@ -453,10 +454,11 @@ export function ProfileClient({
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (file && keepImages.length + editImages.length < 3) {
-                  setEditImages([...editImages, file]);
+                  const compressed = await compressImage(file);
+                  setEditImages([...editImages, compressed]);
                 }
                 e.target.value = "";
               }}

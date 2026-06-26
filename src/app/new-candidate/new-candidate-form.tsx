@@ -5,6 +5,7 @@ import { createCandidate, type FieldErrors } from "./actions";
 import { logout } from "@/app/login/actions";
 import Link from "next/link";
 import Image from "next/image";
+import { compressImage } from "@/lib/compress-image";
 
 export function NewCandidateForm({
   isLoggedIn = false,
@@ -27,9 +28,10 @@ export function NewCandidateForm({
   const [registeredEmail, setRegisteredEmail] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
-    setImages((prev) => [...prev, ...files].slice(0, 3));
+    const compressed = await Promise.all(files.map(compressImage));
+    setImages((prev) => [...prev, ...compressed].slice(0, 3));
     e.target.value = "";
   }
 
