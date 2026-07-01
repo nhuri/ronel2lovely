@@ -62,7 +62,7 @@ export default async function MatchDetailsPage({
   const { data: other } = await admin
     .from("candidates")
     .select(
-      "id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, image_urls, phone_number, email, contact_person, contact_person_phone"
+      "id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, looking_for, image_urls, phone_number, email, contact_person, contact_person_phone"
     )
     .eq("id", otherCandidateId)
     .single();
@@ -185,6 +185,16 @@ export default async function MatchDetailsPage({
                 </p>
                 <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                   {other.about_me as string}
+                </p>
+              </div>
+            )}
+            {other.looking_for && (
+              <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+                <p className="text-xs font-medium text-gray-700 mb-1">
+                  {gender === "נקבה" ? "מה אני מחפשת:" : "מה אני מחפש:"}
+                </p>
+                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                  {other.looking_for as string}
                 </p>
               </div>
             )}
