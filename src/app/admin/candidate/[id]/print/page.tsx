@@ -72,7 +72,7 @@ export default async function CandidatePrintPage({
         <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "24px", borderBottom: "2px solid #0ea5e9", paddingBottom: "16px" }}>
           {imgs[0] && (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={imgs[0]} alt={c.full_name} style={{ width: "100px", height: "120px", objectFit: "cover", borderRadius: "8px", flexShrink: 0 }} />
+            <img src={imgs[0]} alt={c.full_name} style={{ width: "100px", height: "120px", objectFit: "contain", borderRadius: "8px", flexShrink: 0 }} />
           )}
           <div style={{ flex: 1 }}>
             <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#0ea5e9", margin: "0 0 4px" }}>{c.full_name}</h1>
@@ -145,7 +145,7 @@ export default async function CandidatePrintPage({
             <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap" }}>
               {imgs.slice(1).map((url, i) => (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img key={i} src={url} alt="" style={{ width: "120px", height: "140px", objectFit: "cover", borderRadius: "6px" }} />
+                <img key={i} src={url} alt="" style={{ width: "120px", height: "140px", objectFit: "contain", borderRadius: "6px" }} />
               ))}
             </div>
           </>
