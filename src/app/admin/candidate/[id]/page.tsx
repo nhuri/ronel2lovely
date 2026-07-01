@@ -139,7 +139,17 @@ export default async function AdminCandidateViewPage({
     (rejectedRows ?? []).map((r) => Number(r.rejected_candidate_id))
   );
 
-  const basePool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
+  let basePool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
+
+  // For female candidates: never show men younger by more than 2 years
+  if (myGender === "נקבה" && candidate.age) {
+    const minManAge = (candidate.age as number) - 2;
+    basePool = basePool.filter((m) => {
+      const mAge = m.age as number | null;
+      return mAge == null || mAge >= minManAge;
+    });
+  }
+
   const rejectedPool = basePool.filter((m) => rejectedIds.has(Number(m.id)));
   let recPool = basePool.filter((m) => !rejectedIds.has(Number(m.id)));
 
