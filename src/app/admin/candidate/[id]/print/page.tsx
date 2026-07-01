@@ -130,7 +130,7 @@ export default async function CandidatePrintPage({
         )}
 
         {/* Contact info */}
-        <h2 style={{ fontSize: "13px", fontWeight: 700, color: "#0ea5e9", marginBottom: "10px", borderBottom: "1px solid #e5e7eb", paddingBottom: "4px" }}>פרטי קשר</h2>
+        <h2 style={{ fontSize: "13px", fontWeight: 700, color: "#0ea5e9", marginBottom: "10px", borderBottom: "1px solid #e5e7eb", paddingBottom: "4px", breakBefore: "page" }}>פרטי קשר</h2>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 16px", marginBottom: "20px" }}>
           {field("אימייל", c.email)}
           {field("טלפון", c.phone_number)}
