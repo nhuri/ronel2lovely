@@ -246,12 +246,22 @@ function ProposalCard({
                 צפה בפרופיל
               </Link>
             )}
+            {!isAdmin && c1 && !isMeFirst && (
+              <Link href={`/my-profile/match/${p.id}`} className="text-[10px] text-sky-500 hover:text-sky-700 hover:underline">
+                צפה בפרופיל
+              </Link>
+            )}
           </div>
           <span className="text-gray-300 mx-2">&amp;</span>
           <div className="flex-1 text-left">
             <div className="text-sm font-bold text-gray-800 truncate">{c2?.full_name ?? "—"}</div>
             {isAdmin && c2 && (
               <Link href={`/admin/candidate/${c2.id}`} className="text-[10px] text-sky-500 hover:text-sky-700 hover:underline">
+                צפה בפרופיל
+              </Link>
+            )}
+            {!isAdmin && c2 && isMeFirst && (
+              <Link href={`/my-profile/match/${p.id}`} className="text-[10px] text-sky-500 hover:text-sky-700 hover:underline">
                 צפה בפרופיל
               </Link>
             )}
