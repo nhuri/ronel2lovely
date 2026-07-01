@@ -515,9 +515,12 @@ export async function updateProposalStatusByCandidate(
   const result = await verifyCandidateProposal(proposalId, candidateId);
   if (!result) return { error: "אין הרשאה לבצע פעולה זו" };
 
-  const { supabase, proposal } = result;
+  const { proposal } = result;
 
-  const { error } = await supabase
+  // Use admin client to bypass RLS for write operations
+  const adminClient = createSupabaseAdminClient();
+
+  const { error } = await adminClient
     .from("proposals")
     .update({
       status: newStatus,
@@ -527,10 +530,10 @@ export async function updateProposalStatusByCandidate(
 
   if (error) return { error: error.message };
 
-  // Auto-freeze on terminal statuses
+  // Auto-freeze on terminal statuses (8=התארסו, 9=התחתנו)
   if (isTerminalStatus(newStatus)) {
-    const statusLabel = newStatus === "7" ? "התארסו" : "התחתנו";
-    await supabase
+    const statusLabel = newStatus === "8" ? "התארסו" : "התחתנו";
+    await adminClient
       .from("candidates")
       .update({ availability_status: statusLabel })
       .in("id", [proposal.candidate_id_1, proposal.candidate_id_2]);
@@ -550,9 +553,12 @@ export async function addProposalNoteByCandidate(
   const trimmed = noteText.trim();
   if (!trimmed) return { error: "תוכן ההערה ריק" };
 
-  const { supabase, candidateName } = result;
+  const { candidateName } = result;
 
-  const { error } = await supabase.from("proposal_notes").insert({
+  // Use admin client to bypass RLS for write operations
+  const adminClient = createSupabaseAdminClient();
+
+  const { error } = await adminClient.from("proposal_notes").insert({
     proposal_id: proposalId,
     note_text: trimmed,
     author_type: candidateName,
@@ -560,8 +566,7 @@ export async function addProposalNoteByCandidate(
 
   if (error) return { error: error.message };
 
-  // Update proposal updated_at
-  await supabase
+  await adminClient
     .from("proposals")
     .update({ updated_at: new Date().toISOString() })
     .eq("id", proposalId);
