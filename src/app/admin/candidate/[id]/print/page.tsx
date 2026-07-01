@@ -60,11 +60,11 @@ export default async function CandidatePrintPage({
         body { font-family: Arial, sans-serif; background: #fff; color: #111; direction: rtl; }
       `}</style>
 
-      {/* Back button — hidden when printing */}
+      {/* Back link — hidden when printing */}
       <div className="no-print" style={{ padding: "12px 16px", borderBottom: "1px solid #eee" }}>
-        <button onClick={() => window.history.back()} style={{ fontSize: "13px", color: "#555", cursor: "pointer", background: "none", border: "none" }}>
+        <a href={`/admin/candidate/${candidateId}`} style={{ fontSize: "13px", color: "#555", textDecoration: "none" }}>
           ← חזרה
-        </button>
+        </a>
       </div>
 
       <div style={{ maxWidth: "720px", margin: "0 auto", padding: "24px 20px" }} dir="rtl">
