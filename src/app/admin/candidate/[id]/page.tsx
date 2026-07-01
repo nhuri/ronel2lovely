@@ -8,6 +8,9 @@ import { AdminNotesSection } from "./admin-notes-section";
 import { InquiriesSection } from "./inquiries-section";
 import { CandidateTabs } from "./candidate-tabs";
 import { signCandidateImages, signAllCandidateImages, signProposalImages } from "@/lib/storage";
+import { scoreAndRankMatches } from "@/lib/matching";
+import { getMaxRecommendations } from "@/app/admin/settings-actions";
+import { AdminRecommendationsSection } from "./admin-recommendations-section";
 
 export default async function AdminCandidateViewPage({
   params,
@@ -85,6 +88,77 @@ export default async function AdminCandidateViewPage({
     .eq("candidate_id", candidateId)
     .order("created_at", { ascending: false });
 
+  // Fetch recommendation data for this candidate
+  const myGender = candidate.gender as string;
+  const oppositeGender = myGender === "זכר" ? "נקבה" : "זכר";
+
+  const [
+    { data: rawPotentialMatches },
+    { data: rejectedRows },
+    { data: prefData },
+  ] = await Promise.all([
+    supabase
+      .from("candidates")
+      .select("id, full_name, gender, age, residence, religious_level, marital_status, height, occupation, education, image_urls, availability_status, about_me")
+      .eq("gender", oppositeGender)
+      .neq("id", candidateId),
+    supabase
+      .from("recommendation_rejections")
+      .select("rejected_candidate_id")
+      .eq("candidate_id", candidateId),
+    supabase
+      .from("candidates")
+      .select("preference_filters")
+      .eq("id", candidateId)
+      .single(),
+  ]);
+
+  const allPotentialMatches = await signAllCandidateImages(rawPotentialMatches ?? []);
+
+  const activeMatches = allPotentialMatches.filter(
+    (c) =>
+      c.availability_status !== "הקפאה" &&
+      c.availability_status !== "התחתנו" &&
+      c.availability_status !== "התארסו"
+  );
+
+  type PrefFilters = { allowed_religious_levels?: string[]; min_age?: number; max_age?: number };
+  const pref = (prefData?.preference_filters ?? {}) as PrefFilters;
+
+  // Reuse already-fetched proposals to build partner exclusion set
+  const proposalPartnerIds = new Set<number>();
+  for (const p of rawProposals ?? []) {
+    if (Number(p.candidate_id_1) === candidateId) {
+      proposalPartnerIds.add(Number(p.candidate_id_2));
+    } else {
+      proposalPartnerIds.add(Number(p.candidate_id_1));
+    }
+  }
+
+  const rejectedIds = new Set<number>(
+    (rejectedRows ?? []).map((r) => Number(r.rejected_candidate_id))
+  );
+
+  const basePool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
+  const rejectedPool = basePool.filter((m) => rejectedIds.has(Number(m.id)));
+  let recPool = basePool.filter((m) => !rejectedIds.has(Number(m.id)));
+
+  if (pref.allowed_religious_levels?.length) {
+    recPool = recPool.filter((m) => pref.allowed_religious_levels!.includes(m.religious_level as string));
+  }
+  if (pref.min_age) recPool = recPool.filter((m) => (m.age as number) >= pref.min_age!);
+  if (pref.max_age) recPool = recPool.filter((m) => (m.age as number) <= pref.max_age!);
+
+  const availablePool = recPool.filter((m) => m.availability_status !== "תפוס");
+  const unavailablePool = recPool.filter((m) => m.availability_status === "תפוס");
+
+  const maxRec = await getMaxRecommendations();
+  const recLimit = maxRec === "all" ? availablePool.length : maxRec;
+
+  const topMatches = scoreAndRankMatches(candidate, availablePool, recLimit);
+  const unavailableMatches = scoreAndRankMatches(candidate, unavailablePool, unavailablePool.length);
+  const rejectedMatches = scoreAndRankMatches(candidate, rejectedPool, rejectedPool.length);
+
   const tabs = [
     {
       key: "profile",
@@ -125,6 +199,21 @@ export default async function AdminCandidateViewPage({
             isAdmin
           />
         </div>
+      ),
+    },
+    {
+      key: "recommendations",
+      label: "המלצות",
+      count: topMatches.length,
+      color: "bg-violet-500",
+      content: (
+        <AdminRecommendationsSection
+          matches={topMatches}
+          unavailableMatches={unavailableMatches}
+          rejectedMatches={rejectedMatches}
+          totalPool={availablePool.length}
+          filters={pref}
+        />
       ),
     },
     {
