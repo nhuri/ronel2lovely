@@ -1,7 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { signCandidateImages } from "@/lib/storage";
-import { PrintTrigger } from "./print-trigger";
 
 export default async function CandidatePrintPage({
   params,
@@ -51,7 +50,7 @@ export default async function CandidatePrintPage({
 
   return (
     <>
-      <PrintTrigger />
+      <script dangerouslySetInnerHTML={{ __html: "window.print()" }} />
       <style>{`
         @media print {
           @page { margin: 15mm; size: A4 portrait; }
