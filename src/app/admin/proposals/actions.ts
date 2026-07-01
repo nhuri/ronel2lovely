@@ -79,11 +79,14 @@ export async function updateProposalStatus(
   proposalId: number,
   newStatus: string
 ): Promise<ProposalActionResult> {
-  const supabase = await verifyAdmin();
-  if (!supabase) return { error: "אין הרשאה לבצע פעולה זו" };
+  const verified = await verifyAdmin();
+  if (!verified) return { error: "אין הרשאה לבצע פעולה זו" };
+
+  // Use admin client to bypass RLS for write operations
+  const adminClient = createSupabaseAdminClient();
 
   // Fetch current proposal
-  const { data: proposal } = await supabase
+  const { data: proposal } = await adminClient
     .from("proposals")
     .select("id, candidate_id_1, candidate_id_2, status")
     .eq("id", proposalId)
@@ -92,7 +95,7 @@ export async function updateProposalStatus(
   if (!proposal) return { error: "ההצעה לא נמצאה" };
 
   // Update status
-  const { error } = await supabase
+  const { error } = await adminClient
     .from("proposals")
     .update({
       status: newStatus,
@@ -102,10 +105,10 @@ export async function updateProposalStatus(
 
   if (error) return { error: error.message };
 
-  // Auto-freeze: if status is 7 (engaged) or 8 (married), update both candidates
+  // Auto-freeze on terminal status (8=התארסו, 9=התחתנו)
   if (isTerminalStatus(newStatus)) {
-    const statusLabel = newStatus === "7" ? "התארסו" : "התחתנו";
-    await supabase
+    const statusLabel = newStatus === "8" ? "התארסו" : "התחתנו";
+    await adminClient
       .from("candidates")
       .update({ availability_status: statusLabel })
       .in("id", [proposal.candidate_id_1, proposal.candidate_id_2]);
@@ -118,10 +121,11 @@ export async function updateProposalNotes(
   proposalId: number,
   notes: string
 ): Promise<ProposalActionResult> {
-  const supabase = await verifyAdmin();
-  if (!supabase) return { error: "אין הרשאה לבצע פעולה זו" };
+  const verified = await verifyAdmin();
+  if (!verified) return { error: "אין הרשאה לבצע פעולה זו" };
 
-  const { error } = await supabase
+  const adminClient = createSupabaseAdminClient();
+  const { error } = await adminClient
     .from("proposals")
     .update({
       notes: notes.trim() || null,
@@ -138,13 +142,14 @@ export async function addProposalNote(
   noteText: string,
   authorType: string = "admin"
 ): Promise<ProposalActionResult> {
-  const supabase = await verifyAdmin();
-  if (!supabase) return { error: "אין הרשאה לבצע פעולה זו" };
+  const verified = await verifyAdmin();
+  if (!verified) return { error: "אין הרשאה לבצע פעולה זו" };
 
   const trimmed = noteText.trim();
   if (!trimmed) return { error: "תוכן ההערה ריק" };
 
-  const { error } = await supabase.from("proposal_notes").insert({
+  const adminClient = createSupabaseAdminClient();
+  const { error } = await adminClient.from("proposal_notes").insert({
     proposal_id: proposalId,
     note_text: trimmed,
     author_type: authorType,
@@ -152,8 +157,7 @@ export async function addProposalNote(
 
   if (error) return { error: error.message };
 
-  // Update proposal updated_at
-  await supabase
+  await adminClient
     .from("proposals")
     .update({ updated_at: new Date().toISOString() })
     .eq("id", proposalId);
