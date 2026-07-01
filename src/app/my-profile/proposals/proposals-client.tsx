@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import {
   PROPOSAL_STATUSES,
@@ -238,12 +239,22 @@ function ProposalCard({
       <div className="p-4">
         {/* Names */}
         <div className="flex justify-between items-start mb-2">
-          <div className="text-sm font-bold text-gray-800 truncate flex-1">
-            {c1?.full_name ?? "—"}
+          <div className="flex-1">
+            <div className="text-sm font-bold text-gray-800 truncate">{c1?.full_name ?? "—"}</div>
+            {isAdmin && c1 && (
+              <Link href={`/admin/candidate/${c1.id}`} className="text-[10px] text-sky-500 hover:text-sky-700 hover:underline">
+                צפה בפרופיל
+              </Link>
+            )}
           </div>
           <span className="text-gray-300 mx-2">&amp;</span>
-          <div className="text-sm font-bold text-gray-800 truncate flex-1 text-left">
-            {c2?.full_name ?? "—"}
+          <div className="flex-1 text-left">
+            <div className="text-sm font-bold text-gray-800 truncate">{c2?.full_name ?? "—"}</div>
+            {isAdmin && c2 && (
+              <Link href={`/admin/candidate/${c2.id}`} className="text-[10px] text-sky-500 hover:text-sky-700 hover:underline">
+                צפה בפרופיל
+              </Link>
+            )}
           </div>
         </div>
 

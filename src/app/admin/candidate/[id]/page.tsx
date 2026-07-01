@@ -171,12 +171,21 @@ export default async function AdminCandidateViewPage({
               </p>
             </div>
           </div>
-          <Link
-            href="/admin"
-            className="px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-          >
-            חזרה לניהול
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/admin/candidate/${candidateId}/print`}
+              target="_blank"
+              className="px-3 py-1.5 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors"
+            >
+              הורד PDF
+            </Link>
+            <Link
+              href="/admin"
+              className="px-4 py-1.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              חזרה לניהול
+            </Link>
+          </div>
         </div>
       </header>
 

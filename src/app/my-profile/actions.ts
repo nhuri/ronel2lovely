@@ -4,6 +4,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { redirect } from "next/navigation";
 import { isTerminalStatus } from "@/lib/proposals";
 import { toE164 } from "@/lib/phone";
+import { sendEmailWithLog } from "@/lib/email";
 
 export type FieldErrors = Record<string, string>;
 export type ProfileActionResult = {
@@ -327,6 +328,13 @@ export async function updateCandidateEmail(
     return { error: "כתובת האימייל הזו כבר רשומה במערכת" };
   }
 
+  // Fetch candidate name for notification
+  const { data: candidateData } = await supabase
+    .from("candidates")
+    .select("full_name")
+    .eq("id", ctx.candidateId)
+    .maybeSingle();
+
   // 1. Update candidate record in DB
   const { error: dbError } = await supabase
     .from("candidates")
@@ -351,6 +359,20 @@ export async function updateCandidateEmail(
       .eq("id", ctx.candidateId);
     return { error: authError.message };
   }
+
+  // 3. Notify admin of the email change
+  const candidateName = candidateData?.full_name ?? "מועמד/ת";
+  await sendEmailWithLog({
+    to: "ronel2lovely@gmail.com",
+    subject: `עדכון מייל מועמד - ${candidateName}`,
+    html: `<div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+      <p>שלום רונל,</p>
+      <p>המועמד/ת <strong>${candidateName}</strong> עידכן/ה את כתובת המייל שלו/שלה באתר.</p>
+      <p>המייל החדש: <strong style="direction:ltr; unicode-bidi:embed;">${newEmail}</strong></p>
+    </div>`,
+    context: "candidate_email_update",
+    toCandidateId: ctx.candidateId,
+  });
 
   return { success: true };
 }
