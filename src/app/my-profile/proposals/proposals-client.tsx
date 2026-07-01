@@ -177,26 +177,29 @@ function ProposalCard({
     setError(null);
     setSaving(true);
 
-    // Update status if changed
-    if (newStatus !== p.status) {
-      const result = isAdmin
+    try {
+      // Always update status to ensure stale client state doesn't block saves
+      const statusResult = isAdmin
         ? await updateProposalStatus(p.id, newStatus)
         : await updateProposalStatusByCandidate(p.id, newStatus, candidateId);
-      if (result.error) { setError(result.error); setSaving(false); return; }
-    }
+      if (statusResult.error) { setError(statusResult.error); setSaving(false); return; }
 
-    // Add note if text is provided
-    if (newNote.trim()) {
-      const result = isAdmin
-        ? await addProposalNote(p.id, newNote, "admin")
-        : await addProposalNoteByCandidate(p.id, newNote, candidateId);
-      if (result.error) { setError(result.error); setSaving(false); return; }
-    }
+      // Add note if text is provided
+      if (newNote.trim()) {
+        const noteResult = isAdmin
+          ? await addProposalNote(p.id, newNote, "admin")
+          : await addProposalNoteByCandidate(p.id, newNote, candidateId);
+        if (noteResult.error) { setError(noteResult.error); setSaving(false); return; }
+      }
 
-    setSaving(false);
-    setShowEdit(false);
-    setNewNote("");
-    router.refresh();
+      setSaving(false);
+      setShowEdit(false);
+      setNewNote("");
+      router.refresh();
+    } catch {
+      setError("אירעה שגיאה בלתי צפויה. נסה שוב.");
+      setSaving(false);
+    }
   }
 
   async function handleDelete() {

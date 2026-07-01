@@ -678,27 +678,30 @@ function EditProposalModal({
     setError(null);
     setSaving(true);
 
-    // Update status if changed
-    if (newStatus !== proposal.status) {
-      const result = await updateProposalStatus(proposal.id, newStatus);
-      if (result.error) {
-        setError(result.error);
+    try {
+      // Always update status to ensure stale client state doesn't block saves
+      const statusResult = await updateProposalStatus(proposal.id, newStatus);
+      if (statusResult.error) {
+        setError(statusResult.error);
         setSaving(false);
         return;
       }
-    }
 
-    // Add note if provided
-    if (newNote.trim()) {
-      const result = await addProposalNote(proposal.id, newNote, "admin");
-      if (result.error) {
-        setError(result.error);
-        setSaving(false);
-        return;
+      // Add note if provided
+      if (newNote.trim()) {
+        const noteResult = await addProposalNote(proposal.id, newNote, "admin");
+        if (noteResult.error) {
+          setError(noteResult.error);
+          setSaving(false);
+          return;
+        }
       }
-    }
 
-    onUpdated();
+      onUpdated();
+    } catch {
+      setError("אירעה שגיאה בלתי צפויה. נסה שוב.");
+      setSaving(false);
+    }
   }
 
   async function handleDelete() {
