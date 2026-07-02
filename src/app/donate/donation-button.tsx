@@ -6,7 +6,7 @@ import { recordDonation } from "./actions";
 const DONATION_URL =
   "https://pay.grow.link/aa2b4891bc8e6a009aae2746b5dbb201-MzAxMDU0Nw";
 
-export function DonationButton() {
+export function DonationButton({ variant = "compact" }: { variant?: "compact" | "page" }) {
   const [showModal, setShowModal] = useState(false);
 
   const handleClick = () => {
@@ -18,7 +18,11 @@ export function DonationButton() {
     <>
       <button
         onClick={handleClick}
-        className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg border border-white/30 transition-colors"
+        className={
+          variant === "page"
+            ? "w-full py-3.5 text-base font-semibold bg-sky-500 hover:bg-sky-600 text-white rounded-xl transition-colors shadow-sm"
+            : "flex-shrink-0 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white rounded-lg border border-white/30 transition-colors"
+        }
       >
         ❤️ תרומה
       </button>
