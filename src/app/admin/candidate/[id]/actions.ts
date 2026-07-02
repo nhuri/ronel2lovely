@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isValidRemovalReason } from "@/lib/removalReasons";
 
 export type ActionResult = { error?: string; success?: boolean };
@@ -87,7 +87,10 @@ export async function freezeCandidateProfile(
     return { error: "יש לפרט את הסיבה" };
   }
 
-  const { error } = await supabase
+  // Use admin client to bypass RLS — the candidates table's only UPDATE
+  // policy is scoped to the candidate's own manager_id, not admins.
+  const adminClient = createSupabaseAdminClient();
+  const { error } = await adminClient
     .from("candidates")
     .update({
       availability_status: "הקפאה",
@@ -108,7 +111,9 @@ export async function restoreCandidateProfile(
   const supabase = await verifyAdmin();
   if (!supabase) return { error: "אין הרשאה" };
 
-  const { error } = await supabase
+  // Use admin client to bypass RLS — see freezeCandidateProfile above.
+  const adminClient = createSupabaseAdminClient();
+  const { error } = await adminClient
     .from("candidates")
     .update({
       availability_status: null,
