@@ -7,6 +7,7 @@ import { CreateProposalButton } from "./create-proposal-button";
 import { AdminNotesSection } from "./admin-notes-section";
 import { InquiriesSection } from "./inquiries-section";
 import { CandidateTabs } from "./candidate-tabs";
+import { CandidateStatusSection } from "./candidate-status-section";
 import { signCandidateImages, signAllCandidateImages, signProposalImages } from "@/lib/storage";
 import { scoreAndRankMatches } from "@/lib/matching";
 import { getMaxRecommendations } from "@/app/admin/settings-actions";
@@ -288,8 +289,19 @@ export default async function AdminCandidateViewPage({
         </div>
       </header>
 
+      {/* Status */}
+      <div className="pt-4">
+        <CandidateStatusSection
+          candidateId={candidateId}
+          availabilityStatus={candidate.availability_status}
+          removalReason={candidate.removal_reason}
+          removalReasonOther={candidate.removal_reason_other}
+          removedBy={candidate.removed_by}
+        />
+      </div>
+
       {/* Tabs */}
-      <div className="py-4">
+      <div className="pb-4">
         <CandidateTabs tabs={tabs} />
       </div>
     </div>

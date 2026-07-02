@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { logout } from "@/app/login/actions";
 import { compressImage } from "@/lib/compress-image";
+import { REMOVAL_REASONS } from "@/lib/removalReasons";
 import {
   updateMyProfile,
   deleteMyProfile,
@@ -47,6 +48,8 @@ export function ProfileClient({
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit">(startInEditMode ? "edit" : "view");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteReasonOther, setDeleteReasonOther] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
@@ -123,12 +126,12 @@ export function ProfileClient({
   }
 
   async function handleDelete() {
+    setError(null);
     setDeleting(true);
-    const result = await deleteMyProfile(candidateId);
+    const result = await deleteMyProfile(deleteReason, deleteReasonOther, candidateId);
     if (result?.error) {
       setError(result.error);
       setDeleting(false);
-      setShowDeleteConfirm(false);
     }
     // On success, deleteMyProfile redirects to /login
   }
@@ -362,10 +365,32 @@ export function ProfileClient({
                     : "האם אתה בטוח שברצונך להקפיא את הפרופיל? לא תוכל להתחבר עד שתשוחרר ההקפאה."
                   }
                 </p>
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">מה הסיבה?</label>
+                  <select
+                    value={deleteReason}
+                    onChange={(e) => setDeleteReason(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition-all"
+                  >
+                    <option value="">בחר סיבה...</option>
+                    {REMOVAL_REASONS.map((r) => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                  {deleteReason === "other" && (
+                    <textarea
+                      value={deleteReasonOther}
+                      onChange={(e) => setDeleteReasonOther(e.target.value)}
+                      rows={2}
+                      placeholder="פרט/י את הסיבה..."
+                      className="mt-2 w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition-all resize-none"
+                    />
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleDelete}
-                    disabled={deleting}
+                    disabled={deleting || !deleteReason || (deleteReason === "other" && !deleteReasonOther.trim())}
                     className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 rounded-lg transition-colors"
                   >
                     {deleting ? "מקפיא..." : "כן, הקפא את הפרופיל"}

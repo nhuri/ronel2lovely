@@ -9,6 +9,7 @@ import { toE164 } from "@/lib/phone";
 import { sendTwilioSms } from "@/lib/twilio";
 import { sendEmailWithLog } from "@/lib/email";
 import { redirect } from "next/navigation";
+import { isValidRemovalReason } from "@/lib/removalReasons";
 
 type ActionResult = { success?: boolean; error?: string };
 
@@ -81,8 +82,18 @@ export async function validateNoEmailOtp(
 export async function verifyAndFreeze(
   phone: string,
   token: string,
-  candidateId: number | null
+  candidateId: number | null,
+  reason: string,
+  reasonOther: string
 ): Promise<ActionResult> {
+  if (!isValidRemovalReason(reason)) {
+    return { error: "יש לבחור סיבה להסרת הפרופיל" };
+  }
+  const trimmedOther = reasonOther.trim();
+  if (reason === "other" && !trimmedOther) {
+    return { error: "יש לפרט את הסיבה" };
+  }
+
   const e164Phone = toE164(phone);
   const { admin, otp } = await lookupOtp(e164Phone, token);
 
@@ -97,7 +108,12 @@ export async function verifyAndFreeze(
 
   const { error } = await admin
     .from("candidates")
-    .update({ availability_status: "הקפאה" })
+    .update({
+      availability_status: "הקפאה",
+      removal_reason: reason,
+      removal_reason_other: reason === "other" ? trimmedOther : null,
+      removed_by: "candidate",
+    })
     .eq("id", candidate.id);
 
   if (error) return { error: "שגיאה בהסרת הפרופיל. נסה שוב." };

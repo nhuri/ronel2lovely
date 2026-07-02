@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { REMOVAL_REASONS } from "@/lib/removalReasons";
 import {
   sendNoEmailOtp,
   validateNoEmailOtp,
@@ -9,7 +10,7 @@ import {
 } from "./actions";
 
 type Option = "remove" | "view" | null;
-type Step = "options" | "phone" | "otp" | "email" | "done";
+type Step = "options" | "reason" | "phone" | "otp" | "email" | "done";
 
 interface Props {
   candidateId: number | null;
@@ -24,6 +25,8 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [email, setEmail] = useState("");
+  const [reason, setReason] = useState("");
+  const [reasonOther, setReasonOther] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -31,8 +34,16 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
 
   function chooseOption(opt: Option) {
     setOption(opt);
-    setStep("phone");
+    setStep(opt === "remove" ? "reason" : "phone");
     setError(null);
+  }
+
+  function confirmReason(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!reason) return setError("יש לבחור סיבה");
+    if (reason === "other" && !reasonOther.trim()) return setError("יש לפרט את הסיבה");
+    setStep("phone");
   }
 
   async function handleSendOtp(e: React.FormEvent) {
@@ -63,7 +74,7 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
     setLoading(true);
 
     if (option === "remove") {
-      const res = await verifyAndFreeze(phone, otp, candidateId);
+      const res = await verifyAndFreeze(phone, otp, candidateId, reason, reasonOther);
       setLoading(false);
       if (res.error) return setError(res.error);
       setStep("done");
@@ -144,6 +155,57 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
             </>
           )}
 
+          {/* ── Step: reason (remove flow only) ── */}
+          {step === "reason" && (
+            <>
+              <h2 className="text-lg font-bold text-gray-800 mb-1">הסרת הפרופיל</h2>
+              <p className="text-sm text-gray-500 mb-5">
+                {isMale ? "לפני שממשיכים, ספר" : "לפני שממשיכות, ספרי"} לנו מה הסיבה להסרה
+              </p>
+
+              <form onSubmit={confirmReason} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1.5">
+                    מה הסיבה?
+                  </label>
+                  <select
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="">בחר סיבה...</option>
+                    {REMOVAL_REASONS.map((r) => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                  {reason === "other" && (
+                    <textarea
+                      value={reasonOther}
+                      onChange={(e) => setReasonOther(e.target.value)}
+                      rows={2}
+                      placeholder="פרט/י את הסיבה..."
+                      className={`${inputClass} mt-2 resize-none`}
+                    />
+                  )}
+                </div>
+                {errorBox}
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-rose-500 text-white rounded-xl font-semibold hover:bg-rose-600 active:bg-rose-700 disabled:opacity-50 transition-all shadow-sm text-base"
+                >
+                  המשך
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStep("options"); setError(null); }}
+                  className="w-full py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  חזור
+                </button>
+              </form>
+            </>
+          )}
+
           {/* ── Step: phone ── */}
           {step === "phone" && (
             <>
@@ -186,7 +248,7 @@ export default function NoEmailClient({ candidateId, gender }: Props) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setStep("options"); setError(null); }}
+                  onClick={() => { setStep(option === "remove" ? "reason" : "options"); setError(null); }}
                   className="w-full py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   חזור

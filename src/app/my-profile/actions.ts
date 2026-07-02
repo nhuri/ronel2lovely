@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { isTerminalStatus } from "@/lib/proposals";
 import { toE164 } from "@/lib/phone";
 import { sendEmailWithLog } from "@/lib/email";
+import { isValidRemovalReason } from "@/lib/removalReasons";
 
 export type FieldErrors = Record<string, string>;
 export type ProfileActionResult = {
@@ -250,6 +251,8 @@ export async function updateMyProfile(
 }
 
 export async function deleteMyProfile(
+  reason: string,
+  reasonOther: string,
   candidateId?: number
 ): Promise<ProfileActionResult> {
   const ctx = await verifyCandidate(candidateId);
@@ -257,12 +260,25 @@ export async function deleteMyProfile(
     return { error: "אין הרשאה לבצע פעולה זו" };
   }
 
+  if (!isValidRemovalReason(reason)) {
+    return { error: "יש לבחור סיבה להקפאת הפרופיל" };
+  }
+  const trimmedOther = reasonOther.trim();
+  if (reason === "other" && !trimmedOther) {
+    return { error: "יש לפרט את הסיבה" };
+  }
+
   const { supabase } = ctx;
 
   // Soft delete: set availability_status to 'הקפאה' instead of deleting
   const { error } = await supabase
     .from("candidates")
-    .update({ availability_status: "הקפאה" })
+    .update({
+      availability_status: "הקפאה",
+      removal_reason: reason,
+      removal_reason_other: reason === "other" ? trimmedOther : null,
+      removed_by: "candidate",
+    })
     .eq("id", ctx.candidateId);
 
   if (error) {
@@ -287,7 +303,12 @@ export async function restoreMyProfile(
 
   const { error } = await supabase
     .from("candidates")
-    .update({ availability_status: null })
+    .update({
+      availability_status: null,
+      removal_reason: null,
+      removal_reason_other: null,
+      removed_by: null,
+    })
     .eq("id", ctx.candidateId)
     .eq("availability_status", "הקפאה");
 
