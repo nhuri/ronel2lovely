@@ -6,6 +6,7 @@ import { isTerminalStatus } from "@/lib/proposals";
 import { toE164 } from "@/lib/phone";
 import { sendEmailWithLog } from "@/lib/email";
 import { isValidRemovalReason } from "@/lib/removalReasons";
+import { deleteStorageImages } from "@/lib/storage";
 
 export type FieldErrors = Record<string, string>;
 export type ProfileActionResult = {
@@ -194,6 +195,14 @@ export async function updateMyProfile(
     return { error: "ניתן להעלות עד 3 תמונות" };
   }
 
+  // Fetch current images so we can delete any that are being replaced/removed
+  const { data: existingCandidate } = await supabase
+    .from("candidates")
+    .select("image_urls")
+    .eq("id", ctx.candidateId)
+    .maybeSingle();
+  const previousImageUrls: string[] = existingCandidate?.image_urls ?? [];
+
   const uploadedUrls: string[] = [];
   if (newImageFiles.length > 0) {
     const adminClient = createSupabaseAdminClient();
@@ -245,6 +254,12 @@ export async function updateMyProfile(
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Clean up images that were replaced/removed (best-effort, don't fail the request on error)
+  const removedImageUrls = previousImageUrls.filter((url) => !finalImageUrls.includes(url));
+  if (removedImageUrls.length > 0) {
+    await deleteStorageImages(removedImageUrls).catch(() => {});
   }
 
   return { success: true, imageUrls: finalImageUrls };

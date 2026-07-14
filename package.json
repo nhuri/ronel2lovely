@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "recompress-images": "node --env-file=.env.local scripts/recompress-images.mjs",
+    "cleanup-orphaned-images": "node --env-file=.env.local scripts/cleanup-orphaned-images.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -25,5 +27,8 @@
     "resend": "^6.9.2",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3"
   }
 }

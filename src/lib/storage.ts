@@ -80,6 +80,28 @@ export async function signImageUrls(urls: string[]): Promise<string[]> {
   return signed;
 }
 
+/** Delete stored images by their (public or signed) URLs. Best-effort — groups by bucket, ignores unparseable URLs. */
+export async function deleteStorageImages(urls: string[]): Promise<void> {
+  if (!urls.length) return;
+
+  const byBucket = new Map<KnownBucket, string[]>();
+  for (const url of urls) {
+    const entry = extractEntry(url);
+    if (!entry) continue;
+    const list = byBucket.get(entry.bucket) ?? [];
+    list.push(entry.path);
+    byBucket.set(entry.bucket, list);
+  }
+  if (!byBucket.size) return;
+
+  const supabase = createSupabaseAdminClient();
+  await Promise.all(
+    [...byBucket.entries()].map(([bucket, paths]) =>
+      supabase.storage.from(bucket).remove(paths)
+    )
+  );
+}
+
 /** Sign image_urls on a single candidate-like object */
 export async function signCandidateImages<T extends { image_urls?: string[] | null }>(
   c: T
