@@ -8,7 +8,7 @@ import { AdminNotesSection } from "./admin-notes-section";
 import { InquiriesSection } from "./inquiries-section";
 import { CandidateTabs } from "./candidate-tabs";
 import { CandidateStatusSection } from "./candidate-status-section";
-import { signCandidateImages, signAllCandidateImages, signProposalImages } from "@/lib/storage";
+import { signCandidateImages, signProposalImages } from "@/lib/storage";
 import { scoreAndRankMatches } from "@/lib/matching";
 import { getMaxRecommendations } from "@/app/admin/settings-actions";
 import { AdminRecommendationsSection } from "./admin-recommendations-section";
@@ -67,8 +67,7 @@ export default async function AdminCandidateViewPage({
     .select("id, full_name, gender, age, residence, image_urls, availability_status")
     .order("full_name", { ascending: true });
 
-  const signedAllCandidates = await signAllCandidateImages(rawAllCandidates ?? []);
-  const activeCandidates = signedAllCandidates.filter(
+  const activeCandidates = (rawAllCandidates ?? []).filter(
     (c) =>
       !c.availability_status ||
       (c.availability_status !== "הקפאה" &&
@@ -114,7 +113,7 @@ export default async function AdminCandidateViewPage({
       .single(),
   ]);
 
-  const allPotentialMatches = await signAllCandidateImages(rawPotentialMatches ?? []);
+  const allPotentialMatches = rawPotentialMatches ?? [];
 
   const activeMatches = allPotentialMatches.filter(
     (c) =>

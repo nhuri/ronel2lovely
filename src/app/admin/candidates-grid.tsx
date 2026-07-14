@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import Image from "next/image";
+import { useState, useMemo } from "react";
 
 interface Candidate {
   id: number;
@@ -157,85 +156,6 @@ export function CandidatesGrid({
   );
 }
 
-/* ──────────────── Image Carousel ──────────────── */
-
-function ImageCarousel({
-  urls,
-  alt,
-  className,
-  rounded,
-}: {
-  urls: string[];
-  alt: string;
-  className?: string;
-  rounded?: string;
-}) {
-  const [idx, setIdx] = useState(0);
-  const total = urls.length;
-
-  const prev = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setIdx((i) => (i - 1 + total) % total);
-    },
-    [total]
-  );
-  const next = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setIdx((i) => (i + 1) % total);
-    },
-    [total]
-  );
-
-  return (
-    <div className={`relative group/carousel ${className ?? ""}`}>
-      <Image
-        src={urls[idx]}
-        alt={alt}
-        fill
-        className={`object-contain transition-opacity duration-200 ${rounded ?? ""}`}
-      />
-
-      {total > 1 && (
-        <>
-          {/* Arrows */}
-          <button
-            onClick={next}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/carousel:opacity-100 transition-opacity"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
-          </button>
-          <button
-            onClick={prev}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/carousel:opacity-100 transition-opacity"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-          </button>
-
-          {/* Dots */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {urls.map((_, i) => (
-              <button
-                key={i}
-                onClick={(e) => { e.stopPropagation(); setIdx(i); }}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i === idx ? "bg-white w-4" : "bg-white/50 hover:bg-white/80"
-                }`}
-              />
-            ))}
-          </div>
-
-          {/* Counter */}
-          <span className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full">
-            {idx + 1}/{total}
-          </span>
-        </>
-      )}
-    </div>
-  );
-}
-
 /* ──────────────── No Image Placeholder ──────────────── */
 
 function NoImage({ className, rounded }: { className?: string; rounded?: string }) {
@@ -251,16 +171,10 @@ function NoImage({ className, rounded }: { className?: string; rounded?: string 
 /* ──────────────── Card ──────────────── */
 
 function CandidateCard({ candidate: c, onView, ambassadorName }: { candidate: Candidate; onView: () => void; ambassadorName: string | null }) {
-  const imgs = c.image_urls ?? [];
-
   return (
     <div onClick={onView} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
       <div className="relative w-full h-56 sm:h-auto sm:aspect-square bg-gray-100">
-        {imgs.length > 0 ? (
-          <ImageCarousel urls={imgs} alt={c.full_name} className="w-full h-full" />
-        ) : (
-          <NoImage className="absolute inset-0" />
-        )}
+        <NoImage className="absolute inset-0" />
 
         {c.age != null && (
           <span className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
@@ -317,29 +231,13 @@ function Tag({ text, color }: { text: string; color: keyof typeof tagColors }) {
 /* ──────────────── Profile Modal ──────────────── */
 
 function ProfileModal({ candidate: c, onClose, ambassadorName }: { candidate: Candidate; onClose: () => void; ambassadorName: string | null }) {
-  const imgs = c.image_urls ?? [];
-
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Header: Carousel or fallback ── */}
+        {/* ── Header ── */}
         <div className="relative">
-          {imgs.length > 0 ? (
-            <>
-              <div className="bg-black rounded-t-3xl">
-                <ImageCarousel
-                  urls={imgs}
-                  alt={c.full_name}
-                  className="w-full h-80 sm:h-[28rem]"
-                  rounded="rounded-t-3xl"
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent rounded-t-3xl pointer-events-none" />
-            </>
-          ) : (
-            <div className="w-full h-48 bg-gradient-to-bl from-sky-400 to-sky-600 rounded-t-3xl" />
-          )}
+          <div className="w-full h-48 bg-gradient-to-bl from-sky-400 to-sky-600 rounded-t-3xl" />
 
           {/* Close */}
           <button onClick={onClose} className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center transition-colors z-20">

@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import {
   PROPOSAL_STATUSES,
   getStatusLabel,
@@ -205,8 +204,6 @@ function ProposalCard({
 }) {
   const c1 = p.candidate_1;
   const c2 = p.candidate_2;
-  const img1 = c1?.image_urls?.[0];
-  const img2 = c2?.image_urls?.[0];
   const date = new Date(p.created_at).toLocaleDateString("he-IL");
   const allNotes = (p.proposal_notes ?? []).sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -218,28 +215,10 @@ function ProposalCard({
       {/* Two candidate photos side by side */}
       <div className="flex h-44">
         <div className="relative w-1/2 bg-gray-100">
-          {img1 ? (
-            <Image
-              src={img1}
-              alt={c1?.full_name ?? ""}
-              fill
-              className="object-cover object-top"
-            />
-          ) : (
-            <NoImage />
-          )}
+          <NoImage />
         </div>
         <div className="relative w-1/2 bg-gray-100 border-r border-white">
-          {img2 ? (
-            <Image
-              src={img2}
-              alt={c2?.full_name ?? ""}
-              fill
-              className="object-cover object-top"
-            />
-          ) : (
-            <NoImage />
-          )}
+          <NoImage />
         </div>
       </div>
 
@@ -317,17 +296,8 @@ function NoImage() {
 
 /* ──────────────── Candidate Avatar ──────────────── */
 
-function CandidateAvatar({ src, name, size = 32 }: { src?: string | null; name: string; size?: number }) {
-  return src ? (
-    <Image
-      src={src}
-      alt={name}
-      width={size}
-      height={size}
-      className="rounded-full object-cover flex-shrink-0"
-      style={{ width: size, height: size }}
-    />
-  ) : (
+function CandidateAvatar({ size = 32 }: { name: string; size?: number }) {
+  return (
     <div
       className="rounded-full bg-gradient-to-b from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0"
       style={{ width: size, height: size }}
@@ -401,7 +371,7 @@ function CandidatePicker({
           {label} <span className="text-red-500">*</span>
         </label>
         <div className="flex items-center gap-2 px-3 py-2 border border-sky-200 bg-sky-50 rounded-xl">
-          <CandidateAvatar src={selected.image_urls?.[0]} name={selected.full_name} size={28} />
+          <CandidateAvatar name={selected.full_name} size={28} />
           <span className="text-sm font-medium text-gray-800 flex-1">
             {selected.full_name}
             {selected.age ? ` (${selected.age})` : ""}
@@ -452,7 +422,7 @@ function CandidatePicker({
                 onClick={() => handleSelect(c)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-sky-50 transition-colors text-right"
               >
-                <CandidateAvatar src={c.image_urls?.[0]} name={c.full_name} size={28} />
+                <CandidateAvatar name={c.full_name} size={28} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-800 truncate">{c.full_name}</div>
                   <div className="text-[11px] text-gray-400 truncate">
@@ -492,7 +462,7 @@ function CandidatePicker({
                 onClick={() => handleSelect(c)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-sky-50 transition-colors border-b border-gray-50 last:border-b-0 text-right"
               >
-                <CandidateAvatar src={c.image_urls?.[0]} name={c.full_name} size={28} />
+                <CandidateAvatar name={c.full_name} size={28} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-800 truncate">{c.full_name}</div>
                   <div className="text-[11px] text-gray-400 truncate">

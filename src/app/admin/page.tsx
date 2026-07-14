@@ -4,7 +4,6 @@ import { logout } from "@/app/login/actions";
 import Link from "next/link";
 import { getMaxRecommendations, getFollowupDelays } from "./settings-actions";
 import { getAnalyticsStats } from "./analytics-actions";
-import { signAllCandidateImages } from "@/lib/storage";
 
 export default async function AdminDashboard() {
   const supabase = await createSupabaseServerClient();
@@ -20,7 +19,7 @@ export default async function AdminDashboard() {
     .select("*")
     .order("id", { ascending: true });
 
-  const allCandidates = await signAllCandidateImages(rawCandidates ?? []);
+  const allCandidates = rawCandidates ?? [];
 
   // Build candidate_id → ambassador label from contact_person fields on the candidate itself
   const ambassadorNames: Record<number, string> = {};

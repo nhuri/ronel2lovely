@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { logout } from "@/app/login/actions";
 import { replyToInquiry, markInquiryRead } from "@/app/admin/candidate/[id]/actions";
@@ -46,17 +45,8 @@ function CategoryBadge({ category }: { category: string }) {
   );
 }
 
-function CandidateAvatar({ src, name }: { src?: string | null; name: string }) {
-  return src ? (
-    <Image
-      src={src}
-      alt={name}
-      width={32}
-      height={32}
-      className="rounded-full object-cover flex-shrink-0"
-      style={{ width: 32, height: 32 }}
-    />
-  ) : (
+function CandidateAvatar() {
+  return (
     <div className="w-8 h-8 rounded-full bg-gradient-to-b from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0">
       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -212,7 +202,7 @@ function InquiryCard({
     >
       {/* Header: candidate info + category + date */}
       <div className="flex items-center gap-3 mb-3">
-        <CandidateAvatar src={c?.image_urls?.[0]} name={c?.full_name ?? ""} />
+        <CandidateAvatar />
         <div className="flex-1 min-w-0">
           <Link
             href={`/admin/candidate/${c?.id}`}

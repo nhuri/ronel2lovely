@@ -17,7 +17,6 @@ interface Props {
 
 function MatchCard({ match, rank, dim }: { match: ScoredMatch; rank: number; dim?: boolean }) {
   const c = match.candidate;
-  const photo = (c.image_urls as string[] | null)?.[0];
 
   return (
     <Link
@@ -28,16 +27,11 @@ function MatchCard({ match, rank, dim }: { match: ScoredMatch; rank: number; dim
         {rank}
       </div>
       <div className="w-10 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-        {photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo} alt={c.full_name as string} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </div>
-        )}
+        <div className="w-full h-full flex items-center justify-center text-gray-300">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-gray-800 truncate">{c.full_name as string}</p>

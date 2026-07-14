@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { createProposal } from "@/app/admin/proposals/actions";
 
 interface CandidateOption {
@@ -25,17 +24,8 @@ function getOppositeGender(gender: string | null): string | null {
   return null;
 }
 
-function CandidateAvatar({ src, name, size = 28 }: { src?: string | null; name: string; size?: number }) {
-  return src ? (
-    <Image
-      src={src}
-      alt={name}
-      width={size}
-      height={size}
-      className="rounded-full object-cover flex-shrink-0"
-      style={{ width: size, height: size }}
-    />
-  ) : (
+function CandidateAvatar({ size = 28 }: { name: string; size?: number }) {
+  return (
     <div
       className="rounded-full bg-gradient-to-b from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0"
       style={{ width: size, height: size }}
@@ -128,7 +118,7 @@ export function CreateProposalButton({ preselected, candidates }: Props) {
                   {preselected.gender === "נקבה" ? "מועמדת 1" : "מועמד 1"}
                 </label>
                 <div className="flex items-center gap-2 px-3 py-2 border border-sky-200 bg-sky-50 rounded-xl">
-                  <CandidateAvatar src={preselected.image_urls?.[0]} name={preselected.full_name} />
+                  <CandidateAvatar name={preselected.full_name} />
                   <span className="text-sm font-medium text-gray-800">
                     {preselected.full_name}
                     {preselected.age ? ` (${preselected.age})` : ""}
@@ -232,7 +222,7 @@ function CandidatePicker({
           {label} <span className="text-red-500">*</span>
         </label>
         <div className="flex items-center gap-2 px-3 py-2 border border-sky-200 bg-sky-50 rounded-xl">
-          <CandidateAvatar src={selected.image_urls?.[0]} name={selected.full_name} />
+          <CandidateAvatar name={selected.full_name} />
           <span className="text-sm font-medium text-gray-800 flex-1">
             {selected.full_name}
             {selected.age ? ` (${selected.age})` : ""}
@@ -278,7 +268,7 @@ function CandidatePicker({
                 onClick={() => handleSelect(c)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-sky-50 transition-colors text-right"
               >
-                <CandidateAvatar src={c.image_urls?.[0]} name={c.full_name} />
+                <CandidateAvatar name={c.full_name} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-800 truncate">{c.full_name}</div>
                   <div className="text-[11px] text-gray-400 truncate">
@@ -312,7 +302,7 @@ function CandidatePicker({
                 onClick={() => handleSelect(c)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-sky-50 transition-colors border-b border-gray-50 last:border-b-0 text-right"
               >
-                <CandidateAvatar src={c.image_urls?.[0]} name={c.full_name} />
+                <CandidateAvatar name={c.full_name} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-800 truncate">{c.full_name}</div>
                   <div className="text-[11px] text-gray-400 truncate">
