@@ -676,9 +676,17 @@ function MatchDetailModal({
   const interestedText = gender === "זכר" ? "אני מעוניין להכיר" : "אני מעוניינת להכיר";
   const fallbackSentLabel = recipientGender === "זכר" ? "הפנייה נשלחה ✓" : "הפנייה נשלחה ✓";
   const confirmText =
-    recipientGender === "זכר"
-      ? `לחיצה על אישור תשלח הודעה ל${c.full_name}. הוא יקבל את הפרטים שלך ויוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.`
-      : `לחיצה על אישור תשלח הודעה ל${c.full_name}. היא תקבל את הפרטים שלך ותוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.`;
+    recipientGender === "זכר" ? (
+      <>
+        לחיצה על אישור תשלח <strong>הודעה במייל</strong> ל{c.full_name as string}. הוא יקבל את
+        הפרטים שלך ויוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.
+      </>
+    ) : (
+      <>
+        לחיצה על אישור תשלח <strong>הודעה במייל</strong> ל{c.full_name as string}. היא תקבל את
+        הפרטים שלך ותוכל ליצור אתך קשר במידה ותהיה התאמה הדדית.
+      </>
+    );
 
   const handleConfirm = async () => {
     setSending(true);
