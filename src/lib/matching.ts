@@ -26,6 +26,35 @@ const RELIGIOUS_LEVEL_MAP: Record<string, number> = {
   "חילונית": 1,
 };
 
+/**
+ * Religious-level compatibility groups. A candidate should only be shown
+ * matches whose level falls in at least one group their own level belongs to.
+ * Some levels (e.g. "דתי לאומי") are bridge levels that appear in more than
+ * one group, so membership is a union over all matching groups, not a single
+ * partition.
+ */
+const RELIGIOUS_LEVEL_GROUPS: string[][] = [
+  ["חרדי", "חרדית"],
+  ["מסורתי", "מסורתית"],
+  ["דתי לאומי תורני", "דתי לאומי", "דתייה לאומית"],
+  ["דתי לאומי", "דתייה לאומית", "דתי לייט", "דתייה לייט", "דתי", "דתייה"],
+  ["חילוני", "חילונית"],
+];
+
+/**
+ * Returns the set of religious levels compatible with the given level
+ * (the union of every group the level belongs to), or null if the level
+ * isn't recognized (in which case no group filtering should be applied).
+ */
+export function getCompatibleReligiousLevels(
+  level: string | null | undefined
+): Set<string> | null {
+  if (!level) return null;
+  const groups = RELIGIOUS_LEVEL_GROUPS.filter((g) => g.includes(level));
+  if (groups.length === 0) return null;
+  return new Set(groups.flat());
+}
+
 const MARITAL_STATUS_MAP: Record<string, number> = {
   "רווק": 1,
   "רווקה": 1,

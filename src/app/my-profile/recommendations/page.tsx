@@ -4,7 +4,7 @@ import Link from "next/link";
 import { RecommendationsClient } from "./recommendations-client";
 import { resolveCandidate } from "@/lib/candidate-resolver";
 import { CandidateSelectionPage } from "../candidate-selector";
-import { scoreAndRankMatches } from "@/lib/matching";
+import { scoreAndRankMatches, getCompatibleReligiousLevels } from "@/lib/matching";
 import { getMaxRecommendations } from "@/app/admin/settings-actions";
 import { signAllCandidateImages } from "@/lib/storage";
 
@@ -109,6 +109,16 @@ export default async function RecommendationsPage({
 
   // Exclude proposal partners from all pools
   let basePool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
+
+  // Only show candidates whose religious level is in a compatible group with mine
+  const compatibleReligiousLevels = getCompatibleReligiousLevels(
+    candidate.religious_level as string | null
+  );
+  if (compatibleReligiousLevels) {
+    basePool = basePool.filter((m) =>
+      compatibleReligiousLevels.has(m.religious_level as string)
+    );
+  }
 
   // For female candidates: never show men younger by more than 2 years
   if (myGender === "נקבה" && candidate.age) {
