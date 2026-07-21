@@ -120,12 +120,15 @@ export default async function RecommendationsPage({
     );
   }
 
-  // For female candidates: never show men younger by more than 2 years
+  // For female candidates: never show men younger by more than 2 years,
+  // and cap how much older he can be based on her own age
   if (myGender === "נקבה" && candidate.age) {
-    const minManAge = (candidate.age as number) - 2;
+    const myAge = candidate.age as number;
+    const minManAge = myAge - 2;
+    const maxManAge = myAge + (myAge <= 30 ? 5 : 10);
     basePool = basePool.filter((m) => {
       const mAge = m.age as number | null;
-      return mAge == null || mAge >= minManAge;
+      return mAge == null || (mAge >= minManAge && mAge <= maxManAge);
     });
   }
 
