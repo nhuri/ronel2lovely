@@ -4,6 +4,10 @@ import { randomUUID } from "crypto";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendEmailWithLog } from "@/lib/email";
 import { sendTwilioSms } from "@/lib/twilio";
+import {
+  hasReachedDailyProposalLimit,
+  DAILY_PROPOSAL_LIMIT_MESSAGE,
+} from "@/lib/proposalLimits";
 
 export async function sendInterestEmail(
   candidateId: number,
@@ -17,6 +21,10 @@ export async function sendInterestEmail(
   } = await supabase.auth.getUser();
   if (!user) {
     return { success: false, message: "לא מחובר" };
+  }
+
+  if (await hasReachedDailyProposalLimit(supabase, candidateId)) {
+    return { success: false, message: DAILY_PROPOSAL_LIMIT_MESSAGE };
   }
 
   // Fetch both candidates

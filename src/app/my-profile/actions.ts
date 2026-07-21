@@ -6,6 +6,10 @@ import { isTerminalStatus } from "@/lib/proposals";
 import { toE164 } from "@/lib/phone";
 import { sendEmailWithLog } from "@/lib/email";
 import { isValidRemovalReason } from "@/lib/removalReasons";
+import {
+  hasReachedDailyProposalLimit,
+  DAILY_PROPOSAL_LIMIT_MESSAGE,
+} from "@/lib/proposalLimits";
 import { deleteStorageImages } from "@/lib/storage";
 
 export type FieldErrors = Record<string, string>;
@@ -506,6 +510,10 @@ export async function createProposalByCandidate(
 
   if (myId === candidateId2) {
     return { error: "לא ניתן ליצור הצעה עם עצמך" };
+  }
+
+  if (await hasReachedDailyProposalLimit(supabase, myId)) {
+    return { error: DAILY_PROPOSAL_LIMIT_MESSAGE };
   }
 
   // Validate second candidate exists and is active
