@@ -8,6 +8,7 @@ import { sendEmailWithLog } from "@/lib/email";
 import { isValidRemovalReason } from "@/lib/removalReasons";
 import {
   hasReachedDailyProposalLimit,
+  notifyDailyProposalLimitReached,
   DAILY_PROPOSAL_LIMIT_MESSAGE,
 } from "@/lib/proposalLimits";
 import { deleteStorageImages } from "@/lib/storage";
@@ -513,6 +514,7 @@ export async function createProposalByCandidate(
   }
 
   if (await hasReachedDailyProposalLimit(supabase, myId)) {
+    await notifyDailyProposalLimitReached(supabase, myId);
     return { error: DAILY_PROPOSAL_LIMIT_MESSAGE };
   }
 

@@ -6,6 +6,7 @@ import { sendEmailWithLog } from "@/lib/email";
 import { sendTwilioSms } from "@/lib/twilio";
 import {
   hasReachedDailyProposalLimit,
+  notifyDailyProposalLimitReached,
   DAILY_PROPOSAL_LIMIT_MESSAGE,
 } from "@/lib/proposalLimits";
 
@@ -24,6 +25,7 @@ export async function sendInterestEmail(
   }
 
   if (await hasReachedDailyProposalLimit(supabase, candidateId)) {
+    await notifyDailyProposalLimitReached(supabase, candidateId);
     return { success: false, message: DAILY_PROPOSAL_LIMIT_MESSAGE };
   }
 
