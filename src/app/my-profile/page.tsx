@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { logout } from "@/app/login/actions";
-import { restoreMyProfile } from "./actions";
+import { restoreMyProfile, requestAdminUnfreeze } from "./actions";
 import { ProfileClient } from "./profile-client";
 import { resolveCandidate } from "@/lib/candidate-resolver";
 import { CandidateSelectionPage } from "./candidate-selector";
@@ -9,7 +9,7 @@ import { signCandidateImages } from "@/lib/storage";
 export default async function MyProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ restored?: string; candidate_id?: string; tab?: string }>;
+  searchParams: Promise<{ restored?: string; unfreeze_requested?: string; candidate_id?: string; tab?: string }>;
 }) {
   const params = await searchParams;
   const requestedId = params.candidate_id ? parseInt(params.candidate_id, 10) : undefined;
@@ -61,6 +61,9 @@ export default async function MyProfilePage({
   // Frozen candidate — show restore option
   if (candidate.availability_status === "הקפאה") {
     const cId = candidate.id as number;
+    const frozenByAdmin = candidate.removed_by === "admin";
+    const unfreezeRequested = params.unfreeze_requested === "1";
+
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center" dir="rtl">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 max-w-md text-center">
@@ -68,17 +71,48 @@ export default async function MyProfilePage({
             <span className="text-amber-600 text-lg">*</span>
           </div>
           <h1 className="text-lg font-bold text-gray-800 mb-2">הפרופיל מוקפא</h1>
-          <p className="text-sm text-gray-500 mb-6">
-            הפרופיל מוקפא כרגע ואינו פעיל. לחץ על הכפתור למטה כדי לשחרר את ההקפאה.
-          </p>
-          <form action={async () => { "use server"; await restoreMyProfile(cId); }} className="mb-3">
-            <button
-              type="submit"
-              className="w-full px-6 py-3 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors"
-            >
-              שחרר הקפאה
-            </button>
-          </form>
+
+          {frozenByAdmin ? (
+            unfreezeRequested ? (
+              <p className="text-sm text-gray-500 mb-6">
+                הבקשה נשלחה לצוות האתר. נחזור אליך בהקדם לגבי שחרור ההקפאה.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mb-6">
+                  הפרופיל שלך הוקפא ע&quot;י המנהל. יש ליצור קשר עם צוות האתר על מנת לשחרר את ההקפאה,
+                  במייל{" "}
+                  <a href="mailto:ronel2lovely@gmail.com" className="text-sky-600">
+                    ronel2lovely@gmail.com
+                  </a>
+                  .
+                </p>
+                <form action={async () => { "use server"; await requestAdminUnfreeze(cId); }} className="mb-3">
+                  <button
+                    type="submit"
+                    className="w-full px-6 py-3 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors"
+                  >
+                    שלח בקשת שחרור לצוות
+                  </button>
+                </form>
+              </>
+            )
+          ) : (
+            <>
+              <p className="text-sm text-gray-500 mb-6">
+                הפרופיל מוקפא כרגע ואינו פעיל. לחץ על הכפתור למטה כדי לשחרר את ההקפאה.
+              </p>
+              <form action={async () => { "use server"; await restoreMyProfile(cId); }} className="mb-3">
+                <button
+                  type="submit"
+                  className="w-full px-6 py-3 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors"
+                >
+                  שחרר הקפאה
+                </button>
+              </form>
+            </>
+          )}
+
           <form action={logout}>
             <button
               type="submit"

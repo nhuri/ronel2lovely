@@ -305,7 +305,7 @@ export async function deleteMyProfile(
   redirect("/login");
 }
 
-/** Restore a frozen profile (unfreeze) */
+/** Restore a frozen profile (unfreeze) — only for profiles the candidate froze themselves */
 export async function restoreMyProfile(
   candidateId?: number
 ): Promise<ProfileActionResult> {
@@ -315,6 +315,22 @@ export async function restoreMyProfile(
   }
 
   const { supabase } = ctx;
+
+  const { data: current } = await supabase
+    .from("candidates")
+    .select("removed_by")
+    .eq("id", ctx.candidateId)
+    .eq("availability_status", "הקפאה")
+    .maybeSingle();
+
+  if (!current) {
+    redirect("/my-profile");
+  }
+
+  // Profiles frozen by an admin can only be unfrozen by contacting the team.
+  if (current.removed_by === "admin") {
+    return { error: "הפרופיל הוקפא על ידי המנהל ולא ניתן לשחררו באופן עצמאי" };
+  }
 
   const { error } = await supabase
     .from("candidates")
@@ -332,6 +348,51 @@ export async function restoreMyProfile(
   }
 
   redirect("/my-profile?restored=1");
+}
+
+/** Notify the site team that a candidate wants an admin-initiated freeze lifted */
+export async function requestAdminUnfreeze(
+  candidateId?: number
+): Promise<ProfileActionResult> {
+  const ctx = await verifyCandidate(candidateId);
+  if (!ctx) {
+    return { error: "אין הרשאה לבצע פעולה זו" };
+  }
+
+  const { supabase } = ctx;
+
+  const { data: current } = await supabase
+    .from("candidates")
+    .select("full_name, removed_by")
+    .eq("id", ctx.candidateId)
+    .eq("availability_status", "הקפאה")
+    .eq("removed_by", "admin")
+    .maybeSingle();
+
+  if (!current) {
+    return { error: "לא נמצא פרופיל מוקפא הממתין לשחרור" };
+  }
+
+  const result = await sendEmailWithLog({
+    to: "ronel2lovely@gmail.com",
+    subject: `בקשת שחרור הקפאה — ${current.full_name}`,
+    html: `
+      <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
+        <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely</p>
+        <p style="font-size: 15px; line-height: 1.8; margin: 16px 0;">
+          המועמד/ת <strong>${current.full_name}</strong> מעוניין/ת לשחרר את הפרופיל המוקפא שלו/ה.
+        </p>
+      </div>
+    `,
+    context: "unfreeze_request",
+    fromCandidateId: ctx.candidateId,
+  });
+
+  if (!result.success) {
+    return { error: result.error ?? "שליחת הבקשה נכשלה, נסה שוב" };
+  }
+
+  redirect("/my-profile?unfreeze_requested=1");
 }
 
 /** Update candidate email (for phone-auth users who need to add email) */
