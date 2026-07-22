@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { isTerminalStatus } from "@/lib/proposals";
 import { toE164 } from "@/lib/phone";
 import { sendEmailWithLog } from "@/lib/email";
-import { isValidRemovalReason } from "@/lib/removalReasons";
+import { isValidRemovalReason, removalReasonLabel } from "@/lib/removalReasons";
 import {
   hasReachedDailyProposalLimit,
   notifyDailyProposalLimitReached,
@@ -291,7 +291,7 @@ export async function deleteMyProfile(
   const { supabase } = ctx;
 
   // Soft delete: set availability_status to 'הקפאה' instead of deleting
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("candidates")
     .update({
       availability_status: "הקפאה",
@@ -299,11 +299,37 @@ export async function deleteMyProfile(
       removal_reason_other: reason === "other" ? trimmedOther : null,
       removed_by: "candidate",
     })
-    .eq("id", ctx.candidateId);
+    .eq("id", ctx.candidateId)
+    .select("full_name")
+    .single();
 
   if (error) {
     return { error: error.message };
   }
+
+  // Notify the site team that a candidate froze their own profile
+  const reasonText = reason === "other" ? trimmedOther : removalReasonLabel(reason);
+  await sendEmailWithLog({
+    to: "ronel2lovely@gmail.com",
+    subject: `מועמד/ת הקפיא/ה את הפרופיל — ${updated?.full_name ?? ""}`,
+    html: `
+      <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
+        <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely — התראה פנימית</p>
+        <p style="font-size: 15px; line-height: 1.8; margin: 16px 0;">
+          המועמד/ת <strong>${updated?.full_name ?? ""}</strong> הקפיא/ה את הפרופיל שלו/ה.
+        </p>
+        <p style="font-size: 14px; color: #6b7280;">סיבה: ${reasonText ?? "לא צוינה"}</p>
+        <div style="text-align: center; margin: 20px 0 0;">
+          <a href="https://ronel-lovely.com/admin/candidate/${ctx.candidateId}"
+             style="display: inline-block; padding: 13px 28px; background: #0284c7; color: white; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: bold;">
+            צפייה בפרופיל
+          </a>
+        </div>
+      </div>
+    `,
+    context: "candidate_self_froze",
+    toCandidateId: ctx.candidateId,
+  }).catch(() => {}); // Non-critical
 
   // Sign out and redirect to login
   await supabase.auth.signOut();
