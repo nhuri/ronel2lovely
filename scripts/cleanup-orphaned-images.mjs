@@ -39,7 +39,7 @@ async function fetchAllCandidateImageUrls() {
   for (;;) {
     const { data, error } = await supabase
       .from("candidates")
-      .select("id, image_urls")
+      .select("id, image_urls, removed_image_urls")
       .range(from, from + chunk - 1);
     if (error) throw error;
     if (!data || data.length === 0) break;
@@ -65,7 +65,8 @@ async function run() {
 
   const referenced = new Map(BUCKETS.map((b) => [b, new Set()]));
   for (const c of candidates) {
-    for (const url of c.image_urls ?? []) {
+    const urls = [...(c.image_urls ?? []), ...(c.removed_image_urls ?? [])];
+    for (const url of urls) {
       for (const bucket of BUCKETS) {
         const path = extractPath(url, bucket);
         if (path) referenced.get(bucket).add(path);

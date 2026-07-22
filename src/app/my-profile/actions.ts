@@ -11,7 +11,6 @@ import {
   notifyDailyProposalLimitReached,
   DAILY_PROPOSAL_LIMIT_MESSAGE,
 } from "@/lib/proposalLimits";
-import { deleteStorageImages } from "@/lib/storage";
 
 export type FieldErrors = Record<string, string>;
 export type ProfileActionResult = {
@@ -196,17 +195,21 @@ export async function updateMyProfile(
   );
 
   const totalImages = keepImages.length + newImageFiles.length;
+  if (totalImages === 0) {
+    return { fieldErrors: { images: "יש להעלות לפחות תמונה אחת" } };
+  }
   if (totalImages > 3) {
-    return { error: "ניתן להעלות עד 3 תמונות" };
+    return { fieldErrors: { images: "ניתן להעלות עד 3 תמונות" } };
   }
 
-  // Fetch current images so we can delete any that are being replaced/removed
+  // Fetch current images so we can archive any that are being replaced/removed
   const { data: existingCandidate } = await supabase
     .from("candidates")
-    .select("image_urls")
+    .select("image_urls, removed_image_urls")
     .eq("id", ctx.candidateId)
     .maybeSingle();
   const previousImageUrls: string[] = existingCandidate?.image_urls ?? [];
+  const previousRemovedImageUrls: string[] = existingCandidate?.removed_image_urls ?? [];
 
   const uploadedUrls: string[] = [];
   if (newImageFiles.length > 0) {
@@ -228,6 +231,14 @@ export async function updateMyProfile(
   }
 
   const finalImageUrls = [...keepImages, ...uploadedUrls];
+
+  // Images the candidate removed: archive their URLs instead of deleting the
+  // underlying Storage file, so they stay retrievable but are no longer shown.
+  const removedImageUrls = previousImageUrls.filter((url) => !finalImageUrls.includes(url));
+  const finalRemovedImageUrls = [
+    ...previousRemovedImageUrls,
+    ...removedImageUrls.filter((url) => !previousRemovedImageUrls.includes(url)),
+  ];
 
   // ── Update only the candidate's own record ──
   const { error } = await supabase
@@ -254,17 +265,12 @@ export async function updateMyProfile(
       contact_person_phone: raw.contact_person_phone,
       age: calculateAge(raw.birth_date),
       image_urls: finalImageUrls,
+      removed_image_urls: finalRemovedImageUrls,
     })
     .eq("id", ctx.candidateId);
 
   if (error) {
     return { error: error.message };
-  }
-
-  // Clean up images that were replaced/removed (best-effort, don't fail the request on error)
-  const removedImageUrls = previousImageUrls.filter((url) => !finalImageUrls.includes(url));
-  if (removedImageUrls.length > 0) {
-    await deleteStorageImages(removedImageUrls).catch(() => {});
   }
 
   return { success: true, imageUrls: finalImageUrls };
