@@ -1,6 +1,8 @@
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { signImageUrls } from "@/lib/storage";
 
 export default async function MatchDetailsPage({
   params,
@@ -74,7 +76,8 @@ export default async function MatchDetailsPage({
   const name = other.full_name as string;
   const gender = other.gender as string;
   const title = gender === "נקבה" ? "המועמדת" : "המועמד";
-  const photo = (other.image_urls as string[] | null)?.[0] ?? null;
+  const rawImageUrls = (other.image_urls as string[] | null) ?? [];
+  const photos = rawImageUrls.length ? await signImageUrls(rawImageUrls) : [];
   const contactPhone =
     (other.contact_person_phone as string) ||
     (other.phone_number as string) ||
@@ -106,19 +109,21 @@ export default async function MatchDetailsPage({
             <h1 className="text-xl font-bold text-gray-800">{name}</h1>
           </div>
 
+          {/* Photos */}
+          {photos.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className={`flex gap-1 overflow-x-auto overscroll-x-contain p-1 ${photos.length === 1 ? "justify-center" : ""}`}>
+                {photos.map((url, i) => (
+                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="relative flex-shrink-0 w-36 h-48 rounded-xl overflow-hidden block cursor-pointer border border-gray-200 shadow-sm">
+                    <Image src={url} alt={`${name} ${i + 1}`} fill className="object-cover" unoptimized />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Profile card */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            {photo && (
-              <div className="flex justify-center pt-5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photo}
-                  alt={name}
-                  className="w-36 h-48 object-cover rounded-xl border border-gray-200 shadow-sm"
-                />
-              </div>
-            )}
-
             <div className="p-4 space-y-1.5 text-sm text-gray-600">
               {other.age && (
                 <div className="flex gap-2">

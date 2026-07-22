@@ -1,6 +1,8 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { ConfirmButton } from "./confirm-button";
 import Link from "next/link";
+import Image from "next/image";
+import { signImageUrls } from "@/lib/storage";
 
 export default async function ConfirmInterestPage({
   searchParams,
@@ -67,7 +69,8 @@ export default async function ConfirmInterestPage({
   const fromGender = fromCand.gender as string;
   const toGender = (toCand?.gender as string) ?? "זכר";
   const fromTitle = fromGender === "זכר" ? "המועמד" : "המועמדת";
-  const fromPhoto = (fromCand.image_urls as string[] | null)?.[0] ?? null;
+  const fromRawImageUrls = (fromCand.image_urls as string[] | null) ?? [];
+  const fromPhotos = fromRawImageUrls.length ? await signImageUrls(fromRawImageUrls) : [];
   const contactPerson = (fromCand.contact_person as string) || null;
   const contactPhone =
     (fromCand.contact_person_phone as string) ||
@@ -83,18 +86,21 @@ export default async function ConfirmInterestPage({
           <p className="text-xs text-gray-400 mt-1">שלח/ה לך בקשת היכרות דרך Ronel Lovely</p>
         </div>
 
+        {/* Photos */}
+        {fromPhotos.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className={`flex gap-1 overflow-x-auto overscroll-x-contain p-1 ${fromPhotos.length === 1 ? "justify-center" : ""}`}>
+              {fromPhotos.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="relative flex-shrink-0 w-36 h-48 rounded-xl overflow-hidden block cursor-pointer border border-gray-200 shadow-sm">
+                  <Image src={url} alt={`${fromName} ${i + 1}`} fill className="object-cover" unoptimized />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Profile card */}
         <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
-          {fromPhoto && (
-            <div className="flex justify-center pt-5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={fromPhoto}
-                alt={fromName}
-                className="w-36 h-48 object-cover rounded-xl border border-gray-200 shadow-sm"
-              />
-            </div>
-          )}
           <div className="p-4 space-y-1.5 text-sm text-gray-600">
             {fromCand.age && (
               <div className="flex gap-2">
