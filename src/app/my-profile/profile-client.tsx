@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { logout } from "@/app/login/actions";
-import { compressImage } from "@/lib/compress-image";
+import { compressImage, UnreadableImageError } from "@/lib/compress-image";
 import { REMOVAL_REASONS } from "@/lib/removalReasons";
 import {
   updateMyProfile,
@@ -482,8 +482,20 @@ export function ProfileClient({
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (file && keepImages.length + editImages.length < 3) {
-                  const compressed = await compressImage(file);
-                  setEditImages([...editImages, compressed]);
+                  try {
+                    const compressed = await compressImage(file);
+                    setEditImages([...editImages, compressed]);
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.images;
+                      return next;
+                    });
+                  } catch (err) {
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      images: err instanceof UnreadableImageError ? err.message : "אירעה שגיאה בטעינת התמונה. נסה תמונה אחרת.",
+                    }));
+                  }
                 }
                 e.target.value = "";
               }}

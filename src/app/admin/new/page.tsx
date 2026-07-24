@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { createCandidate, type FieldErrors } from "./actions";
 import Link from "next/link";
 import Image from "next/image";
-import { compressImage } from "@/lib/compress-image";
+import { compressImage, UnreadableImageError } from "@/lib/compress-image";
 
 export default function NewCandidatePage() {
   const [error, setError] = useState<string | null>(null);
@@ -16,8 +16,21 @@ export default function NewCandidatePage() {
 
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
-    const compressed = await Promise.all(files.map(compressImage));
+    const results = await Promise.allSettled(files.map(compressImage));
+    const compressed = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
+    const failed = results.some(
+      (r) => r.status === "rejected" && r.reason instanceof UnreadableImageError
+    );
     setImages((prev) => [...prev, ...compressed].slice(0, 3));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      if (failed) {
+        next.images = "לא הצלחנו לקרוא אחת מהתמונות. נסה תמונה אחרת או בפורמט JPG.";
+      } else {
+        delete next.images;
+      }
+      return next;
+    });
     e.target.value = "";
   }
 
