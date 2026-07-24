@@ -447,7 +447,7 @@ export function ProfileClient({
                   <button
                     type="button"
                     onClick={() => setKeepImages(keepImages.filter((_, j) => j !== i))}
-                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs shadow-md"
                   >✕</button>
                 </div>
               ))}
@@ -457,7 +457,7 @@ export function ProfileClient({
                   <button
                     type="button"
                     onClick={() => setEditImages(editImages.filter((_, j) => j !== i))}
-                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs shadow-md"
                   >✕</button>
                 </div>
               ))}
