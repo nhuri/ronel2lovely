@@ -3,14 +3,31 @@
 import { useState } from "react";
 import { saveMaxRecommendations, saveFollowupDelays } from "./settings-actions";
 import { FOLLOWUP_DELAY_OPTIONS, type FollowupDelay } from "@/lib/followup";
+import {
+  saveAdminNotificationSettings,
+  DIGEST_INTERVAL_OPTIONS,
+  NOTIFICATION_TYPE_LABELS,
+  type AdminNotificationType,
+  type AdminNotificationTypeModes,
+} from "@/lib/adminNotifications";
+
+const NOTIFICATION_TYPES = Object.keys(NOTIFICATION_TYPE_LABELS) as AdminNotificationType[];
 
 type Props = {
   initialValue: number | "all";
   initialFollowupFirst: FollowupDelay;
   initialFollowupSecond: FollowupDelay;
+  initialNotificationTypeModes: AdminNotificationTypeModes;
+  initialNotificationInterval: number;
 };
 
-export function SettingsTab({ initialValue, initialFollowupFirst, initialFollowupSecond }: Props) {
+export function SettingsTab({
+  initialValue,
+  initialFollowupFirst,
+  initialFollowupSecond,
+  initialNotificationTypeModes,
+  initialNotificationInterval,
+}: Props) {
   // ── Max recommendations ──────────────────────────────────────────────────
   const [mode, setMode] = useState<"count" | "all">(
     initialValue === "all" ? "all" : "count"
@@ -55,6 +72,29 @@ export function SettingsTab({ initialValue, initialFollowupFirst, initialFollowu
       setTimeout(() => setSavedDelays(false), 3000);
     } else {
       setDelayError(res.error ?? "שגיאה");
+    }
+  };
+
+  // ── Admin notification modes (per type) ──────────────────────────────────
+  const [typeModes, setTypeModes] = useState<AdminNotificationTypeModes>(initialNotificationTypeModes);
+  const [notificationInterval, setNotificationInterval] = useState<number>(initialNotificationInterval);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [savedNotifications, setSavedNotifications] = useState(false);
+  const [notificationError, setNotificationError] = useState<string | null>(null);
+
+  const anyDigest = NOTIFICATION_TYPES.some((t) => typeModes[t] === "digest");
+
+  const handleSaveNotifications = async () => {
+    setSavingNotifications(true);
+    setSavedNotifications(false);
+    setNotificationError(null);
+    const res = await saveAdminNotificationSettings(typeModes, notificationInterval);
+    setSavingNotifications(false);
+    if (res.success) {
+      setSavedNotifications(true);
+      setTimeout(() => setSavedNotifications(false), 3000);
+    } else {
+      setNotificationError(res.error ?? "שגיאה");
     }
   };
 
@@ -191,6 +231,74 @@ export function SettingsTab({ initialValue, initialFollowupFirst, initialFollowu
         <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl p-3">
           <p className="text-xs text-amber-700 leading-relaxed">
             <strong>שים לב:</strong> הגדרת "דקה אחת" מיועדת לבדיקה בלבד. ברירת מחדל: שבוע / חודש.
+          </p>
+        </div>
+      </div>
+
+      {/* Admin notification modes */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <h2 className="text-base font-bold text-gray-800 mb-1">התראות לאדמין</h2>
+        <p className="text-xs text-gray-400 mb-5">
+          לכל סוג התראה — לשלוח כמייל נפרד מיד כשהיא קורית, או לצבור אותה למייל סיכום מרוכז
+        </p>
+
+        <div className="divide-y divide-gray-100">
+          {NOTIFICATION_TYPES.map((type) => (
+            <div key={type} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+              <span className="text-sm text-gray-700">{NOTIFICATION_TYPE_LABELS[type]}</span>
+              <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setTypeModes((prev) => ({ ...prev, [type]: "digest" }))}
+                  className={`px-3 py-1.5 transition-colors ${typeModes[type] === "digest" ? "bg-sky-500 text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+                >
+                  מרוכז
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTypeModes((prev) => ({ ...prev, [type]: "immediate" }))}
+                  className={`px-3 py-1.5 border-s border-gray-200 transition-colors ${typeModes[type] === "immediate" ? "bg-sky-500 text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+                >
+                  מיידי
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {anyDigest && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              תדירות מייל הסיכום המרוכז
+            </label>
+            <select
+              value={notificationInterval}
+              onChange={(e) => setNotificationInterval(parseInt(e.target.value, 10))}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-gray-50"
+            >
+              {DIGEST_INTERVAL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="mt-5 flex items-center gap-3">
+          <button
+            onClick={handleSaveNotifications}
+            disabled={savingNotifications}
+            className="px-5 py-2 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors"
+          >
+            {savingNotifications ? "שומר..." : "שמור"}
+          </button>
+          {savedNotifications && <span className="text-sm text-emerald-600 font-medium">✓ נשמר בהצלחה</span>}
+          {notificationError && <span className="text-sm text-red-500">{notificationError}</span>}
+        </div>
+
+        <div className="mt-4 bg-sky-50 border border-sky-100 rounded-xl p-3">
+          <p className="text-xs text-sky-700 leading-relaxed">
+            <strong>שים לב:</strong> תדירות המייל המרוכז מוגבלת לתדירות שבה השרת החיצוני מפעיל את
+            עבודת ה-cron. כרגע זה מוגדר לרוץ כל שעה — אם תבחר תדירות שונה כאן, ודא שגם הטריגר החיצוני עודכן בהתאם.
           </p>
         </div>
       </div>

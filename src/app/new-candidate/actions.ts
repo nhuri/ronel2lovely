@@ -4,6 +4,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { redirect } from "next/navigation";
 import { toE164 } from "@/lib/phone";
 import { sendEmailWithLog } from "@/lib/email";
+import { queueAdminNotification } from "@/lib/adminNotifications";
 
 export type FieldErrors = Record<string, string>;
 export type CreateCandidateResult = {
@@ -292,28 +293,11 @@ export async function createCandidate(
   // Notify the site team so they can review the new profile and photo
   if (insertedCandidate) {
     const profileUrl = `https://ronel-lovely.com/admin/candidate/${insertedCandidate.id}`;
-    await sendEmailWithLog({
-      to: "ronel2lovely@gmail.com",
-      subject: "הצטרפות מועמד חדש",
-      html: `
-        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
-          <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely — התראה פנימית</p>
-          <p style="font-size: 15px; line-height: 1.8; margin: 16px 0;">
-            המועמד/ת <strong>${raw.full_name}</strong> הצטרף/ה לאתר.
-          </p>
-          <div style="text-align: center; margin: 0 0 20px;">
-            <a href="${profileUrl}"
-               style="display: inline-block; padding: 13px 28px; background: #0284c7; color: white; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: bold;">
-              צפייה בפרופיל
-            </a>
-          </div>
-          <p style="font-size: 13px; color: #6b7280; line-height: 1.8;">
-            המייל נשלח על מנת לוודא שהפרופיל תקין והתמונה ברורה. במידה והתמונה לא ברורה יש לשלוח מייל למועמד שיתקן את הפרופיל שלו.
-          </p>
-        </div>
-      `,
-      context: "new_candidate_admin_alert",
-      toCandidateId: insertedCandidate.id,
+    await queueAdminNotification({
+      type: "new_candidate_admin_alert",
+      message: `המועמד/ת <strong>${raw.full_name}</strong> הצטרף/ה לאתר.`,
+      linkUrl: profileUrl,
+      candidateId: insertedCandidate.id,
     }).catch(() => {}); // Non-critical
   }
 

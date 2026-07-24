@@ -4,7 +4,7 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/sup
 import { redirect } from "next/navigation";
 import { isTerminalStatus } from "@/lib/proposals";
 import { toE164 } from "@/lib/phone";
-import { sendEmailWithLog } from "@/lib/email";
+import { queueAdminNotification } from "@/lib/adminNotifications";
 import { isValidRemovalReason, removalReasonLabel } from "@/lib/removalReasons";
 import {
   hasReachedDailyProposalLimit,
@@ -315,26 +315,11 @@ export async function deleteMyProfile(
 
   // Notify the site team that a candidate froze their own profile
   const reasonText = reason === "other" ? trimmedOther : removalReasonLabel(reason);
-  await sendEmailWithLog({
-    to: "ronel2lovely@gmail.com",
-    subject: `מועמד/ת הקפיא/ה את הפרופיל — ${updated?.full_name ?? ""}`,
-    html: `
-      <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
-        <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely — התראה פנימית</p>
-        <p style="font-size: 15px; line-height: 1.8; margin: 16px 0;">
-          המועמד/ת <strong>${updated?.full_name ?? ""}</strong> הקפיא/ה את הפרופיל שלו/ה.
-        </p>
-        <p style="font-size: 14px; color: #6b7280;">סיבה: ${reasonText ?? "לא צוינה"}</p>
-        <div style="text-align: center; margin: 20px 0 0;">
-          <a href="https://ronel-lovely.com/admin/candidate/${ctx.candidateId}"
-             style="display: inline-block; padding: 13px 28px; background: #0284c7; color: white; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: bold;">
-            צפייה בפרופיל
-          </a>
-        </div>
-      </div>
-    `,
-    context: "candidate_self_froze",
-    toCandidateId: ctx.candidateId,
+  await queueAdminNotification({
+    type: "candidate_self_froze",
+    message: `המועמד/ת <strong>${updated?.full_name ?? ""}</strong> הקפיא/ה את הפרופיל שלו/ה. סיבה: ${reasonText ?? "לא צוינה"}`,
+    linkUrl: `https://ronel-lovely.com/admin/candidate/${ctx.candidateId}`,
+    candidateId: ctx.candidateId,
   }).catch(() => {}); // Non-critical
 
   // Sign out and redirect to login
@@ -410,19 +395,10 @@ export async function requestAdminUnfreeze(
     return { error: "לא נמצא פרופיל מוקפא הממתין לשחרור" };
   }
 
-  const result = await sendEmailWithLog({
-    to: "ronel2lovely@gmail.com",
-    subject: `בקשת שחרור הקפאה — ${current.full_name}`,
-    html: `
-      <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
-        <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely</p>
-        <p style="font-size: 15px; line-height: 1.8; margin: 16px 0;">
-          המועמד/ת <strong>${current.full_name}</strong> מעוניין/ת לשחרר את הפרופיל המוקפא שלו/ה.
-        </p>
-      </div>
-    `,
-    context: "unfreeze_request",
-    fromCandidateId: ctx.candidateId,
+  const result = await queueAdminNotification({
+    type: "unfreeze_request",
+    message: `המועמד/ת <strong>${current.full_name}</strong> מעוניין/ת לשחרר את הפרופיל המוקפא שלו/ה.`,
+    candidateId: ctx.candidateId,
   });
 
   if (!result.success) {
@@ -496,16 +472,10 @@ export async function updateCandidateEmail(
 
   // 3. Notify admin of the email change
   const candidateName = candidateData?.full_name ?? "מועמד/ת";
-  await sendEmailWithLog({
-    to: "ronel2lovely@gmail.com",
-    subject: `עדכון מייל מועמד - ${candidateName}`,
-    html: `<div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-      <p>שלום רונל,</p>
-      <p>המועמד/ת <strong>${candidateName}</strong> עידכן/ה את כתובת המייל שלו/שלה באתר.</p>
-      <p>המייל החדש: <strong style="direction:ltr; unicode-bidi:embed;">${newEmail}</strong></p>
-    </div>`,
-    context: "candidate_email_update",
-    toCandidateId: ctx.candidateId,
+  await queueAdminNotification({
+    type: "candidate_email_update",
+    message: `המועמד/ת <strong>${candidateName}</strong> עידכן/ה את כתובת המייל שלו/שלה לכתובת: <strong style="direction:ltr;unicode-bidi:embed;">${newEmail}</strong>`,
+    candidateId: ctx.candidateId,
   });
 
   return { success: true };

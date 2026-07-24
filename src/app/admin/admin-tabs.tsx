@@ -8,6 +8,7 @@ import { EmailLogsTab } from "./email-logs-tab";
 import { AnalyticsTab } from "./analytics-tab";
 import type { FollowupDelay } from "@/lib/followup";
 import type { AnalyticsStats } from "./analytics-actions";
+import type { AdminNotificationTypeModes } from "@/lib/adminNotifications";
 
 type MessageCandidate = {
   id: number;
@@ -29,11 +30,13 @@ type AdminTabsProps = {
   maxRecommendations: number | "all";
   followupFirst: FollowupDelay;
   followupSecond: FollowupDelay;
+  notificationTypeModes: AdminNotificationTypeModes;
+  notificationInterval: number;
   analyticsStats: AnalyticsStats;
   managerNames: Record<number, string>;
 };
 
-export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond, analyticsStats, managerNames }: AdminTabsProps) {
+export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond, notificationTypeModes, notificationInterval, analyticsStats, managerNames }: AdminTabsProps) {
   const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings" | "emails" | "analytics">("candidates");
 
   return (
@@ -112,6 +115,8 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
           initialValue={maxRecommendations}
           initialFollowupFirst={followupFirst}
           initialFollowupSecond={followupSecond}
+          initialNotificationTypeModes={notificationTypeModes}
+          initialNotificationInterval={notificationInterval}
         />
       )}
       {activeTab === "emails" && (

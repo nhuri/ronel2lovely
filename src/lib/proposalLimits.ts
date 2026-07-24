@@ -1,4 +1,4 @@
-import { sendEmailWithLog } from "@/lib/email";
+import { queueAdminNotification } from "@/lib/adminNotifications";
 
 export const DAILY_PROPOSAL_LIMIT = 5;
 export const DAILY_PROPOSAL_LIMIT_MESSAGE =
@@ -36,18 +36,9 @@ export async function notifyDailyProposalLimitReached(
 
   const name = (candidate?.full_name as string | undefined) ?? `מועמד/ת #${candidateId}`;
 
-  await sendEmailWithLog({
-    to: "ronel2lovely@gmail.com",
-    subject: `מכסת הצעות יומית — ${name}`,
-    html: `
-      <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
-        <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely — התראה פנימית</p>
-        <p style="font-size: 15px; line-height: 1.8; margin: 16px 0;">
-          המועמד/ת <strong>${name}</strong> הגיע/ה למכסת ${DAILY_PROPOSAL_LIMIT} ההצעות היומית שלו/ה.
-        </p>
-      </div>
-    `,
-    context: "daily_proposal_limit_reached",
-    fromCandidateId: candidateId,
+  await queueAdminNotification({
+    type: "daily_proposal_limit_reached",
+    message: `המועמד/ת <strong>${name}</strong> הגיע/ה למכסת ${DAILY_PROPOSAL_LIMIT} ההצעות היומית שלו/ה.`,
+    candidateId,
   });
 }

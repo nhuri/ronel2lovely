@@ -4,14 +4,16 @@ import { logout } from "@/app/login/actions";
 import Link from "next/link";
 import { getMaxRecommendations, getFollowupDelays } from "./settings-actions";
 import { getAnalyticsStats } from "./analytics-actions";
+import { getAdminNotificationSettings } from "@/lib/adminNotifications";
 
 export default async function AdminDashboard() {
   const supabase = await createSupabaseServerClient();
 
-  const [maxRecommendations, followupDelays, analyticsStats] = await Promise.all([
+  const [maxRecommendations, followupDelays, analyticsStats, notificationSettings] = await Promise.all([
     getMaxRecommendations(),
     getFollowupDelays(),
     getAnalyticsStats(),
+    getAdminNotificationSettings(),
   ]);
 
   const { data: rawCandidates } = await supabase
@@ -128,6 +130,8 @@ export default async function AdminDashboard() {
           maxRecommendations={maxRecommendations}
           followupFirst={followupDelays.first}
           followupSecond={followupDelays.second}
+          notificationTypeModes={notificationSettings.typeModes}
+          notificationInterval={notificationSettings.intervalMinutes}
           analyticsStats={analyticsStats}
           managerNames={ambassadorNames}
         />
