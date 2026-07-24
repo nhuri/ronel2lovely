@@ -8,7 +8,7 @@ import { EmailLogsTab } from "./email-logs-tab";
 import { AnalyticsTab } from "./analytics-tab";
 import type { FollowupDelay } from "@/lib/followup";
 import type { AnalyticsStats } from "./analytics-actions";
-import type { AdminNotificationTypeModes } from "@/lib/adminNotifications";
+import type { AdminNotificationTypeModes } from "@/lib/adminNotificationTypes";
 
 type MessageCandidate = {
   id: number;

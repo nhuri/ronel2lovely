@@ -1,10 +1,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendEmailWithLog } from "@/lib/email";
-import {
-  getAdminNotificationSettings,
-  NOTIFICATION_TYPE_LABELS,
-  type AdminNotificationType,
-} from "@/lib/adminNotifications";
+import { getAdminNotificationSettings } from "@/app/admin/settings-actions";
+import { NOTIFICATION_TYPE_LABELS, type AdminNotificationType } from "@/lib/adminNotificationTypes";
 
 export const runtime = "nodejs";
 

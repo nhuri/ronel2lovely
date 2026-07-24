@@ -2,6 +2,12 @@
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { FOLLOWUP_DELAY_OPTIONS, type FollowupDelay } from "@/lib/followup";
+import {
+  DIGEST_INTERVAL_OPTIONS,
+  DEFAULT_NOTIFICATION_TYPE_MODES,
+  ALL_NOTIFICATION_TYPES,
+  type AdminNotificationTypeModes,
+} from "@/lib/adminNotificationTypes";
 
 export async function getMaxRecommendations(): Promise<number | "all"> {
   const admin = createSupabaseAdminClient();
@@ -63,6 +69,58 @@ export async function saveFollowupDelays(
   ]);
   if (error) {
     console.error("Followup delay save error:", error);
+    return { success: false, error: "שגיאה בשמירת ההגדרות" };
+  }
+  return { success: true };
+}
+
+/** Read, per notification type, whether it's sent immediately or batched into the periodic digest — plus the digest interval. */
+export async function getAdminNotificationSettings(): Promise<{
+  typeModes: AdminNotificationTypeModes;
+  intervalMinutes: number;
+}> {
+  const admin = createSupabaseAdminClient();
+  const { data } = await admin
+    .from("site_settings")
+    .select("key, value")
+    .in("key", ["admin_notification_type_modes", "admin_notification_interval_minutes"]);
+
+  const map: Record<string, string> = {};
+  for (const row of data ?? []) map[row.key] = row.value;
+
+  const typeModes: AdminNotificationTypeModes = { ...DEFAULT_NOTIFICATION_TYPE_MODES };
+  if (map["admin_notification_type_modes"]) {
+    try {
+      const parsed = JSON.parse(map["admin_notification_type_modes"]) as Record<string, string>;
+      for (const type of ALL_NOTIFICATION_TYPES) {
+        if (parsed[type] === "immediate" || parsed[type] === "digest") {
+          typeModes[type] = parsed[type];
+        }
+      }
+    } catch {
+      // Malformed value — fall back to defaults for everything.
+    }
+  }
+
+  const parsedInterval = parseInt(map["admin_notification_interval_minutes"] ?? "", 10);
+  const validIntervals: number[] = DIGEST_INTERVAL_OPTIONS.map((o) => o.value);
+  const intervalMinutes = validIntervals.includes(parsedInterval) ? parsedInterval : 60;
+
+  return { typeModes, intervalMinutes };
+}
+
+/** Save, per notification type, whether it's sent immediately or batched — plus the digest interval. */
+export async function saveAdminNotificationSettings(
+  typeModes: AdminNotificationTypeModes,
+  intervalMinutes: number
+): Promise<{ success: boolean; error?: string }> {
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.from("site_settings").upsert([
+    { key: "admin_notification_type_modes", value: JSON.stringify(typeModes) },
+    { key: "admin_notification_interval_minutes", value: String(intervalMinutes) },
+  ]);
+  if (error) {
+    console.error("Admin notification settings save error:", error);
     return { success: false, error: "שגיאה בשמירת ההגדרות" };
   }
   return { success: true };

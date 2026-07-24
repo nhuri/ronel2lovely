@@ -1,17 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { saveMaxRecommendations, saveFollowupDelays } from "./settings-actions";
+import { saveMaxRecommendations, saveFollowupDelays, saveAdminNotificationSettings } from "./settings-actions";
 import { FOLLOWUP_DELAY_OPTIONS, type FollowupDelay } from "@/lib/followup";
 import {
-  saveAdminNotificationSettings,
   DIGEST_INTERVAL_OPTIONS,
   NOTIFICATION_TYPE_LABELS,
-  type AdminNotificationType,
+  ALL_NOTIFICATION_TYPES,
   type AdminNotificationTypeModes,
-} from "@/lib/adminNotifications";
-
-const NOTIFICATION_TYPES = Object.keys(NOTIFICATION_TYPE_LABELS) as AdminNotificationType[];
+} from "@/lib/adminNotificationTypes";
 
 type Props = {
   initialValue: number | "all";
@@ -82,7 +79,7 @@ export function SettingsTab({
   const [savedNotifications, setSavedNotifications] = useState(false);
   const [notificationError, setNotificationError] = useState<string | null>(null);
 
-  const anyDigest = NOTIFICATION_TYPES.some((t) => typeModes[t] === "digest");
+  const anyDigest = ALL_NOTIFICATION_TYPES.some((t) => typeModes[t] === "digest");
 
   const handleSaveNotifications = async () => {
     setSavingNotifications(true);
@@ -243,7 +240,7 @@ export function SettingsTab({
         </p>
 
         <div className="divide-y divide-gray-100">
-          {NOTIFICATION_TYPES.map((type) => (
+          {ALL_NOTIFICATION_TYPES.map((type) => (
             <div key={type} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
               <span className="text-sm text-gray-700">{NOTIFICATION_TYPE_LABELS[type]}</span>
               <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs flex-shrink-0">

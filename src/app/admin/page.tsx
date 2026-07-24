@@ -2,9 +2,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AdminTabs } from "./admin-tabs";
 import { logout } from "@/app/login/actions";
 import Link from "next/link";
-import { getMaxRecommendations, getFollowupDelays } from "./settings-actions";
+import { getMaxRecommendations, getFollowupDelays, getAdminNotificationSettings } from "./settings-actions";
 import { getAnalyticsStats } from "./analytics-actions";
-import { getAdminNotificationSettings } from "@/lib/adminNotifications";
 
 export default async function AdminDashboard() {
   const supabase = await createSupabaseServerClient();
