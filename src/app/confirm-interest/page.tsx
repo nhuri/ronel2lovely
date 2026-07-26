@@ -57,7 +57,7 @@ export default async function ConfirmInterestPage({
       .single(),
     admin
       .from("candidates")
-      .select("gender")
+      .select("full_name, gender, ambassador_id")
       .eq("id", tokenData.to_candidate_id)
       .single(),
   ]);
@@ -75,13 +75,22 @@ export default async function ConfirmInterestPage({
   const contactPerson = (fromCand.contact_person as string) || null;
   const contactPhone = getEffectiveContact(fromCand).phone;
 
+  // If the "to" candidate (viewing this page) has an ambassador, it's actually
+  // the ambassador reading this — refer to the candidate in third person.
+  const toHasAmbassador = !!toCand?.ambassador_id;
+  const toName = (toCand?.full_name as string) || "";
+  const toCandidateTitle = toGender === "זכר" ? "למועמד שלך" : "למועמדת שלך";
+  const introLine = toHasAmbassador
+    ? `שלח/ה בקשת היכרות ${toCandidateTitle}${toName ? `, ${toName},` : ""} דרך Ronel Lovely`
+    : "שלח/ה לך בקשת היכרות דרך Ronel Lovely";
+
   return (
     <PageShell>
       <div className="space-y-5">
         <div className="text-center">
           <p className="text-sm text-gray-500 mb-1">{fromTitle}</p>
           <h2 className="text-xl font-bold text-gray-800">{fromName}</h2>
-          <p className="text-xs text-gray-400 mt-1">שלח/ה לך בקשת היכרות דרך Ronel Lovely</p>
+          <p className="text-xs text-gray-400 mt-1">{introLine}</p>
         </div>
 
         {/* Photos */}

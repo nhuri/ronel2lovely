@@ -40,7 +40,7 @@ export async function sendInterestEmail(
     supabase
       .from("candidates")
       .select(
-        "id, full_name, gender, email, availability_status, phone_number, no_email_sms_sent, contact_person_phone, contact_person_email, ambassador_id"
+        "id, full_name, gender, email, availability_status, phone_number, no_email_sms_sent, contact_person, contact_person_phone, contact_person_email, ambassador_id"
       )
       .eq("id", matchCandidateId)
       .single(),
@@ -137,7 +137,22 @@ export async function sendInterestEmail(
   const senderTitle = senderGender === "זכר" ? "המועמד" : "המועמדת";
   const senderWants = senderGender === "זכר" ? "מעוניין" : "מעוניינת";
   const dear = recipientGender === "זכר" ? "היקר" : "היקרה";
-  const recipientAlsoInterested = recipientGender === "זכר" ? "כן, גם אני מעוניין!" : "כן, גם אני מעוניינת!";
+  const recipientCandidateTitle = recipientGender === "זכר" ? "המועמד" : "המועמדת";
+
+  // If the recipient has an ambassador, this email actually reaches the ambassador —
+  // address them directly and refer to the candidate in third person, not "you".
+  const recipientAmbassadorName = (recipient.contact_person as string | null) || null;
+  const greeting = recipientContact.hasAmbassador
+    ? recipientAmbassadorName
+      ? `שלום ${recipientAmbassadorName},`
+      : "שלום,"
+    : `שלום ${recipientName} ${dear},`;
+  const interestLine = recipientContact.hasAmbassador
+    ? `${senderTitle} <strong>${senderName}</strong> ${senderWants} לבדוק התאמה לפתיחת הצעה עם ${recipientCandidateTitle} שלך, <strong>${recipientName}</strong>.`
+    : `${senderTitle} <strong>${senderName}</strong> ${senderWants} לבדוק התאמה לפתיחת הצעה איתך.`;
+  const emailSubject = recipientContact.hasAmbassador
+    ? `${senderName} ${senderWants} לבדוק התאמה עם ${recipientName} — Ronel Lovely`
+    : `${senderName} ${senderWants} לבדוק התאמה איתך — Ronel Lovely`;
 
   // ── Create proposal + interest token BEFORE building email ──────────────────
   let confirmUrl: string | null = null;
@@ -195,10 +210,10 @@ export async function sendInterestEmail(
         בונים בתים לזכרו של רונאל
       </p>
 
-      <p style="font-size: 16px; margin: 0 0 16px;">שלום ${recipientName} ${dear},</p>
+      <p style="font-size: 16px; margin: 0 0 16px;">${greeting}</p>
 
       <p style="font-size: 15px; line-height: 1.8; margin: 0 0 20px;">
-        ${senderTitle} <strong>${senderName}</strong> ${senderWants} לבדוק התאמה לפתיחת הצעה איתך.
+        ${interestLine}
       </p>
 
       ${confirmUrl ? `
@@ -218,7 +233,7 @@ export async function sendInterestEmail(
 
   const result = await sendEmailWithLog({
     to: recipientEmail,
-    subject: `${senderName} ${senderWants} לבדוק התאמה איתך — Ronel Lovely`,
+    subject: emailSubject,
     html: emailHtml,
     context: "interest_email",
     fromCandidateId: candidateId,

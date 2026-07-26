@@ -218,11 +218,18 @@ export function NewCandidateForm({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InputField name="full_name" label="שם מלא" required placeholder="שם פרטי ומשפחה" error={fieldErrors.full_name} />
               {!isAmbassadorMode && (
-                <>
-                  <InputField name="email" label="אימייל" type="email" required placeholder="example@email.com" dir="ltr" error={fieldErrors.email} />
-                  <InputField name="phone_number" label="מספר טלפון" type="tel" required placeholder="050-0000000" dir="ltr" error={fieldErrors.phone_number} />
-                </>
+                <InputField name="email" label="אימייל" type="email" required placeholder="example@email.com" dir="ltr" error={fieldErrors.email} />
               )}
+              <InputField
+                name="phone_number"
+                label="מספר טלפון"
+                type="tel"
+                required
+                placeholder="050-0000000"
+                dir="ltr"
+                error={fieldErrors.phone_number}
+                hint={isAmbassadorMode ? "כל התקשורת מתבצעת מול השגריר בלבד — המספר משמש לזיהוי המועמד/ת ומניעת רישום כפול." : undefined}
+              />
               <SelectField name="gender" label="מין" required options={["זכר", "נקבה"]} error={fieldErrors.gender} onChange={setSelectedGender} />
               <InputField name="birth_date" label="תאריך לידה" type="date" required dir="ltr" error={fieldErrors.birth_date} />
               <InputField name="residence" label="עיר מגורים" required placeholder="למשל: ירושלים" error={fieldErrors.residence} />
@@ -326,8 +333,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function InputField({ name, label, type = "text", required, placeholder, dir, step, error }: {
-  name: string; label: string; type?: string; required?: boolean; placeholder?: string; dir?: string; step?: string; error?: string;
+function InputField({ name, label, type = "text", required, placeholder, dir, step, hint, error }: {
+  name: string; label: string; type?: string; required?: boolean; placeholder?: string; dir?: string; step?: string; hint?: string; error?: string;
 }) {
   return (
     <div>
@@ -336,6 +343,7 @@ function InputField({ name, label, type = "text", required, placeholder, dir, st
       </label>
       <input id={name} name={name} type={type} required={required} placeholder={placeholder} dir={dir} step={step}
         className={`w-full px-4 py-2.5 border rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all ${error ? "border-red-400 bg-red-50 focus:ring-red-400" : "border-gray-200"}`} />
+      {hint && !error && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );

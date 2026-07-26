@@ -17,6 +17,10 @@ export type CreateCandidateResult = {
 
 const BASE_REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "full_name", label: "שם מלא" },
+  // Collected even in ambassador mode — used only to detect duplicate
+  // registrations (same candidate registered twice, or by two ambassadors),
+  // never for communication (see AMBASSADOR_REQUIRED_FIELDS for that).
+  { key: "phone_number", label: "מספר טלפון" },
   { key: "gender", label: "מין" },
   { key: "birth_date", label: "תאריך לידה" },
   { key: "residence", label: "עיר מגורים" },
@@ -30,11 +34,10 @@ const BASE_REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "military_service", label: "שירות" },
 ];
 
-// The candidate's own contact details — required only for self-registration.
-// In ambassador mode all communication goes through the ambassador's contact
-// info (see AMBASSADOR_REQUIRED_FIELDS), so these are omitted from the form.
+// The candidate's own email — required only for self-registration. In
+// ambassador mode all communication goes through the ambassador's contact
+// info (see AMBASSADOR_REQUIRED_FIELDS), so it's omitted from the form.
 const CANDIDATE_CONTACT_REQUIRED_FIELDS: { key: string; label: string }[] = [
-  { key: "phone_number", label: "מספר טלפון" },
   { key: "email", label: "אימייל" },
 ];
 
