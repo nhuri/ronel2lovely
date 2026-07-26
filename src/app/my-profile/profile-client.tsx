@@ -12,12 +12,23 @@ import {
   deleteMyProfile,
   updateCandidateEmail,
   toggleAvailability,
+  getMarriedCoupleCount,
+  reportMarriageViaInitiative,
   type FieldErrors,
   type ProfileActionResult,
 } from "./actions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Candidate = Record<string, any>;
+
+const COUPLE_ORDINAL_WORDS: Record<number, string> = {
+  1: "הראשון", 2: "השני", 3: "השלישי", 4: "הרביעי", 5: "החמישי",
+  6: "השישי", 7: "השביעי", 8: "השמיני", 9: "התשיעי", 10: "העשירי",
+};
+
+function coupleOrdinalPhrase(n: number): string {
+  return COUPLE_ORDINAL_WORDS[n] ? `הזוג ${COUPLE_ORDINAL_WORDS[n]}` : `הזוג מספר ${n}`;
+}
 
 interface CandidateOption {
   id: number;
@@ -55,6 +66,12 @@ export function ProfileClient({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteReason, setDeleteReason] = useState("");
   const [deleteReasonOther, setDeleteReasonOther] = useState("");
+  const [marriagePopup, setMarriagePopup] = useState<"none" | "outside" | "via">("none");
+  const [marriedOrdinal, setMarriedOrdinal] = useState<number | null>(null);
+  const [loadingOrdinal, setLoadingOrdinal] = useState(false);
+  const [partnerPhone, setPartnerPhone] = useState("");
+  const [partnerPhoneError, setPartnerPhoneError] = useState<string | null>(null);
+  const [sendingMarriage, setSendingMarriage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
@@ -141,6 +158,42 @@ export function ProfileClient({
       setDeleting(false);
     }
     // On success, deleteMyProfile redirects to /login
+  }
+
+  async function handleFreezeConfirm() {
+    if (deleteReason === "married_outside") {
+      setMarriagePopup("outside");
+      return;
+    }
+    if (deleteReason === "married_via") {
+      setLoadingOrdinal(true);
+      const count = await getMarriedCoupleCount();
+      setMarriedOrdinal(count + 1);
+      setLoadingOrdinal(false);
+      setMarriagePopup("via");
+      return;
+    }
+    handleDelete();
+  }
+
+  function handleOutsideCongratsClose() {
+    setMarriagePopup("none");
+    handleDelete();
+  }
+
+  async function handleSendMarriageViaInitiative() {
+    setPartnerPhoneError(null);
+    if (!partnerPhone.trim()) {
+      setPartnerPhoneError("יש להזין מספר טלפון");
+      return;
+    }
+    setSendingMarriage(true);
+    const result = await reportMarriageViaInitiative(partnerPhone, candidateId);
+    if (result?.error) {
+      setPartnerPhoneError(result.error);
+      setSendingMarriage(false);
+    }
+    // On success, reportMarriageViaInitiative redirects to /login
   }
 
   // ── MANDATORY EMAIL MODAL (blocks profile for phone-auth users) ──
@@ -406,11 +459,11 @@ export function ProfileClient({
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={handleDelete}
-                    disabled={deleting || !deleteReason || (deleteReason === "other" && !deleteReasonOther.trim())}
+                    onClick={handleFreezeConfirm}
+                    disabled={deleting || loadingOrdinal || !deleteReason || (deleteReason === "other" && !deleteReasonOther.trim())}
                     className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 rounded-lg transition-colors"
                   >
-                    {deleting ? "מקפיא..." : "כן, הקפא את הפרופיל"}
+                    {deleting || loadingOrdinal ? "מקפיא..." : "כן, הקפא את הפרופיל"}
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
@@ -427,6 +480,69 @@ export function ProfileClient({
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-4">{error}</div>
           )}
         </main>
+
+        {/* Congratulations modal — engaged/married outside the initiative */}
+        {marriagePopup === "outside" && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" dir="rtl">
+            <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-7 text-center">
+              <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-bold text-gray-800 mb-2">מזל טוב!</h2>
+              <p className="text-sm text-gray-600 leading-relaxed mb-6">
+                איחולים חמים מכל צוות האתר!
+              </p>
+              <button
+                onClick={handleOutsideCongratsClose}
+                disabled={deleting}
+                className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 disabled:opacity-50 transition-all text-sm"
+              >
+                {deleting ? "מעדכן..." : "תודה!"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Congratulations modal — engaged/married through the initiative */}
+        {marriagePopup === "via" && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" dir="rtl">
+            <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-7 text-center">
+              <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-bold text-gray-800 mb-1">באמת? ממש מתרגשים לשמוע!!!</h2>
+              <p className="text-base font-bold text-emerald-600 mb-2">מזל טוב!</p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-5">
+                אתם {marriedOrdinal != null ? coupleOrdinalPhrase(marriedOrdinal) : ""} שמתחתן דרך המיזם!
+              </p>
+              <div className="text-right mb-4">
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  {c.gender === "נקבה" ? "מספר הטלפון של ארוסך" : "מספר הטלפון של ארוסתך"}
+                </label>
+                <input
+                  type="tel"
+                  dir="ltr"
+                  value={partnerPhone}
+                  onChange={(e) => setPartnerPhone(e.target.value)}
+                  placeholder="050-0000000"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all"
+                />
+                {partnerPhoneError && <p className="mt-1 text-xs text-red-600">{partnerPhoneError}</p>}
+              </div>
+              <button
+                onClick={handleSendMarriageViaInitiative}
+                disabled={sendingMarriage}
+                className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 disabled:opacity-50 transition-all text-sm"
+              >
+                {sendingMarriage ? "שולח..." : "שלח"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -1,7 +1,8 @@
 export const REMOVAL_REASONS = [
   { value: "break", label: "יוצא/ת להפסקה" },
-  { value: "married_outside", label: "התחתנתי לא דרך המיזם" },
-  { value: "married_via", label: "התחתנתי דרך המיזם" },
+  { value: "site_pause", label: "בהפסקה מהאתר כרגע" },
+  { value: "married_outside", label: "התארסתי לא דרך המיזם" },
+  { value: "married_via", label: "התארסתי דרך המיזם" },
   { value: "other", label: "אחר" },
 ] as const;
 

@@ -362,6 +362,92 @@ export async function deleteMyProfile(
   redirect("/login");
 }
 
+/** Current count of candidates married through the initiative — used to tell a
+ * candidate reporting their own marriage which couple number they are. */
+export async function getMarriedCoupleCount(): Promise<number> {
+  const supabase = await createSupabaseServerClient();
+  const { count } = await supabase
+    .from("candidates")
+    .select("id", { count: "exact", head: true })
+    .eq("availability_status", "התחתנו");
+  return count ?? 0;
+}
+
+/**
+ * A candidate reporting they got married through the initiative: freezes their
+ * profile as married (counted in the site banner), records the partner's phone
+ * for the team to follow up, and also marks the partner as married if they're
+ * a registered candidate found by that phone number.
+ */
+export async function reportMarriageViaInitiative(
+  partnerPhone: string,
+  candidateId?: number
+): Promise<ProfileActionResult> {
+  const ctx = await verifyCandidate(candidateId);
+  if (!ctx) {
+    return { error: "אין הרשאה לבצע פעולה זו" };
+  }
+
+  const trimmedPhone = partnerPhone.trim();
+  if (!trimmedPhone) {
+    return { error: "יש להזין מספר טלפון" };
+  }
+  const normalizedPhone = toE164(trimmedPhone);
+
+  const { supabase } = ctx;
+  const adminClient = createSupabaseAdminClient();
+
+  const { data: updated, error } = await supabase
+    .from("candidates")
+    .update({
+      availability_status: "התחתנו",
+      removal_reason: "married_via",
+      removal_reason_other: null,
+      removed_by: "candidate",
+      system_notes: `מספר טלפון של בן/בת הזוג: ${normalizedPhone}`,
+    })
+    .eq("id", ctx.candidateId)
+    .select("full_name")
+    .single();
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  // If the partner is also a registered candidate, mark them married too and
+  // close out the proposal between them (mirrors updateProposalStatusByCandidate)
+  const { data: partner } = await adminClient
+    .from("candidates")
+    .select("id")
+    .eq("phone_number", normalizedPhone)
+    .neq("id", ctx.candidateId)
+    .maybeSingle();
+
+  if (partner) {
+    await adminClient
+      .from("candidates")
+      .update({ availability_status: "התחתנו" })
+      .eq("id", partner.id);
+
+    await adminClient
+      .from("proposals")
+      .update({ status: "9", updated_at: new Date().toISOString() })
+      .or(
+        `and(candidate_id_1.eq.${ctx.candidateId},candidate_id_2.eq.${partner.id}),and(candidate_id_1.eq.${partner.id},candidate_id_2.eq.${ctx.candidateId})`
+      );
+  }
+
+  await queueAdminNotification({
+    type: "candidate_self_froze",
+    message: `🎉 המועמד/ת <strong>${updated?.full_name ?? ""}</strong> התחתן/ה דרך המיזם! מספר טלפון של בן/בת הזוג לבירור: ${normalizedPhone}`,
+    linkUrl: `https://ronel-lovely.com/admin/candidate/${ctx.candidateId}`,
+    candidateId: ctx.candidateId,
+  }).catch(() => {}); // Non-critical
+
+  await supabase.auth.signOut();
+  redirect("/login");
+}
+
 /** Restore a frozen profile (unfreeze) — only for profiles the candidate froze themselves */
 export async function restoreMyProfile(
   candidateId?: number
