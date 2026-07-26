@@ -235,7 +235,7 @@ export function NewCandidateForm({
               <InputField name="residence" label="עיר מגורים" required placeholder="למשל: ירושלים" error={fieldErrors.residence} />
               <SelectField name="marital_status" label="מצב משפחתי" required options={selectedGender === "נקבה" ? ["רווקה", "גרושה", "אלמנה"] : selectedGender === "זכר" ? ["רווק", "גרוש", "אלמן"] : ["רווק/ה", "גרוש/ה", "אלמן/ה"]} error={fieldErrors.marital_status} />
               <InputField name="children_count" label="מספר ילדים" type="number" placeholder="0" dir="ltr" error={fieldErrors.children_count} />
-              <SelectField name="religious_level" label="רמה דתית" required options={selectedGender === "נקבה" ? ["חרדית", "דתייה", "דתייה לאומית", "דתי לאומי תורני", "דתייה לייט", "מסורתית", "חילונית"] : selectedGender === "זכר" ? ["חרדי", "דתי", "דתי לאומי", "דתי לאומי תורני", "דתי לייט", "מסורתי", "חילוני"] : ["חרדי/ת", "דתי/ה", "דתי/ה לאומי/ת", "דתי לאומי תורני", "דתי/ה לייט", "מסורתי/ת", "חילוני/ת"]} error={fieldErrors.religious_level} />
+              <SelectField name="religious_level" label="רמה דתית" required options={selectedGender === "נקבה" ? ["חרדית", "חרדית לאומית", "דתייה", "דתייה לאומית", "דתי לאומי תורני", "דתייה לייט", "מסורתית", "חילונית"] : selectedGender === "זכר" ? ["חרדי", "חרדי לאומי", "דתי", "דתי לאומי", "דתי לאומי תורני", "דתי לייט", "מסורתי", "חילוני"] : ["חרדי/ת", "חרדי/ת לאומי/ת", "דתי/ה", "דתי/ה לאומי/ת", "דתי לאומי תורני", "דתי/ה לייט", "מסורתי/ת", "חילוני/ת"]} error={fieldErrors.religious_level} />
               <InputField name="height" label="גובה (ס״מ)" type="number" step="any" required placeholder="170" dir="ltr" error={fieldErrors.height} />
               <SelectField name="education" label="השכלה" required options={["תיכונית", "תעודה", "תואר ראשון", "תואר שני"]} error={fieldErrors.education} />
               <InputField name="occupation" label="תעסוקה" required placeholder="למשל: מהנדס תוכנה" error={fieldErrors.occupation} />
@@ -261,6 +261,11 @@ export function NewCandidateForm({
               <label className="block text-xs font-medium text-gray-500 mb-1">
                 תמונות (עד 3) <span className="text-red-500">*</span>
               </label>
+              <div className="mb-3 bg-gradient-to-l from-sky-50 to-emerald-50 border border-sky-100 rounded-2xl p-3 text-center">
+                <p className="text-xs font-semibold text-sky-700 leading-relaxed">
+                  תמונה מכובדת מגדילה את הסיכויים לבניין עדי עד עוד השנה
+                </p>
+              </div>
               <div className="flex flex-wrap gap-3 mt-2">
                 {images.map((file, i) => (
                   <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 group">

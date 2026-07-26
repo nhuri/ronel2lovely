@@ -10,7 +10,7 @@ import { CandidateTabs } from "./candidate-tabs";
 import { CandidateStatusSection } from "./candidate-status-section";
 import { updateCandidateProfileAsAdmin } from "./actions";
 import { signCandidateImages, signProposalImages } from "@/lib/storage";
-import { scoreAndRankMatches } from "@/lib/matching";
+import { scoreAndRankMatches, getCompatibleReligiousLevels } from "@/lib/matching";
 import { getMaxRecommendations } from "@/app/admin/settings-actions";
 import { AdminRecommendationsSection } from "./admin-recommendations-section";
 
@@ -142,12 +142,26 @@ export default async function AdminCandidateViewPage({
 
   let basePool = activeMatches.filter((m) => !proposalPartnerIds.has(Number(m.id)));
 
-  // For female candidates: never show men younger by more than 2 years
+  // Only show candidates whose religious level is in a compatible group with theirs
+  // (kept in sync with src/app/my-profile/recommendations/page.tsx)
+  const compatibleReligiousLevels = getCompatibleReligiousLevels(
+    candidate.religious_level as string | null
+  );
+  if (compatibleReligiousLevels) {
+    basePool = basePool.filter((m) =>
+      compatibleReligiousLevels.has(m.religious_level as string)
+    );
+  }
+
+  // For female candidates: never show men younger by more than 2 years,
+  // and cap how much older he can be based on her own age
   if (myGender === "נקבה" && candidate.age) {
-    const minManAge = (candidate.age as number) - 2;
+    const myAge = candidate.age as number;
+    const minManAge = myAge - 2;
+    const maxManAge = myAge + (myAge <= 30 ? 5 : 10);
     basePool = basePool.filter((m) => {
       const mAge = m.age as number | null;
-      return mAge == null || mAge >= minManAge;
+      return mAge == null || (mAge >= minManAge && mAge <= maxManAge);
     });
   }
 

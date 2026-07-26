@@ -457,6 +457,11 @@ export function ProfileClient({
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         <form onSubmit={handleUpdate} className="space-y-6">
           <EditSection title="תמונות פרופיל">
+            <div className="mb-3 bg-gradient-to-l from-sky-50 to-emerald-50 border border-sky-100 rounded-2xl p-3 text-center">
+              <p className="text-xs font-semibold text-sky-700 leading-relaxed">
+                תמונה מכובדת מגדילה את הסיכויים לבניין עדי עד עוד השנה
+              </p>
+            </div>
             <div className="flex flex-wrap gap-3">
               {keepImages.map((url, i) => (
                 <div key={url} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 group flex-shrink-0">
@@ -533,7 +538,7 @@ export function ProfileClient({
               <EditInput name="residence" label="עיר מגורים" required defaultValue={c.residence} error={fieldErrors.residence} />
               <EditSelect name="marital_status" label="מצב משפחתי" required options={c.gender === "נקבה" ? ["רווקה", "גרושה", "אלמנה"] : ["רווק", "גרוש", "אלמן"]} defaultValue={c.marital_status} error={fieldErrors.marital_status} />
               <EditInput name="children_count" label="מספר ילדים" type="number" defaultValue={c.children_count ?? ""} dir="ltr" error={fieldErrors.children_count} />
-              <EditSelect name="religious_level" label="רמה דתית" required options={c.gender === "נקבה" ? ["חרדית", "דתייה", "מסורתית", "חילונית", "דתייה לאומית", "דתי לאומי תורני"] : ["חרדי", "דתי", "מסורתי", "חילוני", "דתי לאומי", "דתי לאומי תורני"]} defaultValue={c.religious_level} error={fieldErrors.religious_level} />
+              <EditSelect name="religious_level" label="רמה דתית" required options={c.gender === "נקבה" ? ["חרדית", "חרדית לאומית", "דתייה", "מסורתית", "חילונית", "דתייה לאומית", "דתי לאומי תורני"] : ["חרדי", "חרדי לאומי", "דתי", "מסורתי", "חילוני", "דתי לאומי", "דתי לאומי תורני"]} defaultValue={c.religious_level} error={fieldErrors.religious_level} />
               <EditInput name="height" label="גובה (ס״מ)" type="number" required defaultValue={c.height ?? ""} dir="ltr" error={fieldErrors.height} />
               <EditSelect name="education" label="השכלה" required options={["תיכונית", "תעודה", "תואר ראשון", "תואר שני"]} defaultValue={c.education} error={fieldErrors.education} />
               <EditInput name="occupation" label="תעסוקה" required defaultValue={c.occupation} error={fieldErrors.occupation} />
