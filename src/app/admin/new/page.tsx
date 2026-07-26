@@ -111,7 +111,7 @@ export default function NewCandidatePage() {
               <label className="block text-xs font-medium text-gray-500 mb-1">תמונות (עד 3) <span className="text-red-500">*</span></label>
               <div className="mb-3 bg-gradient-to-l from-sky-50 to-emerald-50 border border-sky-100 rounded-2xl p-3 text-center">
                 <p className="text-xs font-semibold text-sky-700 leading-relaxed">
-                  תמונה מכובדת מגדילה את הסיכויים לבניין עדי עד עוד השנה
+                  תמונה מכובדת וצנועה מייצגת את האמת שבך ומקרבת אותך לבניין עדי עד
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 mt-2">
