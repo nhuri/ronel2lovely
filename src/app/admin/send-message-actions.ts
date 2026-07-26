@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { sendTwilioSms } from "@/lib/twilio";
 import { sendEmailWithLog } from "@/lib/email";
+import { getEffectiveContact } from "@/lib/contact";
 
 export type BulkMessageResult = {
   sent: number;
@@ -35,7 +36,7 @@ export async function sendBulkMessage(
 
   const { data: candidates, error: fetchError } = await supabase
     .from("candidates")
-    .select("id, full_name, phone_number, email")
+    .select("id, full_name, phone_number, email, contact_person_phone, contact_person_email, ambassador_id")
     .in("id", candidateIds);
 
   if (fetchError || !candidates) {
@@ -49,7 +50,7 @@ export async function sendBulkMessage(
 
   if (channel === "sms") {
     for (const candidate of candidates) {
-      const phone = candidate.phone_number;
+      const phone = getEffectiveContact(candidate).phone;
       if (!phone) {
         skipped++;
         continue;
@@ -64,7 +65,7 @@ export async function sendBulkMessage(
     }
   } else {
     for (const candidate of candidates) {
-      const email = candidate.email;
+      const email = getEffectiveContact(candidate).email;
       if (!email || email.endsWith("@sms.ronellovely.co.il")) {
         skipped++;
         continue;

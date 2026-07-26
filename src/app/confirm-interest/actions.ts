@@ -2,6 +2,7 @@
 
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendEmailWithLog } from "@/lib/email";
+import { getEffectiveContact } from "@/lib/contact";
 
 export type ConfirmResult =
   | {
@@ -55,12 +56,12 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
   const [{ data: fromCand }, { data: toCand }] = await Promise.all([
     admin
       .from("candidates")
-      .select("id, full_name, gender, phone_number, email, contact_person_phone")
+      .select("id, full_name, gender, phone_number, email, contact_person_phone, contact_person_email, ambassador_id")
       .eq("id", tokenData.from_candidate_id)
       .single(),
     admin
       .from("candidates")
-      .select("id, full_name, gender, phone_number, email, contact_person_phone")
+      .select("id, full_name, gender, phone_number, email, contact_person_phone, contact_person_email, ambassador_id")
       .eq("id", tokenData.to_candidate_id)
       .single(),
   ]);
@@ -72,12 +73,15 @@ export async function confirmMutualInterest(token: string): Promise<ConfirmResul
   const isSmsEmail = (e: string | null) =>
     !e || e.endsWith("@sms.ronellovely.co.il");
 
-  const infoOf = (c: typeof fromCand) => ({
-    name: c.full_name as string,
-    gender: c.gender as string,
-    phone: (c.phone_number as string) || "",
-    email: isSmsEmail(c.email as string | null) ? null : (c.email as string),
-  });
+  const infoOf = (c: typeof fromCand) => {
+    const effective = getEffectiveContact(c);
+    return {
+      name: c.full_name as string,
+      gender: c.gender as string,
+      phone: effective.phone || "",
+      email: isSmsEmail(effective.email) ? null : effective.email,
+    };
+  };
 
   const from = infoOf(fromCand);
   const to = infoOf(toCand);

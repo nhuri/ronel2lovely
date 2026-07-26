@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendEmailWithLog } from "@/lib/email";
 import { sendTwilioSms } from "@/lib/twilio";
+import { getEffectiveContact } from "@/lib/contact";
 import {
   hasReachedDailyProposalLimit,
   notifyDailyProposalLimitReached,
@@ -38,7 +39,9 @@ export async function sendInterestEmail(
       .single(),
     supabase
       .from("candidates")
-      .select("id, full_name, gender, email, availability_status, phone_number, no_email_sms_sent")
+      .select(
+        "id, full_name, gender, email, availability_status, phone_number, no_email_sms_sent, contact_person_phone, contact_person_email, ambassador_id"
+      )
       .eq("id", matchCandidateId)
       .single(),
   ]);
@@ -47,7 +50,8 @@ export async function sendInterestEmail(
     return { success: false, message: "לא נמצאו פרטי המועמדים" };
   }
 
-  const recipientEmail = recipient.email as string | null;
+  const recipientContact = getEffectiveContact(recipient);
+  const recipientEmail = recipientContact.email;
   if (!recipientEmail || recipientEmail.trim() === "" || recipientEmail.endsWith("@sms.ronellovely.co.il")) {
     const senderNameForAlert = sender.full_name as string;
     const recipientNameForAlert = recipient.full_name as string;
@@ -97,9 +101,9 @@ export async function sendInterestEmail(
       }),
     ];
 
-    // 3. One-time SMS to the candidate without email
+    // 3. One-time SMS to the candidate without email (or their ambassador, if any)
     const alreadySent = recipient.no_email_sms_sent as boolean | null;
-    const recipientPhone = recipient.phone_number as string | null;
+    const recipientPhone = recipientContact.phone;
     if (!alreadySent && recipientPhone) {
       tasks.push(
         sendTwilioSms(

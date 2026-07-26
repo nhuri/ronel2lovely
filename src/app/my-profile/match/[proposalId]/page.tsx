@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { signImageUrls } from "@/lib/storage";
+import { getEffectiveContact } from "@/lib/contact";
 
 export default async function MatchDetailsPage({
   params,
@@ -64,7 +65,7 @@ export default async function MatchDetailsPage({
   const { data: other } = await admin
     .from("candidates")
     .select(
-      "id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, looking_for, image_urls, phone_number, email, contact_person, contact_person_phone"
+      "id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, looking_for, image_urls, phone_number, email, contact_person, contact_person_phone, ambassador_id"
     )
     .eq("id", otherCandidateId)
     .single();
@@ -78,10 +79,7 @@ export default async function MatchDetailsPage({
   const title = gender === "נקבה" ? "המועמדת" : "המועמד";
   const rawImageUrls = (other.image_urls as string[] | null) ?? [];
   const photos = rawImageUrls.length ? await signImageUrls(rawImageUrls) : [];
-  const contactPhone =
-    (other.contact_person_phone as string) ||
-    (other.phone_number as string) ||
-    null;
+  const contactPhone = getEffectiveContact(other).phone;
   const contactPerson = (other.contact_person as string) || null;
 
   return (

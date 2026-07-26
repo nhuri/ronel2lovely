@@ -3,6 +3,7 @@ import { ConfirmButton } from "./confirm-button";
 import Link from "next/link";
 import Image from "next/image";
 import { signImageUrls } from "@/lib/storage";
+import { getEffectiveContact } from "@/lib/contact";
 
 export default async function ConfirmInterestPage({
   searchParams,
@@ -51,7 +52,7 @@ export default async function ConfirmInterestPage({
   const [{ data: fromCand }, { data: toCand }] = await Promise.all([
     admin
       .from("candidates")
-      .select("id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, image_urls, contact_person, contact_person_phone, phone_number")
+      .select("id, full_name, gender, age, residence, religious_level, marital_status, occupation, education, height, about_me, image_urls, contact_person, contact_person_phone, phone_number, ambassador_id")
       .eq("id", tokenData.from_candidate_id)
       .single(),
     admin
@@ -72,10 +73,7 @@ export default async function ConfirmInterestPage({
   const fromRawImageUrls = (fromCand.image_urls as string[] | null) ?? [];
   const fromPhotos = fromRawImageUrls.length ? await signImageUrls(fromRawImageUrls) : [];
   const contactPerson = (fromCand.contact_person as string) || null;
-  const contactPhone =
-    (fromCand.contact_person_phone as string) ||
-    (fromCand.phone_number as string) ||
-    null;
+  const contactPhone = getEffectiveContact(fromCand).phone;
 
   return (
     <PageShell>

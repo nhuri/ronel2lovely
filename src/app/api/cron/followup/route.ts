@@ -2,6 +2,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { sendEmailWithLog } from "@/lib/email";
 import { getFollowupDelays } from "@/app/admin/settings-actions";
 import { followupDelayToMs } from "@/lib/followup";
+import { getEffectiveContact } from "@/lib/contact";
 
 export const runtime = "nodejs";
 
@@ -90,12 +91,12 @@ export async function GET(request: Request) {
       const [{ data: c1 }, { data: c2 }] = await Promise.all([
         admin
           .from("candidates")
-          .select("id, full_name, email")
+          .select("id, full_name, email, contact_person_email, ambassador_id")
           .eq("id", proposal.candidate_id_1 as number)
           .single(),
         admin
           .from("candidates")
-          .select("id, full_name, email")
+          .select("id, full_name, email, contact_person_email, ambassador_id")
           .eq("id", proposal.candidate_id_2 as number)
           .single(),
       ]);
@@ -115,7 +116,7 @@ export async function GET(request: Request) {
       ].filter((o) => o.token !== null) as { label: string; token: string }[];
 
       for (const cand of [c1, c2]) {
-        const email = cand.email as string | null;
+        const email = getEffectiveContact(cand).email;
         if (isSmsEmail(email)) continue;
         await sendEmailWithLog({
           to: email!,
@@ -159,12 +160,12 @@ export async function GET(request: Request) {
       const [{ data: c1 }, { data: c2 }] = await Promise.all([
         admin
           .from("candidates")
-          .select("id, full_name, email")
+          .select("id, full_name, email, contact_person_email, ambassador_id")
           .eq("id", proposal.candidate_id_1 as number)
           .single(),
         admin
           .from("candidates")
-          .select("id, full_name, email")
+          .select("id, full_name, email, contact_person_email, ambassador_id")
           .eq("id", proposal.candidate_id_2 as number)
           .single(),
       ]);
@@ -182,7 +183,7 @@ export async function GET(request: Request) {
       ].filter((o) => o.token !== null) as { label: string; token: string }[];
 
       for (const cand of [c1, c2]) {
-        const email = cand.email as string | null;
+        const email = getEffectiveContact(cand).email;
         if (isSmsEmail(email)) continue;
         await sendEmailWithLog({
           to: email!,

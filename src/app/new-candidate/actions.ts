@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { toE164 } from "@/lib/phone";
 import { sendEmailWithLog } from "@/lib/email";
 import { queueAdminNotification } from "@/lib/adminNotifications";
+import { getEffectiveContact } from "@/lib/contact";
 
 export type FieldErrors = Record<string, string>;
 export type CreateCandidateResult = {
@@ -16,7 +17,6 @@ export type CreateCandidateResult = {
 
 const BASE_REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "full_name", label: "שם מלא" },
-  { key: "phone_number", label: "מספר טלפון" },
   { key: "gender", label: "מין" },
   { key: "birth_date", label: "תאריך לידה" },
   { key: "residence", label: "עיר מגורים" },
@@ -27,8 +27,15 @@ const BASE_REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "occupation", label: "תעסוקה" },
   { key: "about_me", label: "תיאור אישי" },
   { key: "looking_for", label: "מה חשוב לי בבן/בת הזוג" },
-  { key: "email", label: "אימייל" },
   { key: "military_service", label: "שירות" },
+];
+
+// The candidate's own contact details — required only for self-registration.
+// In ambassador mode all communication goes through the ambassador's contact
+// info (see AMBASSADOR_REQUIRED_FIELDS), so these are omitted from the form.
+const CANDIDATE_CONTACT_REQUIRED_FIELDS: { key: string; label: string }[] = [
+  { key: "phone_number", label: "מספר טלפון" },
+  { key: "email", label: "אימייל" },
 ];
 
 const AMBASSADOR_REQUIRED_FIELDS: { key: string; label: string }[] = [
@@ -41,6 +48,7 @@ const AMBASSADOR_REQUIRED_FIELDS: { key: string; label: string }[] = [
 // All text fields we read from the form (required + optional)
 const ALL_FIELDS = [
   ...BASE_REQUIRED_FIELDS.map((f) => f.key),
+  ...CANDIDATE_CONTACT_REQUIRED_FIELDS.map((f) => f.key),
   ...AMBASSADOR_REQUIRED_FIELDS.map((f) => f.key),
   "children_count", "torah_education", "mode",
 ];
@@ -73,6 +81,7 @@ export async function createCandidate(
   const needsAmbassadorFields = isAmbassadorMode && !ambassadorIdFromParam;
   const REQUIRED_FIELDS = [
     ...BASE_REQUIRED_FIELDS,
+    ...(!isAmbassadorMode ? CANDIDATE_CONTACT_REQUIRED_FIELDS : []),
     ...(needsAmbassadorFields ? AMBASSADOR_REQUIRED_FIELDS : []),
   ];
 
@@ -220,12 +229,12 @@ export async function createCandidate(
   // ── 7. Build record ──
   const record: Record<string, string | number | string[] | null> = {
     full_name: raw.full_name,
-    email: raw.email,
+    email: raw.email || null,
     contact_person: raw.contact_person || null,
     contact_person_phone: raw.contact_person_phone || null,
     contact_person_email: raw.contact_person_email || null,
     contact_person_gender: raw.contact_person_gender || null,
-    phone_number: raw.phone_number,
+    phone_number: raw.phone_number || null,
     gender: raw.gender,
     birth_date: raw.birth_date,
     residence: raw.residence,
@@ -263,8 +272,12 @@ export async function createCandidate(
       .eq("token", inviteToken);
   }
 
-  // Send welcome email to the candidate
-  const candidateEmail = raw.email?.trim();
+  // Send welcome email — to the ambassador if one submitted this profile, otherwise the candidate
+  const candidateEmail = getEffectiveContact({
+    ambassador_id: ambassadorId,
+    email: raw.email,
+    contact_person_email: raw.contact_person_email,
+  }).email;
   if (candidateEmail && insertedCandidate) {
     await sendEmailWithLog({
       to: candidateEmail,
