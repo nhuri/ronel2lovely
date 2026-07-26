@@ -12,7 +12,7 @@ export type CreateCandidateResult = {
   error?: string;
   fieldErrors?: FieldErrors;
   success?: boolean;
-  email?: string;
+  email?: string | null;
 };
 
 const BASE_REQUIRED_FIELDS: { key: string; label: string }[] = [
