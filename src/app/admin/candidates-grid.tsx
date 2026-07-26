@@ -30,6 +30,7 @@ interface Candidate {
 
 interface Props {
   candidates: Candidate[];
+  frozenCandidates: Candidate[];
   genders: string[];
   religiousLevels: string[];
   managerNames: Record<number, string>;
@@ -46,6 +47,7 @@ const LEVEL_VARIANTS: Record<string, string[]> = {
 
 export function CandidatesGrid({
   candidates,
+  frozenCandidates,
   genders,
   religiousLevels,
   managerNames,
@@ -56,10 +58,13 @@ export function CandidatesGrid({
   const [ageMin, setAgeMin] = useState("");
   const [ageMax, setAgeMax] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [showFrozen, setShowFrozen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
+  const baseList = showFrozen ? [...candidates, ...frozenCandidates] : candidates;
+
   const filtered = useMemo(() => {
-    const list = candidates.filter((c) => {
+    const list = baseList.filter((c) => {
       if (search && !c.full_name?.includes(search)) return false;
       if (genderFilter && c.gender !== genderFilter) return false;
       if (religiousFilter) {
@@ -73,7 +78,7 @@ export function CandidatesGrid({
     return [...list].sort((a, b) =>
       sortOrder === "newest" ? b.id - a.id : a.id - b.id
     );
-  }, [candidates, search, genderFilter, religiousFilter, ageMin, ageMax, sortOrder]);
+  }, [baseList, search, genderFilter, religiousFilter, ageMin, ageMax, sortOrder]);
 
   const hasActiveFilters =
     search || genderFilter || religiousFilter || ageMin || ageMax;
@@ -87,7 +92,7 @@ export function CandidatesGrid({
   }
 
   const selected = selectedId
-    ? candidates.find((c) => c.id === selectedId) ?? null
+    ? baseList.find((c) => c.id === selectedId) ?? null
     : null;
 
   return (
@@ -128,11 +133,17 @@ export function CandidatesGrid({
             </select>
           </div>
         </div>
+        {frozenCandidates.length > 0 && (
+          <label className="mt-3 flex items-center gap-2 text-xs text-gray-500 cursor-pointer w-fit">
+            <input type="checkbox" checked={showFrozen} onChange={(e) => setShowFrozen(e.target.checked)} className="w-4 h-4 accent-amber-500" />
+            הצג גם מועמדים מוקפאים ({frozenCandidates.length})
+          </label>
+        )}
         {hasActiveFilters && (
           <button onClick={clearFilters} className="mt-3 px-4 py-1.5 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">נקה סינון</button>
         )}
         {hasActiveFilters && (
-          <p className="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100">מציג {filtered.length} מתוך {candidates.length} מועמדים</p>
+          <p className="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100">מציג {filtered.length} מתוך {baseList.length} מועמדים</p>
         )}
       </div>
 

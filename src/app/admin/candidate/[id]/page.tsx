@@ -8,6 +8,7 @@ import { AdminNotesSection } from "./admin-notes-section";
 import { InquiriesSection } from "./inquiries-section";
 import { CandidateTabs } from "./candidate-tabs";
 import { CandidateStatusSection } from "./candidate-status-section";
+import { updateCandidateProfileAsAdmin } from "./actions";
 import { signCandidateImages, signProposalImages } from "@/lib/storage";
 import { scoreAndRankMatches } from "@/lib/matching";
 import { getMaxRecommendations } from "@/app/admin/settings-actions";
@@ -177,9 +178,11 @@ export default async function AdminCandidateViewPage({
       content: (
         <ProfileClient
           candidate={candidate}
+          candidateId={candidate.id}
           readOnly
           backUrl="/admin"
           hideHeader
+          adminEditAction={updateCandidateProfileAsAdmin}
         />
       ),
     },

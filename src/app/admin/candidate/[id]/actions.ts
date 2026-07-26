@@ -2,6 +2,7 @@
 
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isValidRemovalReason } from "@/lib/removalReasons";
+import { applyProfileUpdate, type ProfileActionResult } from "@/app/my-profile/actions";
 
 export type ActionResult = { error?: string; success?: boolean };
 
@@ -68,6 +69,19 @@ export async function markInquiryRead(
 
   if (error) return { error: error.message };
   return { success: true };
+}
+
+/** Admin: edit a candidate's profile directly, reusing the same validation the candidate's own edit form uses */
+export async function updateCandidateProfileAsAdmin(
+  formData: FormData,
+  candidateId: number
+): Promise<ProfileActionResult> {
+  const supabase = await verifyAdmin();
+  if (!supabase) return { error: "אין הרשאה" };
+
+  // Use admin client to bypass RLS — see freezeCandidateProfile below.
+  const adminClient = createSupabaseAdminClient();
+  return applyProfileUpdate(adminClient, candidateId, formData);
 }
 
 /** Admin: soft delete (freeze) a candidate profile, recording the reason */

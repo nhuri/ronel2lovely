@@ -149,8 +149,19 @@ export async function updateMyProfile(
     return { error: "אין הרשאה לבצע פעולה זו" };
   }
 
-  const { supabase } = ctx;
+  return applyProfileUpdate(ctx.supabase, ctx.candidateId, formData);
+}
 
+/**
+ * Shared validation + update logic behind updateMyProfile, factored out so
+ * admin-side editing (src/app/admin/candidate/[id]/actions.ts) can reuse it
+ * with its own authorization check instead of verifyCandidate's ownership rule.
+ */
+export async function applyProfileUpdate(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  candidateId: number,
+  formData: FormData
+): Promise<ProfileActionResult> {
   const raw: Record<string, string> = {};
   for (const key of ALL_FIELDS) {
     raw[key] = ((formData.get(key) as string) ?? "").trim();
@@ -161,7 +172,7 @@ export async function updateMyProfile(
   const { data: candidateRow } = await supabase
     .from("candidates")
     .select("ambassador_id")
-    .eq("id", ctx.candidateId)
+    .eq("id", candidateId)
     .maybeSingle();
   const hasAmbassador = !!candidateRow?.ambassador_id;
 
@@ -201,7 +212,7 @@ export async function updateMyProfile(
       .limit(1)
       .maybeSingle();
 
-    if (existingPhone && existingPhone.id !== ctx.candidateId) {
+    if (existingPhone && existingPhone.id !== candidateId) {
       fieldErrors.phone_number = "מספר הטלפון הזה כבר רשום במערכת";
     }
   }
@@ -230,7 +241,7 @@ export async function updateMyProfile(
   const { data: existingCandidate } = await supabase
     .from("candidates")
     .select("image_urls, removed_image_urls")
-    .eq("id", ctx.candidateId)
+    .eq("id", candidateId)
     .maybeSingle();
   const previousImageUrls: string[] = existingCandidate?.image_urls ?? [];
   const previousRemovedImageUrls: string[] = existingCandidate?.removed_image_urls ?? [];
@@ -291,7 +302,7 @@ export async function updateMyProfile(
       image_urls: finalImageUrls,
       removed_image_urls: finalRemovedImageUrls,
     })
-    .eq("id", ctx.candidateId);
+    .eq("id", candidateId);
 
   if (error) {
     return { error: error.message };

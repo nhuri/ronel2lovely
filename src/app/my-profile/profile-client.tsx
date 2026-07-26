@@ -13,6 +13,7 @@ import {
   updateCandidateEmail,
   toggleAvailability,
   type FieldErrors,
+  type ProfileActionResult,
 } from "./actions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,6 +35,7 @@ export function ProfileClient({
   backUrl,
   hideHeader = false,
   ambassadorUserId,
+  adminEditAction,
 }: {
   candidate: Candidate;
   candidateId?: number;
@@ -44,6 +46,9 @@ export function ProfileClient({
   backUrl?: string;
   hideHeader?: boolean;
   ambassadorUserId?: string;
+  // When set, an admin is editing this candidate on their behalf — used
+  // instead of updateMyProfile, which only authorizes the candidate's own manager.
+  adminEditAction?: (formData: FormData, candidateId: number) => Promise<ProfileActionResult>;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit">(startInEditMode ? "edit" : "view");
@@ -87,7 +92,9 @@ export function ProfileClient({
     const formData = new FormData(e.currentTarget);
     keepImages.forEach((url) => formData.append("keep_images", url));
     editImages.forEach((file) => formData.append("new_images", file));
-    const result = await updateMyProfile(formData, candidateId);
+    const result = adminEditAction
+      ? await adminEditAction(formData, candidateId as number)
+      : await updateMyProfile(formData, candidateId);
 
     if (result.fieldErrors) {
       setFieldErrors(result.fieldErrors);
@@ -273,6 +280,16 @@ export function ProfileClient({
         )}
 
         <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          {hideHeader && adminEditAction && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setMode("edit")}
+                className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors"
+              >
+                עריכת פרופיל
+              </button>
+            </div>
+          )}
           {imgs.length > 0 && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
               <div className={`flex gap-1 overflow-x-auto overscroll-x-contain p-1 ${imgs.length === 1 ? "justify-center" : ""}`}>

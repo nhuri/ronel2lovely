@@ -24,6 +24,8 @@ type AdminTabsProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   candidates: any[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  frozenCandidates: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   allCandidates: any[];
   genders: string[];
   religiousLevels: string[];
@@ -36,7 +38,7 @@ type AdminTabsProps = {
   managerNames: Record<number, string>;
 };
 
-export function AdminTabs({ candidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond, notificationTypeModes, notificationInterval, analyticsStats, managerNames }: AdminTabsProps) {
+export function AdminTabs({ candidates, frozenCandidates, allCandidates, genders, religiousLevels, maxRecommendations, followupFirst, followupSecond, notificationTypeModes, notificationInterval, analyticsStats, managerNames }: AdminTabsProps) {
   const [activeTab, setActiveTab] = useState<"candidates" | "message" | "settings" | "emails" | "analytics">("candidates");
 
   return (
@@ -102,6 +104,7 @@ export function AdminTabs({ candidates, allCandidates, genders, religiousLevels,
       {activeTab === "candidates" && (
         <CandidatesGrid
           candidates={candidates}
+          frozenCandidates={frozenCandidates}
           genders={genders}
           religiousLevels={religiousLevels}
           managerNames={managerNames}

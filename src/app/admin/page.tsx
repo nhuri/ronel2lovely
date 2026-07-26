@@ -30,10 +30,12 @@ export default async function AdminDashboard() {
     ambassadorNames[c.id] = `${title}: ${c.contact_person}`;
   }
 
-  // Filter out frozen and married candidates from the main grid
+  // Filter out frozen and married candidates from the main grid by default —
+  // frozen candidates can still be revealed via a toggle (see CandidatesGrid)
   const candidates = allCandidates.filter(
     (c) => !c.availability_status || (c.availability_status !== "הקפאה" && c.availability_status !== "התחתנו" && c.availability_status !== "התארסו")
   );
+  const frozenCandidates = allCandidates.filter((c) => c.availability_status === "הקפאה");
 
   // Count unread inquiries
   const { count: unreadInquiries } = await supabase
@@ -123,6 +125,7 @@ export default async function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <AdminTabs
           candidates={candidates ?? []}
+          frozenCandidates={frozenCandidates}
           allCandidates={allCandidates ?? []}
           genders={genders}
           religiousLevels={religiousLevels}
