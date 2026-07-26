@@ -33,11 +33,22 @@ const REQUIRED_FIELDS: { key: string; label: string }[] = [
   { key: "occupation", label: "תעסוקה" },
   { key: "about_me", label: "תיאור אישי" },
   { key: "looking_for", label: "מה חשוב לי בבן/בת הזוג" },
+];
+
+// Contact person for inquiries — optional for self-managed candidates, but it's
+// the only real contact channel for candidates with an ambassador (see
+// src/lib/contact.ts), so it stays required for those (checked separately below).
+const CONTACT_PERSON_FIELDS: { key: string; label: string }[] = [
   { key: "contact_person", label: "איש קשר" },
   { key: "contact_person_phone", label: "טלפון איש קשר" },
 ];
 
-const ALL_FIELDS = [...REQUIRED_FIELDS.map((f) => f.key), "children_count", "torah_education"];
+const ALL_FIELDS = [
+  ...REQUIRED_FIELDS.map((f) => f.key),
+  ...CONTACT_PERSON_FIELDS.map((f) => f.key),
+  "children_count",
+  "torah_education",
+];
 
 function calculateAge(birthDate: string): number {
   const today = new Date();
@@ -145,10 +156,23 @@ export async function updateMyProfile(
     raw[key] = ((formData.get(key) as string) ?? "").trim();
   }
 
+  // Candidates with an ambassador have no contact info of their own — the
+  // contact person fields are their only real contact channel, so keep them required.
+  const { data: candidateRow } = await supabase
+    .from("candidates")
+    .select("ambassador_id")
+    .eq("id", ctx.candidateId)
+    .maybeSingle();
+  const hasAmbassador = !!candidateRow?.ambassador_id;
+
+  const requiredFields = hasAmbassador
+    ? [...REQUIRED_FIELDS, ...CONTACT_PERSON_FIELDS]
+    : REQUIRED_FIELDS;
+
   // ── Validation ──
   const fieldErrors: FieldErrors = {};
 
-  for (const { key, label } of REQUIRED_FIELDS) {
+  for (const { key, label } of requiredFields) {
     if (!raw[key]) {
       fieldErrors[key] = `${label} הוא שדה חובה`;
     }
@@ -261,8 +285,8 @@ export async function updateMyProfile(
       looking_for: raw.looking_for,
       torah_education: raw.torah_education || null,
       military_service: militaryService || null,
-      contact_person: raw.contact_person,
-      contact_person_phone: raw.contact_person_phone,
+      contact_person: raw.contact_person || null,
+      contact_person_phone: raw.contact_person_phone || null,
       age: calculateAge(raw.birth_date),
       image_urls: finalImageUrls,
       removed_image_urls: finalRemovedImageUrls,
