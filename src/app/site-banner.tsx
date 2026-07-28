@@ -130,6 +130,12 @@ export async function SiteBanner() {
                 </span>
               )}
             </div>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-1 mt-1.5 text-[11px] font-medium text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded-full transition-colors"
+            >
+              האתר נמצא כעת בהרצה 😊 יש לכם הערה, הארה או רעיון לשיפור? נשמח מאוד לשמוע!
+            </Link>
           </div>
           </div>
           {/* Desktop links — last in DOM = leftmost in RTL (left edge) */}
