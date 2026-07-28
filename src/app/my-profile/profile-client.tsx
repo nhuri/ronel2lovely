@@ -145,6 +145,7 @@ export function ProfileClient({
     const result = await toggleAvailability(!currentlyUnavailable, candidateId);
     if (!result?.error) {
       setC({ ...c, availability_status: currentlyUnavailable ? null : "תפוס" });
+      router.refresh();
     }
     setTogglingAvail(false);
   }

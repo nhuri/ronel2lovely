@@ -612,12 +612,16 @@ export async function toggleAvailability(
   const { supabase } = ctx;
   // isAvailable=true → clear "תפוס"; isAvailable=false → set "תפוס"
   const newStatus = isAvailable ? null : "תפוס";
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("candidates")
     .update({ availability_status: newStatus })
-    .eq("id", ctx.candidateId);
+    .eq("id", ctx.candidateId)
+    .select("id");
 
   if (error) return { error: error.message };
+  // RLS can silently no-op an update (0 rows affected, no error) — surface that
+  // instead of reporting success while the DB value stays unchanged.
+  if (!data || data.length === 0) return { error: "עדכון הסטטוס נכשל, נסה/י שוב" };
   return { success: true };
 }
 
