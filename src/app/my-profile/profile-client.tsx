@@ -142,7 +142,7 @@ export function ProfileClient({
   async function handleToggleAvailability(currentlyUnavailable: boolean) {
     setTogglingAvail(true);
     // currentlyUnavailable=true → want to become available; pass isAvailable=true
-    const result = await toggleAvailability(!currentlyUnavailable, candidateId);
+    const result = await toggleAvailability(currentlyUnavailable, candidateId);
     if (!result?.error) {
       setC({ ...c, availability_status: currentlyUnavailable ? null : "תפוס" });
       router.refresh();
