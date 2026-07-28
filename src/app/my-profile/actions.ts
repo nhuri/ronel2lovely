@@ -374,6 +374,71 @@ export async function getMarriedCoupleCount(): Promise<number> {
 }
 
 /**
+ * Shared logic behind reporting a marriage/engagement through the initiative:
+ * freezes the candidate's profile as married (counted in the site banner),
+ * records the partner's phone for the team to follow up, and also marks the
+ * partner as married if they're a registered candidate found by that phone
+ * number. Factored out so the admin-triggered freeze flow
+ * (src/app/admin/candidate/[id]/actions.ts) can reuse it with its own
+ * authorization check instead of verifyCandidate's ownership rule.
+ */
+export async function applyMarriageViaInitiative(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  candidateId: number,
+  partnerPhone: string,
+  removedBy: "candidate" | "admin"
+): Promise<ProfileActionResult & { fullName?: string }> {
+  const trimmedPhone = partnerPhone.trim();
+  if (!trimmedPhone) {
+    return { error: "יש להזין מספר טלפון" };
+  }
+  const normalizedPhone = toE164(trimmedPhone);
+  const adminClient = createSupabaseAdminClient();
+
+  const { data: updated, error } = await supabase
+    .from("candidates")
+    .update({
+      availability_status: "התחתנו",
+      removal_reason: "married_via",
+      removal_reason_other: null,
+      removed_by: removedBy,
+      system_notes: `מספר טלפון של בן/בת הזוג: ${normalizedPhone}`,
+    })
+    .eq("id", candidateId)
+    .select("full_name")
+    .single();
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  // If the partner is also a registered candidate, mark them married too and
+  // close out the proposal between them (mirrors updateProposalStatusByCandidate)
+  const { data: partner } = await adminClient
+    .from("candidates")
+    .select("id")
+    .eq("phone_number", normalizedPhone)
+    .neq("id", candidateId)
+    .maybeSingle();
+
+  if (partner) {
+    await adminClient
+      .from("candidates")
+      .update({ availability_status: "התחתנו" })
+      .eq("id", partner.id);
+
+    await adminClient
+      .from("proposals")
+      .update({ status: "9", updated_at: new Date().toISOString() })
+      .or(
+        `and(candidate_id_1.eq.${candidateId},candidate_id_2.eq.${partner.id}),and(candidate_id_1.eq.${partner.id},candidate_id_2.eq.${candidateId})`
+      );
+  }
+
+  return { success: true, fullName: updated?.full_name ?? "" };
+}
+
+/**
  * A candidate reporting they got married through the initiative: freezes their
  * profile as married (counted in the site banner), records the partner's phone
  * for the team to follow up, and also marks the partner as married if they're
@@ -388,63 +453,17 @@ export async function reportMarriageViaInitiative(
     return { error: "אין הרשאה לבצע פעולה זו" };
   }
 
-  const trimmedPhone = partnerPhone.trim();
-  if (!trimmedPhone) {
-    return { error: "יש להזין מספר טלפון" };
-  }
-  const normalizedPhone = toE164(trimmedPhone);
-
-  const { supabase } = ctx;
-  const adminClient = createSupabaseAdminClient();
-
-  const { data: updated, error } = await supabase
-    .from("candidates")
-    .update({
-      availability_status: "התחתנו",
-      removal_reason: "married_via",
-      removal_reason_other: null,
-      removed_by: "candidate",
-      system_notes: `מספר טלפון של בן/בת הזוג: ${normalizedPhone}`,
-    })
-    .eq("id", ctx.candidateId)
-    .select("full_name")
-    .single();
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  // If the partner is also a registered candidate, mark them married too and
-  // close out the proposal between them (mirrors updateProposalStatusByCandidate)
-  const { data: partner } = await adminClient
-    .from("candidates")
-    .select("id")
-    .eq("phone_number", normalizedPhone)
-    .neq("id", ctx.candidateId)
-    .maybeSingle();
-
-  if (partner) {
-    await adminClient
-      .from("candidates")
-      .update({ availability_status: "התחתנו" })
-      .eq("id", partner.id);
-
-    await adminClient
-      .from("proposals")
-      .update({ status: "9", updated_at: new Date().toISOString() })
-      .or(
-        `and(candidate_id_1.eq.${ctx.candidateId},candidate_id_2.eq.${partner.id}),and(candidate_id_1.eq.${partner.id},candidate_id_2.eq.${ctx.candidateId})`
-      );
-  }
+  const result = await applyMarriageViaInitiative(ctx.supabase, ctx.candidateId, partnerPhone, "candidate");
+  if (result.error) return result;
 
   await queueAdminNotification({
     type: "candidate_self_froze",
-    message: `🎉 המועמד/ת <strong>${updated?.full_name ?? ""}</strong> התחתן/ה דרך המיזם! מספר טלפון של בן/בת הזוג לבירור: ${normalizedPhone}`,
+    message: `🎉 המועמד/ת <strong>${result.fullName}</strong> התחתן/ה דרך המיזם! מספר טלפון של בן/בת הזוג לבירור: ${toE164(partnerPhone.trim())}`,
     linkUrl: `https://ronel-lovely.com/admin/candidate/${ctx.candidateId}`,
     candidateId: ctx.candidateId,
   }).catch(() => {}); // Non-critical
 
-  await supabase.auth.signOut();
+  await ctx.supabase.auth.signOut();
   redirect("/login");
 }
 
@@ -529,18 +548,16 @@ export async function requestAdminUnfreeze(
   redirect("/my-profile?unfreeze_requested=1");
 }
 
-/** Update candidate email (for phone-auth users who need to add email) */
-export async function updateCandidateEmail(
-  newEmail: string,
-  candidateId?: number
+/**
+ * Shared email-update logic behind updateCandidateEmail, factored out so
+ * admin-side editing (src/app/admin/candidate/[id]/actions.ts) can reuse it
+ * with its own authorization check instead of verifyCandidate's ownership rule.
+ */
+export async function applyEmailUpdate(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  candidateId: number,
+  newEmail: string
 ): Promise<ProfileActionResult> {
-  const ctx = await verifyCandidate(candidateId);
-  if (!ctx) {
-    return { error: "אין הרשאה לבצע פעולה זו" };
-  }
-
-  const { supabase, userId } = ctx;
-
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(newEmail)) {
@@ -559,36 +576,40 @@ export async function updateCandidateEmail(
     return { error: "כתובת האימייל הזו כבר רשומה במערכת" };
   }
 
-  // Fetch candidate name for notification
+  // Fetch candidate name + manager_id (the auth user this row logs in as, if any)
   const { data: candidateData } = await supabase
     .from("candidates")
-    .select("full_name")
-    .eq("id", ctx.candidateId)
+    .select("full_name, manager_id")
+    .eq("id", candidateId)
     .maybeSingle();
 
   // 1. Update candidate record in DB
   const { error: dbError } = await supabase
     .from("candidates")
     .update({ email: newEmail })
-    .eq("id", ctx.candidateId);
+    .eq("id", candidateId);
 
   if (dbError) {
     return { error: dbError.message };
   }
 
-  // 2. Update auth user's email (auto-confirm since they verified via phone)
-  const { error: authError } = await supabase.auth.admin.updateUserById(userId, {
-    email: newEmail,
-    email_confirm: true,
-  });
+  // 2. Update auth user's email (auto-confirm since they verified via phone).
+  // Ambassador-managed candidates may have no manager_id (they don't log in
+  // themselves) — skip the auth update in that case.
+  if (candidateData?.manager_id) {
+    const { error: authError } = await supabase.auth.admin.updateUserById(
+      candidateData.manager_id,
+      { email: newEmail, email_confirm: true }
+    );
 
-  if (authError) {
-    // Rollback the DB update
-    await supabase
-      .from("candidates")
-      .update({ email: null })
-      .eq("id", ctx.candidateId);
-    return { error: authError.message };
+    if (authError) {
+      // Rollback the DB update
+      await supabase
+        .from("candidates")
+        .update({ email: null })
+        .eq("id", candidateId);
+      return { error: authError.message };
+    }
   }
 
   // 3. Notify admin of the email change
@@ -596,10 +617,23 @@ export async function updateCandidateEmail(
   await queueAdminNotification({
     type: "candidate_email_update",
     message: `המועמד/ת <strong>${candidateName}</strong> עידכן/ה את כתובת המייל שלו/שלה לכתובת: <strong style="direction:ltr;unicode-bidi:embed;">${newEmail}</strong>`,
-    candidateId: ctx.candidateId,
+    candidateId,
   });
 
   return { success: true };
+}
+
+/** Update candidate email (for phone-auth users who need to add email) */
+export async function updateCandidateEmail(
+  newEmail: string,
+  candidateId?: number
+): Promise<ProfileActionResult> {
+  const ctx = await verifyCandidate(candidateId);
+  if (!ctx) {
+    return { error: "אין הרשאה לבצע פעולה זו" };
+  }
+
+  return applyEmailUpdate(ctx.supabase, ctx.candidateId, newEmail);
 }
 
 export async function toggleAvailability(

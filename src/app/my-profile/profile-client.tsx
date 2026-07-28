@@ -7,6 +7,7 @@ import Link from "next/link";
 import { logout } from "@/app/login/actions";
 import { compressImage, UnreadableImageError } from "@/lib/compress-image";
 import { REMOVAL_REASONS } from "@/lib/removalReasons";
+import { coupleOrdinalPhrase } from "@/lib/coupleOrdinal";
 import {
   updateMyProfile,
   deleteMyProfile,
@@ -20,15 +21,6 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Candidate = Record<string, any>;
-
-const COUPLE_ORDINAL_WORDS: Record<number, string> = {
-  1: "הראשון", 2: "השני", 3: "השלישי", 4: "הרביעי", 5: "החמישי",
-  6: "השישי", 7: "השביעי", 8: "השמיני", 9: "התשיעי", 10: "העשירי",
-};
-
-function coupleOrdinalPhrase(n: number): string {
-  return COUPLE_ORDINAL_WORDS[n] ? `הזוג ${COUPLE_ORDINAL_WORDS[n]}` : `הזוג מספר ${n}`;
-}
 
 interface CandidateOption {
   id: number;
@@ -47,6 +39,7 @@ export function ProfileClient({
   hideHeader = false,
   ambassadorUserId,
   adminEditAction,
+  adminEmailAction,
 }: {
   candidate: Candidate;
   candidateId?: number;
@@ -60,6 +53,9 @@ export function ProfileClient({
   // When set, an admin is editing this candidate on their behalf — used
   // instead of updateMyProfile, which only authorizes the candidate's own manager.
   adminEditAction?: (formData: FormData, candidateId: number) => Promise<ProfileActionResult>;
+  // When set, an admin is setting this candidate's email — used instead of
+  // updateCandidateEmail, which only authorizes the candidate's own manager.
+  adminEmailAction?: (candidateId: number, newEmail: string) => Promise<ProfileActionResult>;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit">(startInEditMode ? "edit" : "view");
@@ -87,6 +83,13 @@ export function ProfileClient({
   const [newEmail, setNewEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailSaving, setEmailSaving] = useState(false);
+
+  // Inline "add email" field shown in the edit form for candidates with no real email yet
+  const [editEmailValue, setEditEmailValue] = useState("");
+  const [emailFieldError, setEmailFieldError] = useState<string | null>(null);
+  const [emailFieldSaving, setEmailFieldSaving] = useState(false);
+  const hasRealEmail =
+    !!c.email && !(c.email as string).endsWith("@sms.ronellovely.co.il");
 
   // Build candidate_id param for navigation links (multi-candidate support)
   const cidParam = allCandidates && allCandidates.length > 1 && candidateId
@@ -137,6 +140,26 @@ export function ProfileClient({
       setMode("view");
       router.refresh();
     }
+  }
+
+  async function handleSaveEmail() {
+    setEmailFieldError(null);
+    const trimmed = editEmailValue.trim();
+    if (!trimmed) {
+      setEmailFieldError("יש להזין כתובת אימייל");
+      return;
+    }
+    setEmailFieldSaving(true);
+    const result = adminEmailAction
+      ? await adminEmailAction(candidateId as number, trimmed)
+      : await updateCandidateEmail(trimmed, candidateId);
+    if (result?.error) {
+      setEmailFieldError(result.error);
+    } else {
+      setC({ ...c, email: trimmed });
+      setEditEmailValue("");
+    }
+    setEmailFieldSaving(false);
   }
 
   async function handleToggleAvailability(currentlyUnavailable: boolean) {
@@ -574,11 +597,6 @@ export function ProfileClient({
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         <form onSubmit={handleUpdate} className="space-y-6">
           <EditSection title="תמונות פרופיל">
-            <div className="mb-3 bg-gradient-to-l from-sky-50 to-emerald-50 border border-sky-100 rounded-2xl p-3 text-center">
-              <p className="text-xs font-semibold text-sky-700 leading-relaxed">
-                תמונה מכובדת וצנועה מייצגת את האמת שבך ומקרבת אותך לבניין עדי עד
-              </p>
-            </div>
             <div className="flex flex-wrap gap-3">
               {keepImages.map((url, i) => (
                 <div key={url} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 group flex-shrink-0">
@@ -668,6 +686,30 @@ export function ProfileClient({
             <EditTextarea name="about_me" label="תיאור אישי" required defaultValue={c.about_me ?? ""} hint="יש לכתוב לפחות 15 מילים" error={fieldErrors.about_me} />
             <EditTextarea name="looking_for" label={c.gender === "נקבה" ? "מה חשוב לי בבן הזוג" : "מה חשוב לי בבת הזוג"} required defaultValue={c.looking_for ?? ""} error={fieldErrors.looking_for} />
           </EditSection>
+
+          {!hasRealEmail && (
+            <EditSection title="אימייל">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="email"
+                  value={editEmailValue}
+                  onChange={(e) => setEditEmailValue(e.target.value)}
+                  placeholder="example@email.com"
+                  dir="ltr"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveEmail}
+                  disabled={emailFieldSaving || !editEmailValue.trim()}
+                  className="px-4 py-2 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 rounded-xl transition-colors flex-shrink-0"
+                >
+                  {emailFieldSaving ? "שומר..." : "שמור אימייל"}
+                </button>
+              </div>
+              {emailFieldError && <p className="text-xs text-red-600 mt-1.5">{emailFieldError}</p>}
+            </EditSection>
+          )}
 
           <EditSection title="פרטי איש קשר">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -8,7 +8,7 @@ import { AdminNotesSection } from "./admin-notes-section";
 import { InquiriesSection } from "./inquiries-section";
 import { CandidateTabs } from "./candidate-tabs";
 import { CandidateStatusSection } from "./candidate-status-section";
-import { updateCandidateProfileAsAdmin } from "./actions";
+import { updateCandidateProfileAsAdmin, updateCandidateEmailAsAdmin } from "./actions";
 import { signCandidateImages, signProposalImages } from "@/lib/storage";
 import { scoreAndRankMatches, getCompatibleReligiousLevels } from "@/lib/matching";
 import { getMaxRecommendations } from "@/app/admin/settings-actions";
@@ -197,6 +197,7 @@ export default async function AdminCandidateViewPage({
           backUrl="/admin"
           hideHeader
           adminEditAction={updateCandidateProfileAsAdmin}
+          adminEmailAction={updateCandidateEmailAsAdmin}
         />
       ),
     },

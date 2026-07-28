@@ -2,7 +2,8 @@
 
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { isValidRemovalReason } from "@/lib/removalReasons";
-import { applyProfileUpdate, type ProfileActionResult } from "@/app/my-profile/actions";
+import { applyProfileUpdate, applyEmailUpdate, applyMarriageViaInitiative, type ProfileActionResult } from "@/app/my-profile/actions";
+import { queueAdminNotification } from "@/lib/adminNotifications";
 
 export type ActionResult = { error?: string; success?: boolean };
 
@@ -84,6 +85,18 @@ export async function updateCandidateProfileAsAdmin(
   return applyProfileUpdate(adminClient, candidateId, formData);
 }
 
+/** Admin: set/change a candidate's email, reusing the same logic the candidate's own email form uses */
+export async function updateCandidateEmailAsAdmin(
+  candidateId: number,
+  newEmail: string
+): Promise<ProfileActionResult> {
+  const supabase = await verifyAdmin();
+  if (!supabase) return { error: "אין הרשאה" };
+
+  const adminClient = createSupabaseAdminClient();
+  return applyEmailUpdate(adminClient, candidateId, newEmail);
+}
+
 /** Admin: soft delete (freeze) a candidate profile, recording the reason */
 export async function freezeCandidateProfile(
   candidateId: number,
@@ -115,6 +128,28 @@ export async function freezeCandidateProfile(
     .eq("id", candidateId);
 
   if (error) return { error: error.message };
+  return { success: true };
+}
+
+/** Admin: freeze a candidate as married/engaged through the initiative (mirrors reportMarriageViaInitiative) */
+export async function reportMarriageViaInitiativeAsAdmin(
+  candidateId: number,
+  partnerPhone: string
+): Promise<ActionResult> {
+  const verified = await verifyAdmin();
+  if (!verified) return { error: "אין הרשאה" };
+
+  const adminClient = createSupabaseAdminClient();
+  const result = await applyMarriageViaInitiative(adminClient, candidateId, partnerPhone, "admin");
+  if (result.error) return { error: result.error };
+
+  await queueAdminNotification({
+    type: "candidate_self_froze",
+    message: `🎉 המועמד/ת <strong>${result.fullName}</strong> סומן/ה כמי שהתחתן/ה דרך המיזם (ע״י מנהל).`,
+    linkUrl: `https://ronel-lovely.com/admin/candidate/${candidateId}`,
+    candidateId,
+  }).catch(() => {}); // Non-critical
+
   return { success: true };
 }
 

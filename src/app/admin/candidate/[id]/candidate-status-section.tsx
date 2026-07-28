@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { REMOVAL_REASONS, removalReasonLabel } from "@/lib/removalReasons";
-import { freezeCandidateProfile, restoreCandidateProfile } from "./actions";
+import { coupleOrdinalPhrase } from "@/lib/coupleOrdinal";
+import { getMarriedCoupleCount } from "@/app/my-profile/actions";
+import { freezeCandidateProfile, restoreCandidateProfile, reportMarriageViaInitiativeAsAdmin } from "./actions";
 
 interface Props {
   candidateId: number;
@@ -28,11 +30,16 @@ export function CandidateStatusSection({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleFreeze() {
-    setError(null);
-    if (!reason) return setError("יש לבחור סיבה");
-    if (reason === "other" && !reasonOther.trim()) return setError("יש לפרט את הסיבה");
+  // Congratulations flow — mirrors the candidate's own self-freeze popups
+  // (src/app/my-profile/profile-client.tsx) for the two engagement reasons.
+  const [marriagePopup, setMarriagePopup] = useState<"none" | "outside" | "via">("none");
+  const [marriedOrdinal, setMarriedOrdinal] = useState<number | null>(null);
+  const [loadingOrdinal, setLoadingOrdinal] = useState(false);
+  const [partnerPhone, setPartnerPhone] = useState("");
+  const [partnerPhoneError, setPartnerPhoneError] = useState<string | null>(null);
+  const [sendingMarriage, setSendingMarriage] = useState(false);
 
+  async function doFreeze() {
     setSaving(true);
     const result = await freezeCandidateProfile(candidateId, reason, reasonOther);
     setSaving(false);
@@ -40,6 +47,50 @@ export function CandidateStatusSection({
       setError(result.error);
       return;
     }
+    setShowConfirm(false);
+    router.refresh();
+  }
+
+  async function handleFreeze() {
+    setError(null);
+    if (!reason) return setError("יש לבחור סיבה");
+    if (reason === "other" && !reasonOther.trim()) return setError("יש לפרט את הסיבה");
+
+    if (reason === "married_outside") {
+      setMarriagePopup("outside");
+      return;
+    }
+    if (reason === "married_via") {
+      setLoadingOrdinal(true);
+      const count = await getMarriedCoupleCount();
+      setMarriedOrdinal(count + 1);
+      setLoadingOrdinal(false);
+      setMarriagePopup("via");
+      return;
+    }
+
+    await doFreeze();
+  }
+
+  function handleOutsideCongratsClose() {
+    setMarriagePopup("none");
+    doFreeze();
+  }
+
+  async function handleSendMarriageViaInitiative() {
+    setPartnerPhoneError(null);
+    if (!partnerPhone.trim()) {
+      setPartnerPhoneError("יש להזין מספר טלפון");
+      return;
+    }
+    setSendingMarriage(true);
+    const result = await reportMarriageViaInitiativeAsAdmin(candidateId, partnerPhone);
+    setSendingMarriage(false);
+    if (result?.error) {
+      setPartnerPhoneError(result.error);
+      return;
+    }
+    setMarriagePopup("none");
     setShowConfirm(false);
     router.refresh();
   }
@@ -124,16 +175,79 @@ export function CandidateStatusSection({
           <div className="flex gap-2">
             <button
               onClick={handleFreeze}
-              disabled={saving}
+              disabled={saving || loadingOrdinal}
               className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 rounded-lg transition-colors"
             >
-              {saving ? "מקפיא..." : "הקפא פרופיל"}
+              {saving || loadingOrdinal ? "מקפיא..." : "הקפא פרופיל"}
             </button>
             <button
               onClick={() => { setShowConfirm(false); setError(null); }}
               className="px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
               ביטול
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Congratulations modal — candidate got engaged/married outside the initiative */}
+      {marriagePopup === "outside" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" dir="rtl">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-7 text-center">
+            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">מזל טוב!</h2>
+            <p className="text-sm text-gray-600 leading-relaxed mb-6">
+              איחולים חמים מכל צוות האתר!
+            </p>
+            <button
+              onClick={handleOutsideCongratsClose}
+              disabled={saving}
+              className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 disabled:opacity-50 transition-all text-sm"
+            >
+              {saving ? "מעדכן..." : "תודה!"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Congratulations modal — candidate got engaged/married through the initiative */}
+      {marriagePopup === "via" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" dir="rtl">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-7 text-center">
+            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 mb-1">באמת? ממש מתרגשים לשמוע!!!</h2>
+            <p className="text-base font-bold text-emerald-600 mb-2">מזל טוב!</p>
+            <p className="text-sm text-gray-600 leading-relaxed mb-5">
+              אתם {marriedOrdinal != null ? coupleOrdinalPhrase(marriedOrdinal) : ""} שמתחתן דרך המיזם!
+            </p>
+            <div className="text-right mb-4">
+              <label className="block text-xs font-medium text-gray-500 mb-1">
+                מספר הטלפון של בן/בת הזוג
+              </label>
+              <input
+                type="tel"
+                dir="ltr"
+                value={partnerPhone}
+                onChange={(e) => setPartnerPhone(e.target.value)}
+                placeholder="050-0000000"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all"
+              />
+              {partnerPhoneError && <p className="mt-1 text-xs text-red-600">{partnerPhoneError}</p>}
+            </div>
+            <button
+              onClick={handleSendMarriageViaInitiative}
+              disabled={sendingMarriage}
+              className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 disabled:opacity-50 transition-all text-sm"
+            >
+              {sendingMarriage ? "שולח..." : "שלח"}
             </button>
           </div>
         </div>
