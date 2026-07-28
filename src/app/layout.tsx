@@ -52,9 +52,9 @@ export default function RootLayout({
         <SiteBanner />
         {/* Mobile only: links secondary nav below header */}
         <div className="lg:hidden bg-sky-800 px-4 py-1.5 flex items-center gap-3 flex-wrap" dir="rtl">
-          <a href="/VID-20260429-WA0055.mp4" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-white text-xs font-medium">
-            <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[9px] flex-shrink-0">▶</span>
-            סרטון הסבר
+          <a href="https://ronals-prayer-page.lovable.app/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-white text-xs font-medium">
+            <span>😊</span>
+            מתחילים את הבוקר בחיוך
           </a>
           <a href="https://chaim-beronel.org/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white/80 hover:text-white text-xs transition-colors">
             <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

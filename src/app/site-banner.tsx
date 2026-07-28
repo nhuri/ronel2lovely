@@ -134,9 +134,9 @@ export async function SiteBanner() {
           </div>
           {/* Desktop links — last in DOM = leftmost in RTL (left edge) */}
           <div className="hidden lg:flex flex-col gap-2 items-end flex-shrink-0">
-              <a href="/VID-20260429-WA0055.mp4" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white text-[11px] font-medium hover:text-sky-200 transition-colors">
-                <span className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center text-[8px] flex-shrink-0">▶</span>
-                סרטון הסבר
+              <a href="https://ronals-prayer-page.lovable.app/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white text-[11px] font-medium hover:text-sky-200 transition-colors">
+                <span>😊</span>
+                מתחילים את הבוקר בחיוך
               </a>
               <a href="https://chaim-beronel.org/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white/80 hover:text-white text-[11px] transition-colors">
                 <svg viewBox="0 0 24 24" className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
