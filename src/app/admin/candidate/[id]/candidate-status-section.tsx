@@ -23,7 +23,10 @@ export function CandidateStatusSection({
   removedBy,
 }: Props) {
   const router = useRouter();
-  const isFrozen = availabilityStatus === "הקפאה";
+  // "התחתנו"/"התארסו" also hide the candidate from matching (set either by the
+  // marriage-report flow or by a proposal reaching a terminal status), so they
+  // need the same restore option as a plain "הקפאה" freeze.
+  const isFrozen = !!availabilityStatus && ["הקפאה", "התחתנו", "התארסו"].includes(availabilityStatus);
   const [showConfirm, setShowConfirm] = useState(false);
   const [reason, setReason] = useState("");
   const [reasonOther, setReasonOther] = useState("");
@@ -113,7 +116,12 @@ export function CandidateStatusSection({
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center justify-between gap-3 flex-wrap">
           <div>
             <p className="text-sm font-bold text-red-700">
-              הפרופיל מוקפא{removedBy === "admin" ? " (ע״י מנהל)" : ""}
+              {availabilityStatus === "התחתנו"
+                ? "המועמד/ת התחתן/ה"
+                : availabilityStatus === "התארסו"
+                ? "המועמד/ת התארס/ה"
+                : "הפרופיל מוקפא"}
+              {removedBy === "admin" ? " (ע״י מנהל)" : ""}
             </p>
             {removalReason && (
               <p className="text-xs text-red-600 mt-0.5">
