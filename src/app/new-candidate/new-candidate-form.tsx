@@ -86,16 +86,21 @@ export function NewCandidateForm({
       formData.set("mode", "ambassador");
     }
 
-    const result = await createCandidate(formData);
-    if (result?.fieldErrors) {
-      setFieldErrors(result.fieldErrors);
-      setSubmitting(false);
-    } else if (result?.error) {
-      setError(result.error);
-      setSubmitting(false);
-    } else if (result?.success) {
-      setRegisteredEmail(result.email ?? "");
-      setShowEmailModal(true);
+    try {
+      const result = await createCandidate(formData);
+      if (result?.fieldErrors) {
+        setFieldErrors(result.fieldErrors);
+      } else if (result?.error) {
+        setError(result.error);
+      } else if (result?.success) {
+        setRegisteredEmail(result.email ?? "");
+        setShowEmailModal(true);
+      }
+    } catch {
+      setError(
+        "אירעה שגיאה בשמירת הפרטים. ייתכן שהתמונות שהעלית גדולות מדי — נסה/י תמונות קטנות יותר או פחות תמונות ונסה/י שוב."
+      );
+    } finally {
       setSubmitting(false);
     }
   }

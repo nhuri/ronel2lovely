@@ -8,6 +8,12 @@ const compressionOptions = {
 
 export class UnreadableImageError extends Error {}
 
+// If compression fails and we fall back to the original file, cap how large
+// that fallback is allowed to be — an uncompressed multi-MB phone photo (times
+// up to 3 images) can silently exceed the server action's request body limit,
+// which surfaces as a hung/failed submit rather than a clear error.
+const MAX_FALLBACK_BYTES = 4 * 1024 * 1024; // 4MB
+
 function looksLikeHeic(file: File): boolean {
   const type = file.type.toLowerCase();
   const name = file.name.toLowerCase();
@@ -41,7 +47,11 @@ export async function compressImage(file: File): Promise<File> {
   try {
     return await imageCompression(source, compressionOptions);
   } catch {
-    if (source.size > 0) return source;
-    throw new UnreadableImageError("לא הצלחנו לקרוא את קובץ התמונה. נסה תמונה אחרת או בפורמט JPG.");
+    if (source.size > 0 && source.size <= MAX_FALLBACK_BYTES) return source;
+    throw new UnreadableImageError(
+      source.size > MAX_FALLBACK_BYTES
+        ? "התמונה גדולה מדי ולא הצלחנו לדחוס אותה. נסה תמונה קטנה יותר או בפורמט JPG."
+        : "לא הצלחנו לקרוא את קובץ התמונה. נסה תמונה אחרת או בפורמט JPG."
+    );
   }
 }
