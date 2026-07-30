@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import Image from "next/image";
+import { signCandidateImageUrls } from "./image-actions";
 
 interface Candidate {
   id: number;
@@ -36,6 +38,8 @@ interface Props {
   managerNames: Record<number, string>;
 }
 
+const PAGE_SIZE = 20;
+
 const LEVEL_VARIANTS: Record<string, string[]> = {
   "דתי לאומי": ["דתי לאומי", "דתייה לאומית"],
   "דתי לייט": ["דתי לייט", "דתייה לייט"],
@@ -61,6 +65,8 @@ export function CandidatesGrid({
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [showFrozen, setShowFrozen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [page, setPage] = useState(0);
+  const [signedImages, setSignedImages] = useState<Record<number, string[]>>({});
 
   const baseList = showFrozen ? [...candidates, ...frozenCandidates] : candidates;
 
@@ -91,6 +97,38 @@ export function CandidatesGrid({
     setAgeMin("");
     setAgeMax("");
   }
+
+  // Reset to page 1 whenever the visible set changes
+  useEffect(() => {
+    setPage(0);
+  }, [search, genderFilter, religiousFilter, ageMin, ageMax, sortOrder, showFrozen]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paged = useMemo(
+    () => filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE),
+    [filtered, page]
+  );
+
+  // Sign image URLs lazily, only for candidates on the current page — signing all
+  // ~1,100 candidates up front is what caused the Egress overage that got photos
+  // removed from this grid in the first place (see commit 3c0880c).
+  useEffect(() => {
+    const toFetch: Record<number, string[]> = {};
+    for (const c of paged) {
+      if (c.image_urls?.length && !signedImages[c.id]) {
+        toFetch[c.id] = c.image_urls;
+      }
+    }
+    if (Object.keys(toFetch).length === 0) return;
+    let cancelled = false;
+    signCandidateImageUrls(toFetch).then((signed) => {
+      if (cancelled) return;
+      setSignedImages((prev) => ({ ...prev, ...signed }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [paged, signedImages]);
 
   const selected = selectedId
     ? baseList.find((c) => c.id === selectedId) ?? null
@@ -155,16 +193,133 @@ export function CandidatesGrid({
           <p className="text-sm">נסה לשנות את הסינון</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map((c) => (
-            <CandidateCard key={c.id} candidate={c} onView={() => setSelectedId(c.id)} ambassadorName={managerNames[c.id] ?? null} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {paged.map((c) => (
+              <CandidateCard
+                key={c.id}
+                candidate={c}
+                onView={() => setSelectedId(c.id)}
+                ambassadorName={managerNames[c.id] ?? null}
+                signedImages={signedImages[c.id]}
+              />
+            ))}
+          </div>
+
+          {/* ── Pagination ── */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 mt-8">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="px-4 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              >
+                הקודם
+              </button>
+              <span className="text-sm text-gray-500">
+                עמוד {page + 1} מתוך {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
+                className="px-4 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              >
+                הבא
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* ── Profile Modal ── */}
-      {selected && <ProfileModal candidate={selected} onClose={() => setSelectedId(null)} ambassadorName={managerNames[selected.id] ?? null} />}
+      {selected && (
+        <ProfileModal
+          candidate={selected}
+          onClose={() => setSelectedId(null)}
+          ambassadorName={managerNames[selected.id] ?? null}
+          signedImages={signedImages[selected.id]}
+        />
+      )}
     </>
+  );
+}
+
+/* ──────────────── Image Carousel ──────────────── */
+
+function ImageCarousel({
+  urls,
+  alt,
+  className,
+  rounded,
+}: {
+  urls: string[];
+  alt: string;
+  className?: string;
+  rounded?: string;
+}) {
+  const [idx, setIdx] = useState(0);
+  const total = urls.length;
+
+  const prev = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIdx((i) => (i - 1 + total) % total);
+    },
+    [total]
+  );
+  const next = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIdx((i) => (i + 1) % total);
+    },
+    [total]
+  );
+
+  return (
+    <div className={`relative group/carousel ${className ?? ""}`}>
+      <Image
+        src={urls[idx]}
+        alt={alt}
+        fill
+        className={`object-contain transition-opacity duration-200 ${rounded ?? ""}`}
+      />
+
+      {total > 1 && (
+        <>
+          {/* Arrows */}
+          <button
+            onClick={next}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/carousel:opacity-100 transition-opacity"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          <button
+            onClick={prev}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/carousel:opacity-100 transition-opacity"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+          </button>
+
+          {/* Dots */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {urls.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setIdx(i); }}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  i === idx ? "bg-white w-4" : "bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Counter */}
+          <span className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full">
+            {idx + 1}/{total}
+          </span>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -182,11 +337,25 @@ function NoImage({ className, rounded }: { className?: string; rounded?: string 
 
 /* ──────────────── Card ──────────────── */
 
-function CandidateCard({ candidate: c, onView, ambassadorName }: { candidate: Candidate; onView: () => void; ambassadorName: string | null }) {
+function CandidateCard({
+  candidate: c,
+  onView,
+  ambassadorName,
+  signedImages,
+}: {
+  candidate: Candidate;
+  onView: () => void;
+  ambassadorName: string | null;
+  signedImages?: string[];
+}) {
   return (
     <div onClick={onView} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
       <div className="relative w-full h-56 sm:h-auto sm:aspect-square bg-gray-100">
-        <NoImage className="absolute inset-0" />
+        {signedImages?.length ? (
+          <ImageCarousel urls={signedImages} alt={c.full_name} className="w-full h-full" />
+        ) : (
+          <NoImage className="absolute inset-0" />
+        )}
 
         {c.age != null && (
           <span className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
@@ -242,14 +411,38 @@ function Tag({ text, color }: { text: string; color: keyof typeof tagColors }) {
 
 /* ──────────────── Profile Modal ──────────────── */
 
-function ProfileModal({ candidate: c, onClose, ambassadorName }: { candidate: Candidate; onClose: () => void; ambassadorName: string | null }) {
+function ProfileModal({
+  candidate: c,
+  onClose,
+  ambassadorName,
+  signedImages,
+}: {
+  candidate: Candidate;
+  onClose: () => void;
+  ambassadorName: string | null;
+  signedImages?: string[];
+}) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Header ── */}
+        {/* ── Header: Carousel or fallback ── */}
         <div className="relative">
-          <div className="w-full h-48 bg-gradient-to-bl from-sky-400 to-sky-600 rounded-t-3xl" />
+          {signedImages?.length ? (
+            <>
+              <div className="bg-black rounded-t-3xl">
+                <ImageCarousel
+                  urls={signedImages}
+                  alt={c.full_name}
+                  className="w-full h-80 sm:h-[28rem]"
+                  rounded="rounded-t-3xl"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent rounded-t-3xl pointer-events-none" />
+            </>
+          ) : (
+            <div className="w-full h-48 bg-gradient-to-bl from-sky-400 to-sky-600 rounded-t-3xl" />
+          )}
 
           {/* Close */}
           <button onClick={onClose} className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center transition-colors z-20">
