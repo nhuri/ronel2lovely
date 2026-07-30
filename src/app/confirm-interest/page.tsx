@@ -28,27 +28,8 @@ export default async function ConfirmInterestPage({
     return <ErrorPage message="קישור לא תקין." />;
   }
 
-  if (tokenData.used_at) {
-    return (
-      <PageShell>
-        <div className="text-center space-y-3">
-          <div className="w-14 h-14 bg-sky-100 rounded-full flex items-center justify-center mx-auto">
-            <svg className="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-lg font-bold text-gray-800">ההתאמה כבר אושרה</h2>
-          <p className="text-sm text-gray-500">קישור זה כבר שומש. בדוק/י את המייל שנשלח עם פרטי ההתקשרות.</p>
-        </div>
-      </PageShell>
-    );
-  }
-
-  if (new Date(tokenData.expires_at) < new Date()) {
-    return <ErrorPage message="קישור זה פג תוקף. צור/י קשר עם צוות האתר." />;
-  }
-
-  // Fetch from_candidate details to display
+  // Fetch from_candidate details to display — done before the used/expired
+  // checks below so those messages can be phrased for the reader's gender.
   const [{ data: fromCand }, { data: toCand }] = await Promise.all([
     admin
       .from("candidates")
@@ -62,13 +43,47 @@ export default async function ConfirmInterestPage({
       .single(),
   ]);
 
+  const toGenderEarly = (toCand?.gender as string) ?? "זכר";
+
+  if (tokenData.used_at) {
+    return (
+      <PageShell>
+        <div className="text-center space-y-3">
+          <div className="w-14 h-14 bg-sky-100 rounded-full flex items-center justify-center mx-auto">
+            <svg className="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-bold text-gray-800">ההתאמה כבר אושרה</h2>
+          <p className="text-sm text-gray-500">
+            {toGenderEarly === "נקבה"
+              ? "קישור זה כבר שומש. בדקי את המייל שנשלח עם פרטי ההתקשרות."
+              : "קישור זה כבר שומש. בדוק את המייל שנשלח עם פרטי ההתקשרות."}
+          </p>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (new Date(tokenData.expires_at) < new Date()) {
+    return (
+      <ErrorPage
+        message={
+          toGenderEarly === "נקבה"
+            ? "קישור זה פג תוקף. צרי קשר עם צוות האתר."
+            : "קישור זה פג תוקף. צור קשר עם צוות האתר."
+        }
+      />
+    );
+  }
+
   if (!fromCand) {
     return <ErrorPage message="שגיאה בטעינת פרטי המועמד." />;
   }
 
   const fromName = fromCand.full_name as string;
   const fromGender = fromCand.gender as string;
-  const toGender = (toCand?.gender as string) ?? "זכר";
+  const toGender = toGenderEarly;
   const fromTitle = fromGender === "זכר" ? "המועמד" : "המועמדת";
   const fromRawImageUrls = (fromCand.image_urls as string[] | null) ?? [];
   const fromPhotos = fromRawImageUrls.length ? await signImageUrls(fromRawImageUrls) : [];
@@ -80,9 +95,10 @@ export default async function ConfirmInterestPage({
   const toHasAmbassador = !!toCand?.ambassador_id;
   const toName = (toCand?.full_name as string) || "";
   const toCandidateTitle = toGender === "זכר" ? "למועמד שלך" : "למועמדת שלך";
+  const fromSent = fromGender === "נקבה" ? "שלחה" : "שלח";
   const introLine = toHasAmbassador
-    ? `שלח/ה בקשת היכרות ${toCandidateTitle}${toName ? `, ${toName},` : ""} דרך Ronel Lovely`
-    : "שלח/ה לך בקשת היכרות דרך Ronel Lovely";
+    ? `${fromSent} בקשת היכרות ${toCandidateTitle}${toName ? `, ${toName},` : ""} דרך Ronel Lovely`
+    : `${fromSent} לך בקשת היכרות דרך Ronel Lovely`;
 
   return (
     <PageShell>

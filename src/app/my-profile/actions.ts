@@ -900,7 +900,7 @@ export async function reopenProposalByCandidate(
   const result = await verifyCandidateProposal(proposalId, candidateId);
   if (!result) return { error: "אין הרשאה לבצע פעולה זו" };
 
-  const { proposal, candidateId: myId, candidateName, candidateGender } = result;
+  const { supabase, proposal, candidateId: myId, candidateName, candidateGender } = result;
 
   if (proposal.status !== "1" && proposal.status !== "2") {
     return { error: "ניתן לפתוח מחדש רק הצעה פתוחה או הצעה שנפסלה" };
@@ -908,8 +908,15 @@ export async function reopenProposalByCandidate(
 
   const rejectedBy = proposal.rejected_by_candidate_id as number | null;
   if (rejectedBy && rejectedBy !== myId) {
+    const { data: rejecter } = await supabase
+      .from("candidates")
+      .select("gender")
+      .eq("id", rejectedBy)
+      .maybeSingle();
+    const heShe = rejecter?.gender === "נקבה" ? "היא" : "הוא";
+    const canVerb = rejecter?.gender === "נקבה" ? "יכולה" : "יכול";
     return {
-      error: "הצד השני הוא זה שפסל את ההצעה, רק הוא/היא יכול/ה לפתוח אותה מחדש.",
+      error: `הצד השני הוא זה שפסל את ההצעה, רק ${heShe} ${canVerb} לפתוח אותה מחדש.`,
     };
   }
 
@@ -933,10 +940,15 @@ export async function reopenProposalByCandidate(
     .eq("id", otherId)
     .maybeSingle();
 
-  if (!other) return { error: "המועמד/ת השני/ה לא נמצא/ה" };
+  if (!other) return { error: "לא נמצאו פרטי הצד השני" };
 
   if (other.availability_status === "הקפאה" || other.availability_status === "התחתנו") {
-    return { error: "המועמד/ת השני/ה מוקפא/ת או נשוי/אה, לא ניתן לפתוח את ההצעה מחדש" };
+    const otherIsFrozenFemale = other.gender === "נקבה";
+    return {
+      error: otherIsFrozenFemale
+        ? "המועמדת השנייה מוקפאת או נשואה, לא ניתן לפתוח את ההצעה מחדש"
+        : "המועמד השני מוקפא או נשוי, לא ניתן לפתוח את ההצעה מחדש",
+    };
   }
 
   const otherContact = getEffectiveContact(other);
@@ -984,9 +996,10 @@ export async function reopenProposalByCandidate(
       ? `שלום ${otherAmbassadorName},`
       : "שלום,"
     : `שלום ${otherName} ${dear},`;
+  const otherCanConfirm = otherGender === "נקבה" ? "תוכלי" : "תוכל";
   const bodyLine = otherContact.hasAmbassador
-    ? `ההצעה של ${otherCandidateTitle} שלך, <strong>${otherName}</strong>, עם <strong>${candidateName}</strong> נפתחה מחדש. תוכל/י לאשר או לפסול את ההתעניינות מחדש.`
-    : `ההצעה שלך עם <strong>${candidateName}</strong> נפתחה מחדש. תוכל/י לאשר או לפסול את ההתעניינות מחדש.`;
+    ? `ההצעה של ${otherCandidateTitle} שלך, <strong>${otherName}</strong>, עם <strong>${candidateName}</strong> נפתחה מחדש. ${otherCanConfirm} לאשר או לפסול את ההתעניינות מחדש.`
+    : `ההצעה שלך עם <strong>${candidateName}</strong> נפתחה מחדש. ${otherCanConfirm} לאשר או לפסול את ההתעניינות מחדש.`;
 
   const requesterTitle = candidateGender === "נקבה" ? "המועמדת" : "המועמד";
   const requesterAsks = candidateGender === "נקבה" ? "מבקשת" : "מבקש";
@@ -1035,7 +1048,8 @@ export async function reopenProposalByCandidate(
   });
 
   if (!emailResult.success) {
-    return { error: "ההצעה נפתחה מחדש אך שליחת המייל נכשלה. נסה/י שוב או צור/י קשר עם צוות האתר." };
+    const tryAgain = candidateGender === "נקבה" ? "נסי שוב או צרי" : "נסה שוב או צור";
+    return { error: `ההצעה נפתחה מחדש אך שליחת המייל נכשלה. ${tryAgain} קשר עם צוות האתר.` };
   }
 
   return { success: true };

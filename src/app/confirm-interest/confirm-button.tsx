@@ -38,13 +38,25 @@ export function ConfirmButton({ token, fromName, fromGender, toGender }: Props) 
       });
     } else if (res.status === "already_used") {
       setState("error");
-      setErrorMsg("קישור זה כבר שומש. בדוק/י את ההודעה שנשלחה לשניכם.");
+      setErrorMsg(
+        toGender === "זכר"
+          ? "קישור זה כבר שומש. בדוק את ההודעה שנשלחה לשניכם."
+          : "קישור זה כבר שומש. בדקי את ההודעה שנשלחה לשניכם."
+      );
     } else if (res.status === "expired") {
       setState("error");
-      setErrorMsg("קישור זה פג תוקף. צור/י קשר עם צוות האתר.");
+      setErrorMsg(
+        toGender === "זכר"
+          ? "קישור זה פג תוקף. צור קשר עם צוות האתר."
+          : "קישור זה פג תוקף. צרי קשר עם צוות האתר."
+      );
     } else {
       setState("error");
-      setErrorMsg("שגיאה. נסה/י שוב או צור/י קשר עם צוות האתר.");
+      setErrorMsg(
+        toGender === "זכר"
+          ? "שגיאה. נסה שוב או צור קשר עם צוות האתר."
+          : "שגיאה. נסי שוב או צרי קשר עם צוות האתר."
+      );
     }
   };
 
@@ -68,10 +80,18 @@ export function ConfirmButton({ token, fromName, fromGender, toGender }: Props) 
       setErrorMsg("קישור זה כבר שומש.");
     } else if (res.status === "expired") {
       setState("error");
-      setErrorMsg("קישור זה פג תוקף. צור/י קשר עם צוות האתר.");
+      setErrorMsg(
+        toGender === "זכר"
+          ? "קישור זה פג תוקף. צור קשר עם צוות האתר."
+          : "קישור זה פג תוקף. צרי קשר עם צוות האתר."
+      );
     } else {
       setState("error");
-      setErrorMsg("שגיאה. נסה/י שוב או צור/י קשר עם צוות האתר.");
+      setErrorMsg(
+        toGender === "זכר"
+          ? "שגיאה. נסה שוב או צור קשר עם צוות האתר."
+          : "שגיאה. נסי שוב או צרי קשר עם צוות האתר."
+      );
     }
   };
 

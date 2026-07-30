@@ -254,6 +254,17 @@ function ProposalCard({
   const showBlockedMessage = isReopenableStatus && otherRejected;
   const showLimitReachedMessage = isReopenableStatus && !otherRejected && reopenLimitReached;
 
+  const rejecterCandidate = p.rejected_by_candidate_id === p.candidate_id_1 ? c1 : c2;
+  const rejecterHeShe = rejecterCandidate?.gender === "נקבה" ? "היא" : "הוא";
+  const rejecterCanVerb = rejecterCandidate?.gender === "נקבה" ? "יכולה" : "יכול";
+
+  const myCandidate = isMeFirst ? c1 : c2;
+  const otherCandidate = isMeFirst ? c2 : c1;
+  const otherCandidateTitle = otherCandidate?.gender === "נקבה" ? "למועמדת" : "למועמד";
+  const otherLoLah = otherCandidate?.gender === "נקבה" ? "לה" : "לו";
+  const myYou = myCandidate?.gender === "נקבה" ? "את" : "אתה";
+  const mySure = myCandidate?.gender === "נקבה" ? "בטוחה" : "בטוח";
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Two candidate photos side by side */}
@@ -404,7 +415,7 @@ function ProposalCard({
         {showBlockedMessage && !showEdit && (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mt-2">
             <p className="text-xs text-gray-500">
-              הצד השני פסל את ההצעה — רק הוא/היא יכול/ה לפתוח אותה מחדש.
+              הצד השני פסל את ההצעה — רק {rejecterHeShe} {rejecterCanVerb} לפתוח אותה מחדש.
             </p>
           </div>
         )}
@@ -430,8 +441,8 @@ function ProposalCard({
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mt-2">
             <p className="text-xs font-medium text-emerald-700 mb-2">
               {p.status === "1"
-                ? "לחיצה על אישור תשלח שוב מייל למועמד/ת על פתיחת ההצעה מחדש. אתה בטוח/ה שברצונך בכך?"
-                : "פתיחת ההצעה מחדש תשלח מייל לצד השני ותאפשר לו/לה לאשר או לפסול את ההצעה מחדש. להמשיך?"}
+                ? `לחיצה על אישור תשלח שוב מייל ${otherCandidateTitle} על פתיחת ההצעה מחדש. ${myYou} ${mySure} שברצונך בכך?`
+                : `פתיחת ההצעה מחדש תשלח מייל לצד השני ותאפשר ${otherLoLah} לאשר או לפסול את ההצעה מחדש. להמשיך?`}
             </p>
             <p className="text-[11px] text-emerald-600 mb-2">
               זו תהיה פתיחה מספר {reopenCount + 1}/{MAX_PROPOSAL_REOPENS}.

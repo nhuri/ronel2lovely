@@ -105,7 +105,7 @@ export default async function MyProfilePage({
               </>
             )
           ) : (
-            <UnfreezeFlow candidateId={cId} />
+            <UnfreezeFlow candidateId={cId} gender={candidate.gender as string | null} />
           )}
 
           <form action={logout}>

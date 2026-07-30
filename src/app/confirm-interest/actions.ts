@@ -191,8 +191,8 @@ async function completeInterestConfirmation(
         ? `<strong>${otherName}</strong> רואה פוטנציאל בהצעה עם ${candidateTitle(recipient.gender)} שלך, <strong>${recipient.name}</strong>, ו${otherWillBeHappy} לשמוע יותר פרטים על ההצעה. פרטי הקשר ${otherHisHer} מופיעים מטה, ו${otherHeShe} ${otherWillBeHappy} ${recipientWillSend} ${otherToHimHer} מספר לבירורים, או ${recipientWillInvite} ${otherHimHer} לברר יותר פרטים דרכך.`
         : `<strong>${otherName}</strong> רואה פוטנציאל בהצעה זו ו${otherWillBeHappy} לשמוע יותר פרטים על ההצעה. פרטי הקשר ${otherHisHer} מופיעים מטה, ו${otherHeShe} ${otherWillBeHappy} ${recipientWillSend} ${otherToHimHer} מספר לבירורים, או ${recipientWillInvite} ${otherHimHer} לברר יותר פרטים דרכך.`
       : recipient.hasAmbassador
-        ? `<strong>${otherName}</strong> אישר/ה עניין הדדי עם ${candidateTitle(recipient.gender)} שלך, <strong>${recipient.name}</strong>.`
-        : `<strong>${otherName}</strong> אישר/ה עניין הדדי.`;
+        ? `<strong>${otherName}</strong> ${otherGender === "נקבה" ? "אישרה" : "אישר"} עניין הדדי עם ${candidateTitle(recipient.gender)} שלך, <strong>${recipient.name}</strong>.`
+        : `<strong>${otherName}</strong> ${otherGender === "נקבה" ? "אישרה" : "אישר"} עניין הדדי.`;
 
     return `
     <div dir="rtl" style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#374151;">
@@ -238,7 +238,7 @@ async function completeInterestConfirmation(
   if (from.email) {
     const subject = mode === "inquiry"
       ? `${to.name} רואה פוטנציאל ו${to.gender === "נקבה" ? "מעוניינת" : "מעוניין"} בפרטים נוספים — Ronel Lovely`
-      : `🎉 ${to.name} גם מעוניינ/ת — Ronel Lovely`;
+      : `🎉 ${to.name} גם ${to.gender === "נקבה" ? "מעוניינת" : "מעוניין"} — Ronel Lovely`;
     const result = await sendEmailWithLog({
       to: from.email,
       subject,
@@ -255,7 +255,7 @@ async function completeInterestConfirmation(
   if (to.email) {
     const result = await sendEmailWithLog({
       to: to.email,
-      subject: `🎉 אישרת עניין — ${from.name} גם מעוניינ/ת — Ronel Lovely`,
+      subject: `🎉 אישרת עניין — ${from.name} גם ${from.gender === "נקבה" ? "מעוניינת" : "מעוניין"} — Ronel Lovely`,
       html: matchEmail(to, "to", from.name, from.phone, from.email, from.gender),
       context: `${emailContextSuffix}_to`,
       fromCandidateId: tokenData.from_candidate_id as number,

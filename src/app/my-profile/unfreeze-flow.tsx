@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { requestUnfreezeCode, confirmUnfreezeCode } from "./actions";
 
-export function UnfreezeFlow({ candidateId }: { candidateId: number }) {
+export function UnfreezeFlow({
+  candidateId,
+  gender,
+}: {
+  candidateId: number;
+  gender?: string | null;
+}) {
+  const isFemale = gender === "נקבה";
   const [step, setStep] = useState<"confirm" | "code">("confirm");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,7 +55,9 @@ export function UnfreezeFlow({ candidateId }: { candidateId: number }) {
     return (
       <>
         <p className="text-sm text-gray-500 mb-6">
-          הפרופיל שלך מוקפא כרגע ואינו פעיל. האם אתה מעוניין לשחרר את ההקפאה?
+          {isFemale
+            ? "הפרופיל שלך מוקפא כרגע ואינו פעיל. האם את מעוניינת לשחרר את ההקפאה?"
+            : "הפרופיל שלך מוקפא כרגע ואינו פעיל. האם אתה מעוניין לשחרר את ההקפאה?"}
         </p>
         {error && (
           <div className="text-red-600 text-sm bg-red-50 border border-red-100 p-3 rounded-xl mb-4">
@@ -60,7 +69,7 @@ export function UnfreezeFlow({ candidateId }: { candidateId: number }) {
           disabled={loading}
           className="w-full px-6 py-3 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 disabled:opacity-50 rounded-xl transition-colors mb-3"
         >
-          {loading ? "שולח קוד..." : "כן, אני מעוניין/ת לשחרר"}
+          {loading ? "שולח קוד..." : isFemale ? "כן, אני מעוניינת לשחרר" : "כן, אני מעוניין לשחרר"}
         </button>
       </>
     );
@@ -69,7 +78,9 @@ export function UnfreezeFlow({ candidateId }: { candidateId: number }) {
   return (
     <form onSubmit={handleSubmitCode}>
       <p className="text-sm text-gray-500 mb-4">
-        שלחנו קוד אימות לכתובת המייל שלך. הזן/י אותו כדי להשלים את שחרור ההקפאה.
+        {isFemale
+          ? "שלחנו קוד אימות לכתובת המייל שלך. הזיני אותו כדי להשלים את שחרור ההקפאה."
+          : "שלחנו קוד אימות לכתובת המייל שלך. הזן אותו כדי להשלים את שחרור ההקפאה."}
       </p>
       <input
         type="text"
