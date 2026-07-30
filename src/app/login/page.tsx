@@ -38,6 +38,10 @@ function LoginContent() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Self-frozen profile: ask before sending the code whether to unfreeze
+  const [showUnfreezeConfirm, setShowUnfreezeConfirm] = useState(false);
+  const [unfreezeConfirmed, setUnfreezeConfirmed] = useState(false);
+
   // SMS modal state
   const [showSmsModal, setShowSmsModal] = useState(false);
   const [smsStep, setSmsStep] = useState<SmsStep>("phone");
@@ -53,10 +57,30 @@ function LoginContent() {
 
     const result = await sendOtp(email);
 
+    if (result?.frozenSelf) {
+      setLoading(false);
+      setShowUnfreezeConfirm(true);
+    } else if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    } else {
+      setStep("otp");
+      setLoading(false);
+    }
+  }
+
+  async function handleConfirmUnfreeze() {
+    setError(null);
+    setLoading(true);
+    setShowUnfreezeConfirm(false);
+
+    const result = await sendOtp(email, true);
+
     if (result?.error) {
       setError(result.error);
       setLoading(false);
     } else {
+      setUnfreezeConfirmed(true);
       setStep("otp");
       setLoading(false);
     }
@@ -67,7 +91,7 @@ function LoginContent() {
     setError(null);
     setLoading(true);
 
-    const result = await verifyOtp(email, token, next);
+    const result = await verifyOtp(email, token, next, unfreezeConfirmed);
 
     if (result?.error) {
       setError(result.error);
@@ -247,6 +271,7 @@ function LoginContent() {
                   setStep("email");
                   setToken("");
                   setError(null);
+                  setUnfreezeConfirmed(false);
                 }}
                 className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
@@ -406,6 +431,38 @@ function LoginContent() {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Self-frozen profile confirmation ── */}
+      {showUnfreezeConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" dir="rtl">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+            <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-amber-600 text-lg">*</span>
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 mb-2">הפרופיל שלך מוקפא</h2>
+            <p className="text-sm text-gray-600 leading-relaxed mb-6">
+              האם אתה מעוניין לשחרר אותו?
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleConfirmUnfreeze}
+                disabled={loading}
+                className="flex-1 py-3 bg-sky-500 text-white rounded-xl font-semibold hover:bg-sky-600 disabled:opacity-50 transition-colors text-sm"
+              >
+                {loading ? "שולח..." : "כן, שחרר"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUnfreezeConfirm(false)}
+                className="flex-1 py-3 text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                ביטול
+              </button>
+            </div>
           </div>
         </div>
       )}

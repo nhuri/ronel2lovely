@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { logout } from "@/app/login/actions";
-import { restoreMyProfile, requestAdminUnfreeze } from "./actions";
+import { requestAdminUnfreeze } from "./actions";
 import { ProfileClient } from "./profile-client";
+import { UnfreezeFlow } from "./unfreeze-flow";
 import { resolveCandidate } from "@/lib/candidate-resolver";
 import { CandidateSelectionPage } from "./candidate-selector";
 import { signCandidateImages } from "@/lib/storage";
@@ -58,8 +59,14 @@ export default async function MyProfilePage({
     }
   }
 
+  // Legacy SMS/phone-only accounts have no real email to verify against, so
+  // the freeze/unfreeze flow (which relies on an email code) doesn't apply to
+  // them — treat them exactly like a non-frozen candidate, same as before.
+  const isSmsAccount =
+    !!user.user_metadata?.db_phone || !!user.email?.endsWith("@sms.ronellovely.co.il");
+
   // Frozen candidate — show restore option
-  if (candidate.availability_status === "הקפאה") {
+  if (!isSmsAccount && candidate.availability_status === "הקפאה") {
     const cId = candidate.id as number;
     const frozenByAdmin = candidate.removed_by === "admin";
     const unfreezeRequested = params.unfreeze_requested === "1";
@@ -98,19 +105,7 @@ export default async function MyProfilePage({
               </>
             )
           ) : (
-            <>
-              <p className="text-sm text-gray-500 mb-6">
-                הפרופיל מוקפא כרגע ואינו פעיל. לחץ על הכפתור למטה כדי לשחרר את ההקפאה.
-              </p>
-              <form action={async () => { "use server"; await restoreMyProfile(cId); }} className="mb-3">
-                <button
-                  type="submit"
-                  className="w-full px-6 py-3 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors"
-                >
-                  שחרר הקפאה
-                </button>
-              </form>
-            </>
+            <UnfreezeFlow candidateId={cId} />
           )}
 
           <form action={logout}>

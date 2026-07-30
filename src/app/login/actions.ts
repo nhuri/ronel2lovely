@@ -9,6 +9,9 @@ export type OtpResult = {
   error?: string;
   success?: boolean;
   showPhoneFlow?: boolean;
+  /** This email belongs to a candidate who froze their own profile — ask
+   * before sending a code whether they want to unfreeze it as part of login. */
+  frozenSelf?: boolean;
 };
 
 const ADMIN_EMAIL = "ronel2lovely@gmail.com";
@@ -19,8 +22,15 @@ function safeNext(next?: string | null, fallback = "/my-profile"): string {
   return fallback;
 }
 
-/** Step 1 – Send an OTP code to the user's email (with pre-verification) */
-export async function sendOtp(email: string): Promise<OtpResult> {
+/**
+ * Step 1 – Send an OTP code to the user's email (with pre-verification).
+ * If this email belongs to a self-frozen candidate and `confirmUnfreeze` is
+ * not yet true, no code is sent — the caller must first ask the user whether
+ * they want to unfreeze, then call again with `confirmUnfreeze: true`. This
+ * keeps the whole login+unfreeze flow to a single email code, since Supabase
+ * rate-limits repeat OTP requests to the same address within ~a minute.
+ */
+export async function sendOtp(email: string, confirmUnfreeze = false): Promise<OtpResult> {
   const supabase = await createSupabaseServerClient();
 
   // Admin email — always allowed
@@ -30,10 +40,19 @@ export async function sendOtp(email: string): Promise<OtpResult> {
     // Check if this email belongs to a candidate
     const { data: candidate } = await supabase
       .from("candidates")
-      .select("id")
+      .select("id, availability_status, removed_by")
       .eq("email", email)
       .limit(1)
       .maybeSingle();
+
+    if (
+      candidate &&
+      !confirmUnfreeze &&
+      candidate.availability_status === "הקפאה" &&
+      candidate.removed_by === "candidate"
+    ) {
+      return { frozenSelf: true };
+    }
 
     if (!candidate) {
       // Check if this email is registered as an ambassador for any candidate
@@ -79,7 +98,8 @@ export async function sendOtp(email: string): Promise<OtpResult> {
 export async function verifyOtp(
   email: string,
   token: string,
-  next?: string
+  next?: string,
+  confirmUnfreeze?: boolean
 ): Promise<OtpResult> {
   const supabase = await createSupabaseServerClient();
 
@@ -96,6 +116,31 @@ export async function verifyOtp(
   const user = data.user;
   if (!user) {
     return { error: "אימות נכשל, נסה שוב" };
+  }
+
+  // If the user confirmed unfreezing at the "profile is frozen" prompt (see
+  // sendOtp), lift the freeze now that they've proven ownership of the email.
+  // Re-check removed_by server-side rather than trusting the client flag —
+  // admin-frozen profiles must never be lifted this way.
+  if (confirmUnfreeze) {
+    const { data: frozenCandidate } = await supabase
+      .from("candidates")
+      .select("id, removed_by")
+      .eq("email", email)
+      .eq("availability_status", "הקפאה")
+      .maybeSingle();
+
+    if (frozenCandidate && frozenCandidate.removed_by !== "admin") {
+      await supabase
+        .from("candidates")
+        .update({
+          availability_status: null,
+          removal_reason: null,
+          removal_reason_other: null,
+          removed_by: null,
+        })
+        .eq("id", frozenCandidate.id);
+    }
   }
 
   // Determine role: admin only for the designated admin email, otherwise candidate
