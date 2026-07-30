@@ -1,15 +1,19 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { isTerminalStatus } from "@/lib/proposals";
 import { toE164 } from "@/lib/phone";
 import { queueAdminNotification } from "@/lib/adminNotifications";
 import { isValidRemovalReason, removalReasonLabel } from "@/lib/removalReasons";
+import { sendEmailWithLog } from "@/lib/email";
+import { getEffectiveContact } from "@/lib/contact";
 import {
-  hasReachedDailyProposalLimit,
+  getDailyProposalCount,
   notifyDailyProposalLimitReached,
-  DAILY_PROPOSAL_LIMIT_MESSAGE,
+  dailyProposalLimitMessage,
+  DAILY_PROPOSAL_LIMIT,
 } from "@/lib/proposalLimits";
 
 export type FieldErrors = Record<string, string>;
@@ -65,6 +69,7 @@ type CandidateContext = {
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
   userId: string;
   candidateId: number;
+  authEmail: string | null;
 };
 
 /**
@@ -128,12 +133,12 @@ async function verifyCandidate(candidateId?: number): Promise<CandidateContext |
   // If a specific candidate was requested, verify ownership
   if (candidateId) {
     if (!managedIds.includes(candidateId)) return null;
-    return { supabase, userId: user.id, candidateId };
+    return { supabase, userId: user.id, candidateId, authEmail: user.email ?? null };
   }
 
   // Auto-select if only one candidate
   if (managedIds.length === 1) {
-    return { supabase, userId: user.id, candidateId: managedIds[0] };
+    return { supabase, userId: user.id, candidateId: managedIds[0], authEmail: user.email ?? null };
   }
 
   // Multiple candidates but no selection - cannot proceed
@@ -512,6 +517,71 @@ export async function restoreMyProfile(
   redirect("/my-profile?restored=1");
 }
 
+/**
+ * Send an email verification code before unfreezing a self-frozen profile —
+ * an extra confirmation step so reactivation isn't a single accidental click.
+ * Reuses Supabase's own email-OTP mechanism (the same one used at login).
+ */
+export async function requestUnfreezeCode(
+  candidateId?: number
+): Promise<ProfileActionResult> {
+  const ctx = await verifyCandidate(candidateId);
+  if (!ctx) return { error: "אין הרשאה לבצע פעולה זו" };
+
+  const { supabase, authEmail } = ctx;
+
+  const { data: current } = await supabase
+    .from("candidates")
+    .select("removed_by")
+    .eq("id", ctx.candidateId)
+    .eq("availability_status", "הקפאה")
+    .maybeSingle();
+
+  if (!current) return { error: "לא נמצא פרופיל מוקפא" };
+
+  if (current.removed_by === "admin") {
+    return { error: "הפרופיל הוקפא על ידי המנהל ולא ניתן לשחררו באופן עצמאי" };
+  }
+
+  if (!authEmail) {
+    return { error: "לא נמצאה כתובת מייל לחשבון, יש לפנות לצוות האתר" };
+  }
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email: authEmail,
+    options: { shouldCreateUser: false },
+  });
+
+  if (error) return { error: error.message };
+
+  return { success: true };
+}
+
+/** Verify the email code from requestUnfreezeCode, then unfreeze the profile */
+export async function confirmUnfreezeCode(
+  code: string,
+  candidateId?: number
+): Promise<ProfileActionResult> {
+  const ctx = await verifyCandidate(candidateId);
+  if (!ctx) return { error: "אין הרשאה לבצע פעולה זו" };
+
+  const { supabase, authEmail } = ctx;
+
+  if (!authEmail) {
+    return { error: "לא נמצאה כתובת מייל לחשבון, יש לפנות לצוות האתר" };
+  }
+
+  const { error } = await supabase.auth.verifyOtp({
+    email: authEmail,
+    token: code,
+    type: "email",
+  });
+
+  if (error) return { error: "קוד אימות שגוי או שפג תוקפו" };
+
+  return restoreMyProfile(candidateId);
+}
+
 /** Notify the site team that a candidate wants an admin-initiated freeze lifted */
 export async function requestAdminUnfreeze(
   candidateId?: number
@@ -674,9 +744,10 @@ export async function createProposalByCandidate(
     return { error: "לא ניתן ליצור הצעה עם עצמך" };
   }
 
-  if (await hasReachedDailyProposalLimit(supabase, myId)) {
+  const dailyProposalCount = await getDailyProposalCount(supabase, myId);
+  if (dailyProposalCount >= DAILY_PROPOSAL_LIMIT) {
     await notifyDailyProposalLimitReached(supabase, myId);
-    return { error: DAILY_PROPOSAL_LIMIT_MESSAGE };
+    return { error: dailyProposalLimitMessage(dailyProposalCount) };
   }
 
   // Validate second candidate exists and is active
@@ -753,10 +824,10 @@ async function verifyCandidateProposal(proposalId: number, candidateId?: number)
   const { supabase } = ctx;
   const cId = ctx.candidateId;
 
-  // Get candidate name for note authoring
+  // Get candidate name/gender for note authoring and notification emails
   const { data: candidate } = await supabase
     .from("candidates")
-    .select("full_name")
+    .select("full_name, gender")
     .eq("id", cId)
     .maybeSingle();
 
@@ -765,14 +836,20 @@ async function verifyCandidateProposal(proposalId: number, candidateId?: number)
   // Verify candidate is part of this proposal
   const { data: proposal } = await supabase
     .from("proposals")
-    .select("id, candidate_id_1, candidate_id_2, status")
+    .select("id, candidate_id_1, candidate_id_2, status, rejected_by_candidate_id, reopen_count")
     .eq("id", proposalId)
     .or(`candidate_id_1.eq.${cId},candidate_id_2.eq.${cId}`)
     .maybeSingle();
 
   if (!proposal) return null;
 
-  return { supabase, candidateId: cId, candidateName: candidate.full_name, proposal };
+  return {
+    supabase,
+    candidateId: cId,
+    candidateName: candidate.full_name as string,
+    candidateGender: candidate.gender as string | null,
+    proposal,
+  };
 }
 
 export async function updateProposalStatusByCandidate(
@@ -783,7 +860,7 @@ export async function updateProposalStatusByCandidate(
   const result = await verifyCandidateProposal(proposalId, candidateId);
   if (!result) return { error: "אין הרשאה לבצע פעולה זו" };
 
-  const { proposal } = result;
+  const { proposal, candidateId: cId } = result;
 
   // Use admin client to bypass RLS for write operations
   const adminClient = createSupabaseAdminClient();
@@ -792,6 +869,10 @@ export async function updateProposalStatusByCandidate(
     .from("proposals")
     .update({
       status: newStatus,
+      // Track who explicitly rejected the proposal (so a later "reopen" request
+      // can tell whether the requester was the one who rejected it or the one
+      // who got rejected). Cleared whenever the status moves away from "2".
+      rejected_by_candidate_id: newStatus === "2" ? cId : null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", proposalId);
@@ -805,6 +886,156 @@ export async function updateProposalStatusByCandidate(
       .from("candidates")
       .update({ availability_status: statusLabel })
       .in("id", [proposal.candidate_id_1, proposal.candidate_id_2]);
+  }
+
+  return { success: true };
+}
+
+const MAX_PROPOSAL_REOPENS = 3;
+
+export async function reopenProposalByCandidate(
+  proposalId: number,
+  candidateId?: number
+): Promise<ProfileActionResult> {
+  const result = await verifyCandidateProposal(proposalId, candidateId);
+  if (!result) return { error: "אין הרשאה לבצע פעולה זו" };
+
+  const { proposal, candidateId: myId, candidateName, candidateGender } = result;
+
+  if (proposal.status !== "1" && proposal.status !== "2") {
+    return { error: "ניתן לפתוח מחדש רק הצעה פתוחה או הצעה שנפסלה" };
+  }
+
+  const rejectedBy = proposal.rejected_by_candidate_id as number | null;
+  if (rejectedBy && rejectedBy !== myId) {
+    return {
+      error: "הצד השני הוא זה שפסל את ההצעה, רק הוא/היא יכול/ה לפתוח אותה מחדש.",
+    };
+  }
+
+  const reopenCount = (proposal.reopen_count as number | null) ?? 0;
+  if (reopenCount >= MAX_PROPOSAL_REOPENS) {
+    return {
+      error: `ניתן לפתוח הצעה זו מחדש עד ${MAX_PROPOSAL_REOPENS} פעמים, והמכסה כבר נוצלה.`,
+    };
+  }
+
+  const otherId =
+    proposal.candidate_id_1 === myId ? proposal.candidate_id_2 : proposal.candidate_id_1;
+
+  const adminClient = createSupabaseAdminClient();
+
+  const { data: other } = await adminClient
+    .from("candidates")
+    .select(
+      "id, full_name, gender, email, availability_status, phone_number, contact_person, contact_person_phone, contact_person_email, ambassador_id"
+    )
+    .eq("id", otherId)
+    .maybeSingle();
+
+  if (!other) return { error: "המועמד/ת השני/ה לא נמצא/ה" };
+
+  if (other.availability_status === "הקפאה" || other.availability_status === "התחתנו") {
+    return { error: "המועמד/ת השני/ה מוקפא/ת או נשוי/אה, לא ניתן לפתוח את ההצעה מחדש" };
+  }
+
+  const otherContact = getEffectiveContact(other);
+  const otherEmail = otherContact.email;
+  if (!otherEmail || otherEmail.trim() === "" || otherEmail.endsWith("@sms.ronellovely.co.il")) {
+    return {
+      error: "לצד השני אין כתובת מייל מעודכנת במערכת. יש לפנות לצוות האתר במייל ronel2lovely@gmail.com לטיפול.",
+    };
+  }
+
+  const { error: updateError } = await adminClient
+    .from("proposals")
+    .update({
+      status: "1",
+      rejected_by_candidate_id: null,
+      reopen_count: reopenCount + 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", proposalId);
+
+  if (updateError) return { error: updateError.message };
+
+  await adminClient.from("proposal_notes").insert({
+    proposal_id: proposalId,
+    note_text: `ההצעה נפתחה מחדש ע"י ${candidateName}`,
+    author_type: candidateName,
+  });
+
+  const token = randomUUID();
+  await adminClient.from("interest_tokens").insert({
+    token,
+    proposal_id: proposalId,
+    from_candidate_id: myId,
+    to_candidate_id: otherId,
+  });
+
+  const otherGender = other.gender as string;
+  const otherName = other.full_name as string;
+  const dear = otherGender === "זכר" ? "היקר" : "היקרה";
+  const otherCandidateTitle = otherGender === "זכר" ? "המועמד" : "המועמדת";
+  const otherAmbassadorName = (other.contact_person as string | null) || null;
+
+  const greeting = otherContact.hasAmbassador
+    ? otherAmbassadorName
+      ? `שלום ${otherAmbassadorName},`
+      : "שלום,"
+    : `שלום ${otherName} ${dear},`;
+  const bodyLine = otherContact.hasAmbassador
+    ? `ההצעה של ${otherCandidateTitle} שלך, <strong>${otherName}</strong>, עם <strong>${candidateName}</strong> נפתחה מחדש. תוכל/י לאשר או לפסול את ההתעניינות מחדש.`
+    : `ההצעה שלך עם <strong>${candidateName}</strong> נפתחה מחדש. תוכל/י לאשר או לפסול את ההתעניינות מחדש.`;
+
+  const requesterTitle = candidateGender === "נקבה" ? "המועמדת" : "המועמד";
+  const requesterAsks = candidateGender === "נקבה" ? "מבקשת" : "מבקש";
+  const emailSubject = `${requesterTitle} ${candidateName} ${requesterAsks} לפתוח איתך את ההצעה מחדש — Ronel Lovely`;
+
+  const reopenAttemptNumber = reopenCount + 1;
+  const confirmUrl = `https://ronel-lovely.com/confirm-interest?token=${token}`;
+
+  const emailHtml = `
+    <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #374151;">
+      <p style="font-size: 13px; color: #0284c7; font-weight: bold; margin: 0 0 4px;">Ronel Lovely</p>
+      <p style="font-size: 11px; color: #94a3b8; margin: 0 0 24px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
+        בונים בתים לזכרו של רונאל
+      </p>
+
+      <p style="font-size: 16px; margin: 0 0 16px;">${greeting}</p>
+
+      <p style="font-size: 15px; line-height: 1.8; margin: 0 0 20px;">
+        ${bodyLine}
+      </p>
+
+      <p style="font-size: 12px; color: #9ca3af; margin: 0 0 20px;">
+        פתיחה מספר ${reopenAttemptNumber}/${MAX_PROPOSAL_REOPENS} של ההצעה.
+      </p>
+
+      <div style="text-align: center; margin: 0 0 8px;">
+        <a href="${confirmUrl}"
+           style="display: inline-block; padding: 13px 28px; background: #059669; color: white; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: bold;">
+          צפייה בפרופיל
+        </a>
+      </div>
+
+      <p style="font-size: 11px; color: #9ca3af; margin-top: 28px; padding-top: 16px; border-top: 1px solid #f3f4f6; text-align: center;">
+        Ronel Lovely — ronel-lovely.com
+      </p>
+    </div>
+  `;
+
+  const emailResult = await sendEmailWithLog({
+    to: otherEmail,
+    subject: emailSubject,
+    html: emailHtml,
+    context: "proposal_reopened",
+    fromCandidateId: myId,
+    toCandidateId: otherId,
+  });
+
+  if (!emailResult.success) {
+    return { error: "ההצעה נפתחה מחדש אך שליחת המייל נכשלה. נסה/י שוב או צור/י קשר עם צוות האתר." };
   }
 
   return { success: true };

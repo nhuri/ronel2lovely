@@ -5,6 +5,7 @@ import { MyProposalsClient } from "./proposals-client";
 import { resolveCandidate } from "@/lib/candidate-resolver";
 import { CandidateSelectionPage } from "../candidate-selector";
 import { signProposalImages, signAllCandidateImages } from "@/lib/storage";
+import { getDailyProposalCount, DAILY_PROPOSAL_LIMIT } from "@/lib/proposalLimits";
 
 export default async function MyProposalsPage({
   searchParams,
@@ -68,6 +69,8 @@ export default async function MyProposalsPage({
         c.availability_status !== "התחתנו")
   );
 
+  const dailyProposalCount = await getDailyProposalCount(supabase, candidateId);
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -126,6 +129,8 @@ export default async function MyProposalsPage({
             image_urls: candidate.image_urls as string[] | null,
           }}
           activeCandidates={activeCandidates}
+          dailyProposalCount={dailyProposalCount}
+          dailyProposalLimit={DAILY_PROPOSAL_LIMIT}
         />
       </main>
     </div>

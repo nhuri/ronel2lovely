@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  PROPOSAL_STATUSES,
   getStatusLabel,
   getStatusColor,
   isTerminalStatus,
+  getOrderedProposalStatusEntries,
 } from "@/lib/proposals";
 import {
   updateProposalStatus,
@@ -19,6 +19,7 @@ import {
   updateProposalStatusByCandidate,
   addProposalNoteByCandidate,
   createProposalByCandidate,
+  reopenProposalByCandidate,
 } from "@/app/my-profile/actions";
 
 interface CandidateBasic {
@@ -48,7 +49,11 @@ interface Proposal {
   candidate_1: CandidateBasic;
   candidate_2: CandidateBasic;
   proposal_notes?: ProposalNote[];
+  rejected_by_candidate_id?: number | null;
+  reopen_count?: number | null;
 }
+
+const MAX_PROPOSAL_REOPENS = 3;
 
 interface Props {
   proposals: Proposal[];
@@ -57,6 +62,8 @@ interface Props {
   candidateInfo?: CandidateBasic;
   activeCandidates?: CandidateBasic[];
   showInterestEmailModal?: boolean;
+  dailyProposalCount?: number;
+  dailyProposalLimit?: number;
 }
 
 function getNoteAuthorLabel(note: ProposalNote): string {
@@ -75,7 +82,7 @@ function NoImage() {
   );
 }
 
-export function MyProposalsClient({ proposals, candidateId, isAdmin = false, candidateInfo, activeCandidates, showInterestEmailModal = false }: Props) {
+export function MyProposalsClient({ proposals, candidateId, isAdmin = false, candidateInfo, activeCandidates, showInterestEmailModal = false, dailyProposalCount, dailyProposalLimit }: Props) {
   const [showNewProposal, setShowNewProposal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(showInterestEmailModal);
 
@@ -108,12 +115,19 @@ export function MyProposalsClient({ proposals, candidateId, isAdmin = false, can
 
       {/* Create new proposal button - for candidates */}
       {!isAdmin && activeCandidates && candidateInfo && (
-        <button
-          onClick={() => setShowNewProposal(true)}
-          className="w-full py-3 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-2xl transition-colors shadow-sm"
-        >
-          + הצעה חדשה
-        </button>
+        <div>
+          <button
+            onClick={() => setShowNewProposal(true)}
+            className="w-full py-3 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded-2xl transition-colors shadow-sm"
+          >
+            + הצעה חדשה
+          </button>
+          {dailyProposalCount != null && dailyProposalLimit != null && (
+            <p className="text-center text-[11px] text-gray-400 mt-1.5">
+              נוצלו {dailyProposalCount}/{dailyProposalLimit} הצעות היום
+            </p>
+          )}
+        </div>
       )}
 
       {showNewProposal && candidateInfo && activeCandidates && (
@@ -167,6 +181,10 @@ function ProposalCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showAllNotes, setShowAllNotes] = useState(false);
+  const [showReopenConfirm, setShowReopenConfirm] = useState(false);
+  const [reopening, setReopening] = useState(false);
+  const [reopenError, setReopenError] = useState<string | null>(null);
+  const [reopenSuccess, setReopenSuccess] = useState(false);
 
   const isMeFirst = p.candidate_id_1 === candidateId;
   const allNotes = (p.proposal_notes ?? []).sort(
@@ -212,6 +230,29 @@ function ProposalCard({
       router.refresh();
     }
   }
+
+  async function handleReopen() {
+    setReopening(true);
+    setReopenError(null);
+    const result = await reopenProposalByCandidate(p.id, candidateId);
+    if (result.error) {
+      setReopenError(result.error);
+      setReopening(false);
+    } else {
+      setReopening(false);
+      setReopenSuccess(true);
+      setShowReopenConfirm(false);
+      router.refresh();
+    }
+  }
+
+  const otherRejected = p.rejected_by_candidate_id != null && p.rejected_by_candidate_id !== candidateId;
+  const isReopenableStatus = !isAdmin && (p.status === "1" || p.status === "2");
+  const reopenCount = p.reopen_count ?? 0;
+  const reopenLimitReached = reopenCount >= MAX_PROPOSAL_REOPENS;
+  const canReopen = isReopenableStatus && !otherRejected && !reopenLimitReached && !reopenSuccess;
+  const showBlockedMessage = isReopenableStatus && otherRejected;
+  const showLimitReachedMessage = isReopenableStatus && !otherRejected && reopenLimitReached;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -348,6 +389,71 @@ function ProposalCard({
                 מחק
               </button>
             )}
+            {canReopen && (
+              <button
+                onClick={() => setShowReopenConfirm(true)}
+                className="px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
+              >
+                פתיחת ההצעה מחדש
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Blocked reopen message - shown when the other side rejected the proposal */}
+        {showBlockedMessage && !showEdit && (
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mt-2">
+            <p className="text-xs text-gray-500">
+              הצד השני פסל את ההצעה — רק הוא/היא יכול/ה לפתוח אותה מחדש.
+            </p>
+          </div>
+        )}
+
+        {/* Reopen limit reached message */}
+        {showLimitReachedMessage && !showEdit && (
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mt-2">
+            <p className="text-xs text-gray-500">
+              הגעת למספר המקסימלי של פתיחות הצעה מחדש ({MAX_PROPOSAL_REOPENS}).
+            </p>
+          </div>
+        )}
+
+        {/* Reopen success message */}
+        {reopenSuccess && !showEdit && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mt-2">
+            <p className="text-xs font-medium text-emerald-700">המייל נשלח!</p>
+          </div>
+        )}
+
+        {/* Reopen confirmation - candidate only */}
+        {canReopen && showReopenConfirm && !showEdit && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mt-2">
+            <p className="text-xs font-medium text-emerald-700 mb-2">
+              {p.status === "1"
+                ? "לחיצה על אישור תשלח שוב מייל למועמד/ת על פתיחת ההצעה מחדש. אתה בטוח/ה שברצונך בכך?"
+                : "פתיחת ההצעה מחדש תשלח מייל לצד השני ותאפשר לו/לה לאשר או לפסול את ההצעה מחדש. להמשיך?"}
+            </p>
+            <p className="text-[11px] text-emerald-600 mb-2">
+              זו תהיה פתיחה מספר {reopenCount + 1}/{MAX_PROPOSAL_REOPENS}.
+            </p>
+            {reopenError && (
+              <p className="text-xs text-red-600 mb-2">{reopenError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={handleReopen}
+                disabled={reopening}
+                className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 rounded-lg transition-colors"
+              >
+                {reopening ? "שולח..." : p.status === "1" ? "אישור" : "כן, פתח מחדש"}
+              </button>
+              <button
+                onClick={() => { setShowReopenConfirm(false); setReopenError(null); }}
+                className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                ביטול
+              </button>
+            </div>
           </div>
         )}
 
@@ -385,7 +491,7 @@ function ProposalCard({
                 onChange={(e) => setNewStatus(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all"
               >
-                {Object.entries(PROPOSAL_STATUSES).map(([key, label]) => (
+                {getOrderedProposalStatusEntries().map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
               </select>

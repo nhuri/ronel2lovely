@@ -1,15 +1,13 @@
 import { queueAdminNotification } from "@/lib/adminNotifications";
 
 export const DAILY_PROPOSAL_LIMIT = 5;
-export const DAILY_PROPOSAL_LIMIT_MESSAGE =
-  "אפשר לפתוח עד 5 הצעות ביום, הגעת למכסה היומית, המכסה תתחדש מחר";
 
-/** Whether this candidate has already opened DAILY_PROPOSAL_LIMIT proposals today as the initiator */
-export async function hasReachedDailyProposalLimit(
+/** How many proposals this candidate has opened as the initiator since midnight */
+export async function getDailyProposalCount(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   candidateId: number
-): Promise<boolean> {
+): Promise<number> {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
@@ -19,7 +17,20 @@ export async function hasReachedDailyProposalLimit(
     .eq("candidate_id_1", candidateId)
     .gte("created_at", startOfToday.toISOString());
 
-  return (count ?? 0) >= DAILY_PROPOSAL_LIMIT;
+  return count ?? 0;
+}
+
+/** Whether this candidate has already opened DAILY_PROPOSAL_LIMIT proposals today as the initiator */
+export async function hasReachedDailyProposalLimit(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  candidateId: number
+): Promise<boolean> {
+  return (await getDailyProposalCount(supabase, candidateId)) >= DAILY_PROPOSAL_LIMIT;
+}
+
+export function dailyProposalLimitMessage(count: number): string {
+  return `פתחת ${count}/${DAILY_PROPOSAL_LIMIT} הצעות היום, הגעת למכסה היומית, המכסה תתחדש מחר`;
 }
 
 /** Notify the site team by email that a candidate hit their daily proposal quota */

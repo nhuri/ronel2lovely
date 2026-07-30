@@ -8,7 +8,31 @@ export const PROPOSAL_STATUSES: Record<string, string> = {
   "7": "חתכו לאחר תקופה",
   "8": "התארסו",
   "9": "התחתנו",
+  "10": "מבררים לפני פגישה",
 };
+
+/**
+ * Display order for status dropdowns/filters. Needed because "10" is a
+ * numeric-string key — JS always iterates plain-object integer-index keys in
+ * ascending numeric order ("1".."9" before "10"), so Object.entries() alone
+ * can't place "10" between "1" and "2" as intended.
+ */
+export const PROPOSAL_STATUS_ORDER: string[] = [
+  "1",
+  "10",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+];
+
+export function getOrderedProposalStatusEntries(): [string, string][] {
+  return PROPOSAL_STATUS_ORDER.map((key) => [key, PROPOSAL_STATUSES[key]]);
+}
 
 /** Return gender-appropriate text. male=זכר version, female=נקבה version */
 export function genderText(
@@ -45,6 +69,8 @@ export function getStatusColor(status: string): string {
       return "bg-emerald-50 text-emerald-700";
     case "9":
       return "bg-emerald-50 text-emerald-700";
+    case "10":
+      return "bg-sky-50 text-sky-700";
     default:
       return "bg-gray-50 text-gray-700";
   }

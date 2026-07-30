@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { confirmMutualInterest } from "./actions";
+import { confirmMutualInterest, confirmInquiryInterest, rejectInterest } from "./actions";
 
 type Props = {
   token: string;
@@ -18,14 +18,17 @@ type SuccessData = {
 };
 
 export function ConfirmButton({ token, fromName, fromGender, toGender }: Props) {
-  const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "success" | "rejected" | "error">("idle");
+  const [successMode, setSuccessMode] = useState<"mutual" | "inquiry">("mutual");
   const [successData, setSuccessData] = useState<SuccessData | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleConfirm = async () => {
-    setState("loading");
-    const res = await confirmMutualInterest(token);
+  const applyConfirmResult = (
+    mode: "mutual" | "inquiry",
+    res: Awaited<ReturnType<typeof confirmMutualInterest>>
+  ) => {
     if (res.status === "success") {
+      setSuccessMode(mode);
       setState("success");
       setSuccessData({
         fromPhone: res.fromPhone,
@@ -45,6 +48,33 @@ export function ConfirmButton({ token, fromName, fromGender, toGender }: Props) 
     }
   };
 
+  const handleConfirm = async () => {
+    setState("loading");
+    applyConfirmResult("mutual", await confirmMutualInterest(token));
+  };
+
+  const handleMoreInfo = async () => {
+    setState("loading");
+    applyConfirmResult("inquiry", await confirmInquiryInterest(token));
+  };
+
+  const handleReject = async () => {
+    setState("loading");
+    const res = await rejectInterest(token);
+    if (res.status === "success") {
+      setState("rejected");
+    } else if (res.status === "already_used") {
+      setState("error");
+      setErrorMsg("קישור זה כבר שומש.");
+    } else if (res.status === "expired") {
+      setState("error");
+      setErrorMsg("קישור זה פג תוקף. צור/י קשר עם צוות האתר.");
+    } else {
+      setState("error");
+      setErrorMsg("שגיאה. נסה/י שוב או צור/י קשר עם צוות האתר.");
+    }
+  };
+
   if (state === "success" && successData) {
     const { fromPhone, fromEmail, notificationsSent, notificationErrors } = successData;
     return (
@@ -55,12 +85,18 @@ export function ConfirmButton({ token, fromName, fromGender, toGender }: Props) 
           </svg>
         </div>
 
-        <h3 className="text-lg font-bold text-gray-800 text-center">🎉 מזל טוב! ההתאמה נרשמה!</h3>
+        <h3 className="text-lg font-bold text-gray-800 text-center">
+          {successMode === "mutual" ? "🎉 מזל טוב! ההתאמה נרשמה!" : "פרטי הקשר הועברו!"}
+        </h3>
 
         <p className="text-sm text-gray-600 text-center">
-          {notificationsSent > 0
-            ? `נשלחו ${notificationsSent} הודעות עם פרטי ההתקשרות. סטטוס ההצעה עודכן ל"דייטים".`
-            : `סטטוס ההצעה עודכן ל"דייטים". פרטי ההתקשרות מופיעים מטה.`}
+          {successMode === "mutual"
+            ? notificationsSent > 0
+              ? `נשלחו ${notificationsSent} הודעות עם פרטי ההתקשרות. סטטוס ההצעה עודכן ל"דייטים".`
+              : `סטטוס ההצעה עודכן ל"דייטים". פרטי ההתקשרות מופיעים מטה.`
+            : notificationsSent > 0
+              ? `נשלחו ${notificationsSent} הודעות עם פרטי ההתקשרות לצורך בירורים. פרטי הקשר מופיעים מטה.`
+              : `פרטי הקשר לצורך בירורים מופיעים מטה.`}
         </p>
 
         {/* Contact details always shown on page */}
@@ -105,6 +141,14 @@ export function ConfirmButton({ token, fromName, fromGender, toGender }: Props) 
     );
   }
 
+  if (state === "rejected") {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+        <p className="text-sm text-gray-600">העדפתך נשמרה, תודה.</p>
+      </div>
+    );
+  }
+
   if (state === "error") {
     return (
       <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
@@ -114,22 +158,45 @@ export function ConfirmButton({ token, fromName, fromGender, toGender }: Props) 
   }
 
   return (
-    <button
-      onClick={handleConfirm}
-      disabled={state === "loading"}
-      className="w-full py-4 bg-gradient-to-l from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-white rounded-2xl font-bold text-lg transition-all shadow-md"
-    >
-      {state === "loading" ? (
-        <span className="flex items-center justify-center gap-2">
-          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          שולח...
+    <div className="space-y-2">
+      <button
+        onClick={handleConfirm}
+        disabled={state === "loading"}
+        className="w-full py-4 bg-gradient-to-l from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-white rounded-2xl font-bold text-lg transition-all shadow-md"
+      >
+        {state === "loading" ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            שולח...
+          </span>
+        ) : (
+          `✓ כן, גם אני ${toGender === "זכר" ? "מעוניין" : "מעוניינת"} להכיר ${fromGender === "זכר" ? "אותו" : "אותה"}!`
+        )}
+      </button>
+
+      <button
+        onClick={handleMoreInfo}
+        disabled={state === "loading"}
+        className="w-full py-3 px-4 bg-sky-50 hover:bg-sky-100 disabled:opacity-50 text-sky-700 rounded-2xl transition-colors text-right"
+      >
+        <span className="block font-semibold text-sm">כן, אשמח לשמוע יותר פרטים לפני שנפגשים</span>
+        <span className="block text-[11px] text-sky-700/70 font-normal leading-relaxed mt-1">
+          בחירה באופציה זו תעביר את פרטי ההתקשרות שלך {fromGender === "זכר" ? "למועמד" : "למועמדת"}
+          {" "}ותבקש {fromGender === "זכר" ? "ממנו" : "ממנה"} לשלוח לך מספר לבירורים, או ש
+          {toGender === "זכר" ? "תברר" : "תבררי"} {fromGender === "זכר" ? "דרכו" : "דרכה"} ישירות.
         </span>
-      ) : (
-        `✓ כן, גם אני ${toGender === "זכר" ? "מעוניין" : "מעוניינת"} להכיר ${fromGender === "זכר" ? "אותו" : "אותה"}!`
-      )}
-    </button>
+      </button>
+
+      <button
+        onClick={handleReject}
+        disabled={state === "loading"}
+        className="w-full py-2.5 text-sm text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 disabled:opacity-50 rounded-xl transition-colors"
+      >
+        ההצעה פחות מתאימה עבורי בשלב זה
+      </button>
+    </div>
   );
 }

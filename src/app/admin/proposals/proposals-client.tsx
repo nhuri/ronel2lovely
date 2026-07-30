@@ -3,10 +3,10 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  PROPOSAL_STATUSES,
   getStatusLabel,
   getStatusColor,
   isTerminalStatus,
+  getOrderedProposalStatusEntries,
 } from "@/lib/proposals";
 import {
   createProposal,
@@ -111,7 +111,7 @@ export function ProposalsClient({ proposals, candidates }: Props) {
               className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent focus:bg-white transition-all"
             >
               <option value="">הכל</option>
-              {Object.entries(PROPOSAL_STATUSES).map(([key, label]) => (
+              {getOrderedProposalStatusEntries().map(([key, label]) => (
                 <option key={key} value={key}>
                   {label}
                 </option>
@@ -638,7 +638,7 @@ function EditProposalModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const statusOptions = Object.entries(PROPOSAL_STATUSES);
+  const statusOptions = getOrderedProposalStatusEntries();
   const allNotes = (proposal.proposal_notes ?? []).sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );

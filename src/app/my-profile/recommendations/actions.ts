@@ -6,9 +6,10 @@ import { sendEmailWithLog } from "@/lib/email";
 import { sendTwilioSms } from "@/lib/twilio";
 import { getEffectiveContact } from "@/lib/contact";
 import {
-  hasReachedDailyProposalLimit,
+  getDailyProposalCount,
   notifyDailyProposalLimitReached,
-  DAILY_PROPOSAL_LIMIT_MESSAGE,
+  dailyProposalLimitMessage,
+  DAILY_PROPOSAL_LIMIT,
 } from "@/lib/proposalLimits";
 
 export async function sendInterestEmail(
@@ -25,9 +26,10 @@ export async function sendInterestEmail(
     return { success: false, message: "לא מחובר" };
   }
 
-  if (await hasReachedDailyProposalLimit(supabase, candidateId)) {
+  const dailyProposalCount = await getDailyProposalCount(supabase, candidateId);
+  if (dailyProposalCount >= DAILY_PROPOSAL_LIMIT) {
     await notifyDailyProposalLimitReached(supabase, candidateId);
-    return { success: false, message: DAILY_PROPOSAL_LIMIT_MESSAGE };
+    return { success: false, message: dailyProposalLimitMessage(dailyProposalCount) };
   }
 
   // Fetch both candidates
