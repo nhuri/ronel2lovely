@@ -33,7 +33,7 @@ export default function HomePage() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 bg-sky-700 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white text-sm font-bold">RL</span>
             </div>
             <span className="text-base font-bold text-gray-800">Ronel Lovely</span>
@@ -54,7 +54,7 @@ export default function HomePage() {
           </nav>
           <Link
             href="/login"
-            className="px-4 py-2 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors flex-shrink-0"
+            className="px-4 py-2 text-sm font-semibold text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors flex-shrink-0"
           >
             הרשמה / התחברות
           </Link>
@@ -81,7 +81,7 @@ export default function HomePage() {
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Link
                   href="/login"
-                  className="px-6 py-3 text-sm font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl shadow-sm transition-colors"
+                  className="px-6 py-3 text-sm font-semibold text-white bg-sky-700 hover:bg-sky-800 rounded-xl shadow-sm transition-colors"
                 >
                   להרשמה / התחברות
                 </Link>
@@ -112,7 +112,7 @@ export default function HomePage() {
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
             איך המערכת עובדת?
           </h2>
-          <p className="text-sm text-gray-500 text-center mb-8 max-w-xl mx-auto">
+          <p className="text-sm text-gray-600 text-center mb-8 max-w-xl mx-auto">
             שלושה שלבים פשוטים, בלי עלות ובלי מחויבות — עד להצעת השידוך הראשונה
             שלכם.
           </p>
@@ -141,7 +141,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
               אודות המיזם והחזון החברתי
             </h2>
-            <p className="text-sm text-gray-500 text-center mb-8 max-w-xl mx-auto">
+            <p className="text-sm text-gray-600 text-center mb-8 max-w-xl mx-auto">
               הניצחון של רונאל הוא השמחה של כולנו
             </p>
             <div className="grid sm:grid-cols-2 gap-6">
@@ -162,7 +162,7 @@ export default function HomePage() {
                     href="https://chaim-beronel.org/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sky-600 hover:text-sky-700 underline"
+                    className="text-sky-700 hover:text-sky-800 underline"
                   >
                     חיים ברונאל
                   </a>
@@ -179,7 +179,7 @@ export default function HomePage() {
               </Link>
               <Link
                 href="/donate"
-                className="px-5 py-2.5 font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-lg transition-colors"
+                className="px-5 py-2.5 font-semibold text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors"
               >
                 לתרומה למיזם
               </Link>
@@ -192,12 +192,12 @@ export default function HomePage() {
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
             מוכנים להתחיל את הדרך שלכם?
           </h2>
-          <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
+          <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
             ההרשמה חינמית ולוקחת רק כמה דקות. אנחנו כאן כדי לעזור לכל הצעד.
           </p>
           <Link
             href="/login"
-            className="inline-block px-8 py-3.5 text-base font-semibold text-white bg-sky-500 hover:bg-sky-600 rounded-xl shadow-sm transition-colors"
+            className="inline-block px-8 py-3.5 text-base font-semibold text-white bg-sky-700 hover:bg-sky-800 rounded-xl shadow-sm transition-colors"
           >
             להרשמה / התחברות
           </Link>
@@ -215,7 +215,7 @@ export default function HomePage() {
             </p>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-3">קישורים</h4>
+            <h3 className="text-white font-semibold mb-3">קישורים</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/about" className="hover:text-white transition-colors">
@@ -235,7 +235,7 @@ export default function HomePage() {
             </ul>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-3">מידע משפטי ויצירת קשר</h4>
+            <h3 className="text-white font-semibold mb-3">מידע משפטי ויצירת קשר</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/terms#privacy" className="hover:text-white transition-colors">
@@ -255,7 +255,7 @@ export default function HomePage() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-800 py-4 text-center text-xs text-gray-500">
+        <div className="border-t border-gray-800 py-4 text-center text-xs text-gray-400">
           © {new Date().getFullYear()} Ronel Lovely. כל הזכויות שמורות.
         </div>
       </footer>
@@ -274,11 +274,11 @@ function StepCard({
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-      <div className="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-bold mb-3">
+      <div className="w-8 h-8 rounded-full bg-sky-700 text-white flex items-center justify-center text-sm font-bold mb-3">
         {number}
       </div>
       <h3 className="font-bold text-gray-800 mb-1">{title}</h3>
-      <p className="text-sm text-gray-500 leading-relaxed">{text}</p>
+      <p className="text-sm text-gray-600 leading-relaxed">{text}</p>
     </div>
   );
 }
