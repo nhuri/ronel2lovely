@@ -1,47 +1,62 @@
 import Image from "next/image";
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+
+// Uses the admin client (no cookies() call) so this stays cacheable instead of
+// forcing every page — including the public landing page — into fully dynamic,
+// per-request rendering just to show public aggregate counts.
+const getSiteStats = unstable_cache(
+  async () => {
+    let candidateCount = 0;
+    let proposalCount = 0;
+    let marriedCount = 0;
+    let engagedCount = 0;
+    let datingCount = 0;
+
+    try {
+      const supabase = createSupabaseAdminClient();
+
+      const [candidatesRes, proposalsRes, marriedRes, engagedRes, datingRes] =
+        await Promise.all([
+          supabase
+            .from("candidates")
+            .select("id", { count: "exact", head: true }),
+          supabase
+            .from("proposals")
+            .select("id", { count: "exact", head: true }),
+          supabase
+            .from("candidates")
+            .select("id", { count: "exact", head: true })
+            .eq("availability_status", "התחתנו"),
+          supabase
+            .from("candidates")
+            .select("id", { count: "exact", head: true })
+            .eq("availability_status", "התארסו"),
+          supabase
+            .from("proposals")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "5"),
+        ]);
+
+      candidateCount = candidatesRes.count ?? 0;
+      proposalCount = proposalsRes.count ?? 0;
+      marriedCount = marriedRes.count ?? 0;
+      engagedCount = engagedRes.count ?? 0;
+      datingCount = datingRes.count ?? 0;
+    } catch {
+      // Fail silently — banner still renders with zeros
+    }
+
+    return { candidateCount, proposalCount, marriedCount, engagedCount, datingCount };
+  },
+  ["site-banner-stats"],
+  { revalidate: 60 }
+);
 
 export async function SiteBanner() {
-  let candidateCount = 0;
-  let proposalCount = 0;
-  let marriedCount = 0;
-  let engagedCount = 0;
-  let datingCount = 0;
-
-  try {
-    const supabase = await createSupabaseServerClient();
-
-    const [candidatesRes, proposalsRes, marriedRes, engagedRes, datingRes] =
-      await Promise.all([
-        supabase
-          .from("candidates")
-          .select("id", { count: "exact", head: true }),
-        supabase
-          .from("proposals")
-          .select("id", { count: "exact", head: true }),
-        supabase
-          .from("candidates")
-          .select("id", { count: "exact", head: true })
-          .eq("availability_status", "התחתנו"),
-        supabase
-          .from("candidates")
-          .select("id", { count: "exact", head: true })
-          .eq("availability_status", "התארסו"),
-        supabase
-          .from("proposals")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "5"),
-      ]);
-
-    candidateCount = candidatesRes.count ?? 0;
-    proposalCount = proposalsRes.count ?? 0;
-    marriedCount = marriedRes.count ?? 0;
-    engagedCount = engagedRes.count ?? 0;
-    datingCount = datingRes.count ?? 0;
-  } catch {
-    // Fail silently — banner still renders with zeros
-  }
+  const { candidateCount, proposalCount, marriedCount, engagedCount, datingCount } =
+    await getSiteStats();
 
   return (
     <div className="bg-gradient-to-l from-sky-600 to-sky-700 text-white py-2 px-4 lg:max-h-[20vh] overflow-hidden">
@@ -58,10 +73,10 @@ export async function SiteBanner() {
             <Image
               src="/chaim%20beronel.jpg"
               alt="לתרומה למיזם לזכרו של רונאל"
-              width={300}
-              height={300}
+              width={80}
+              height={80}
+              sizes="40px"
               className="h-10 w-auto object-contain"
-              unoptimized
             />
             <span className="text-[9px] text-sky-100 text-center leading-tight mt-0.5 max-w-[60px]">
               בחסות עמותת חיים ברונאל

@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/**",
       },
     ],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 31536000,
   },
   experimental: {
     serverActions: {
@@ -18,6 +20,16 @@ const nextConfig: NextConfig = {
       // default ~1MB body limit was getting exceeded and silently failing.
       bodySizeLimit: "15mb",
     },
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*.(jpg|jpeg|png|webp|avif|svg|ico)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+    ];
   },
 };
 

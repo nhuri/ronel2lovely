@@ -24,7 +24,7 @@ export default function TermsPage() {
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Terms of Use */}
-        <Section title="תנאי שימוש">
+        <Section id="terms" title="תנאי שימוש">
           <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
             <Clause number={1} title="כללי">
               <p>
@@ -101,7 +101,7 @@ export default function TermsPage() {
         </Section>
 
         {/* Privacy Policy */}
-        <Section title="מדיניות פרטיות">
+        <Section id="privacy" title="מדיניות פרטיות">
           <div className="space-y-4 text-sm text-gray-600 leading-relaxed">
             <Clause number={1} title="מידע שאנו אוספים">
               <ul className="list-disc list-inside space-y-1 mr-2">
@@ -194,14 +194,16 @@ export default function TermsPage() {
 }
 
 function Section({
+  id,
   title,
   children,
 }: {
+  id?: string;
   title: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-6">
+    <div id={id} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-6 scroll-mt-20">
       <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
         <span className="w-1 h-4 bg-sky-500 rounded-full inline-block" />
         {title}

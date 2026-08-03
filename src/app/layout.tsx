@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Script from "next/script";
+import { Noto_Sans_Hebrew } from "next/font/google";
 import "./globals.css";
 import { SiteBanner } from "./site-banner";
 import { VisitTracker } from "./visit-tracker";
+
+const notoSansHebrew = Noto_Sans_Hebrew({
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -34,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="he" dir="rtl" className="overflow-x-hidden w-full">
+    <html lang="he" dir="rtl" className={`overflow-x-hidden w-full scroll-smooth ${notoSansHebrew.className}`}>
       <body className="bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden overscroll-x-none w-full">
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-XR1DPKSR97"
@@ -49,7 +57,13 @@ export default function RootLayout({
           `}
         </Script>
         <VisitTracker />
-        <SiteBanner />
+        <Suspense
+          fallback={
+            <div className="bg-gradient-to-l from-sky-600 to-sky-700 h-[76px] lg:h-[64px]" />
+          }
+        >
+          <SiteBanner />
+        </Suspense>
         {/* Mobile only: links secondary nav below header */}
         <div className="lg:hidden bg-sky-800 px-4 py-1.5 flex items-center gap-3 flex-wrap" dir="rtl">
           <a href="https://ronals-prayer-page.lovable.app/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-white text-xs font-medium">
