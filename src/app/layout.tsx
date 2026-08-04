@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Script from "next/script";
 import { Noto_Sans_Hebrew } from "next/font/google";
 import "./globals.css";
 import { SiteBanner } from "./site-banner";
@@ -44,18 +43,6 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" className={`overflow-x-hidden w-full scroll-smooth ${notoSansHebrew.className}`}>
       <body className="bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden overscroll-x-none w-full">
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-XR1DPKSR97"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-XR1DPKSR97');
-          `}
-        </Script>
         <VisitTracker />
         <Suspense
           fallback={
