@@ -41,6 +41,9 @@ import_candidates.sql
 # duplicate image in root (original is in public/)
 /ronel-web.jpg
 
+# operational logs from maintenance scripts (not code, may reference real data)
+scripts/logs/
+
 # vercel
 .vercel
 
