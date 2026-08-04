@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { isTerminalStatus } from "@/lib/proposals";
 import { toE164 } from "@/lib/phone";
 import { queueAdminNotification } from "@/lib/adminNotifications";
+import { signImageUrls } from "@/lib/storage";
 import { isValidRemovalReason, removalReasonLabel } from "@/lib/removalReasons";
 import { sendEmailWithLog } from "@/lib/email";
 import { getEffectiveContact } from "@/lib/contact";
@@ -330,7 +331,11 @@ export async function applyProfileUpdate(
     return { error: error.message };
   }
 
-  return { success: true, imageUrls: finalImageUrls };
+  // The client updates its preview straight from this return value (no
+  // full page reload), so it needs already-signed URLs — the raw
+  // getPublicUrl() value stored in the DB above doesn't resolve on its
+  // own since candidate-images is a private bucket.
+  return { success: true, imageUrls: await signImageUrls(finalImageUrls) };
 }
 
 export async function deleteMyProfile(
