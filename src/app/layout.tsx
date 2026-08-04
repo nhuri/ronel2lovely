@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Noto_Sans_Hebrew } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { SiteBanner } from "./site-banner";
 import { VisitTracker } from "./visit-tracker";
@@ -85,6 +86,7 @@ export default function RootLayout({
           </a>
         </div>
         {children}
+        <GoogleAnalytics gaId="G-XR1DPKSR97" />
       </body>
     </html>
   );
