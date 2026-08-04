@@ -154,7 +154,24 @@ export async function updateMyProfile(
     return { error: "אין הרשאה לבצע פעולה זו" };
   }
 
-  return applyProfileUpdate(ctx.supabase, ctx.candidateId, formData);
+  const result = await applyProfileUpdate(ctx.supabase, ctx.candidateId, formData);
+
+  if (result.success) {
+    const { data: updated } = await ctx.supabase
+      .from("candidates")
+      .select("full_name")
+      .eq("id", ctx.candidateId)
+      .maybeSingle();
+
+    await queueAdminNotification({
+      type: "candidate_profile_updated",
+      message: `המועמד/ת <strong>${updated?.full_name ?? ""}</strong> עדכן/ה את הפרופיל שלו/ה.`,
+      linkUrl: `https://ronel-lovely.com/admin/candidate/${ctx.candidateId}`,
+      candidateId: ctx.candidateId,
+    }).catch(() => {}); // Non-critical
+  }
+
+  return result;
 }
 
 /**

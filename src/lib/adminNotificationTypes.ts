@@ -8,7 +8,8 @@ export type AdminNotificationType =
   | "candidate_self_froze"
   | "daily_proposal_limit_reached"
   | "unfreeze_request"
-  | "candidate_email_update";
+  | "candidate_email_update"
+  | "candidate_profile_updated";
 
 export type AdminNotificationMode = "immediate" | "digest";
 
@@ -26,6 +27,7 @@ export const NOTIFICATION_TYPE_LABELS: Record<AdminNotificationType, string> = {
   candidate_self_froze: "הקפאת פרופיל עצמית",
   unfreeze_request: "בקשת שחרור הקפאה",
   candidate_email_update: "עדכון כתובת מייל",
+  candidate_profile_updated: "עדכון פרופיל מועמד",
 };
 
 export const ALL_NOTIFICATION_TYPES = Object.keys(NOTIFICATION_TYPE_LABELS) as AdminNotificationType[];
@@ -36,4 +38,5 @@ export const DEFAULT_NOTIFICATION_TYPE_MODES: AdminNotificationTypeModes = {
   candidate_self_froze: "digest",
   unfreeze_request: "digest",
   candidate_email_update: "digest",
+  candidate_profile_updated: "immediate",
 };
